@@ -24,7 +24,7 @@ In Windows
 ```  pip3 install -r requirement.txt ```
 - Make sure there are no errors in the install.
 - If there are any errors in the install, try to install the same version of the libraries seperatly.
-- Donwload the user given template and save it in the same file where the code is hosted.
+- Download the user given template and save it in the same file where the code is hosted.
 - Command to run the script.
 ```  python3 main.py --env pre-prod --programFile input.xlsx ```
 We have ``` pre-prod ``` and ``` production ``` as environment.
