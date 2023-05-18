@@ -107,6 +107,8 @@ ccRootOrgId  = None
 certificatetemplateid = None
 
 # function to map course to program
+
+
 # As per the discussion with products team, course is currently taken down from the product until further notice 
 def courseMapToProgram(accessToken, courseLink, parentFolder):
     terminatingMessage("---> Course not part of the product ...")
