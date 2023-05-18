@@ -796,7 +796,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
     url = config.get(environment, 'userInfoApiUrl')
     messageArr = ["User search API called."]
     headers = {'Content-Type': 'application/json',
-               'Authorization': config.get(environment, 'AuthorizationForUserSearchApi'),
+               'Authorization': config.get(environment, 'AuthorizationForHost'),
                'x-authenticated-user-token': accessToken}
     isEmail = checkEmailValidation(dikshaId.lstrip().rstrip())
     if isEmail:
