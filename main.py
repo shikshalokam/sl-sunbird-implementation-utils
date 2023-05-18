@@ -107,8 +107,6 @@ ccRootOrgId  = None
 certificatetemplateid = None
 
 # function to map course to program
-
-
 # As per the discussion with products team, course is currently taken down from the product until further notice 
 def courseMapToProgram(accessToken, courseLink, parentFolder):
     terminatingMessage("---> Course not part of the product ...")
@@ -287,7 +285,7 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
 
 # this function is used to create the sheet of PDPM for API requerment
 def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,programexternalId,parentFolder):
-    pdpmsheet = os.path.join(MainFilePath, "pdpmmapping")
+    pdpmsheet = MainFilePath+ "/pdpmmapping/"
     if not os.path.exists(pdpmsheet):
         os.mkdir(pdpmsheet)
     print(program_file)
@@ -642,6 +640,7 @@ def envCheck():
 
 # Generate access token for the APIs. 
 def generateAccessToken(solutionName_for_folder_path):
+    # production search user api - start
     headerKeyClockUser = {'Content-Type': config.get(environment, 'keyclockAPIContent-Type')}
     keyclockAPIBody = "client_id=lms&client_secret=80ea98b5-f8a3-4745-8994-8bf41d75642e&grant_type=client_credentials&scope=offline_access"
     responseKeyClockUser = requests.post(url=config.get(environment, 'keyclockAPIUrl'), headers=headerKeyClockUser,
@@ -658,6 +657,7 @@ def generateAccessToken(solutionName_for_folder_path):
         fileheader = ["Access Token","Access Token succesfully genarated","Passed"]
         apicheckslog(solutionName_for_folder_path,fileheader)
         print("--->Access Token Generated!")
+        # sys.exit()
         return accessTokenUser
     print("Error in generating Access token")
     print("Status code : " + str(responseKeyClockUser.status_code))
@@ -856,7 +856,7 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
                 messageArr.append("orgIds : " + str(orgIds))
-            elif environment == "pre-prod-with-vpn":
+            elif environment == "pre-prod":
                 messageArr.append("Given Organisation/ State tenant is not present in DIKSHA platform.")
                 print("Given Organisation/ State tenant is not present in DIKSHA platform.")
                 messageArr.append("orgApi : " + str(url))
@@ -4173,6 +4173,662 @@ def taskUpload(projectFile, projectName_for_folder_path, accessToken):
             createAPILog(projectName_for_folder_path, messageArr)
             terminatingMessage("--->Tasks Upload failed.")
 
+
+def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path, accessToken,solutionId,programID):
+    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
+    projectsheetforcertificate = wbproject.sheet_names()
+    for prosheet in projectsheetforcertificate:
+        if prosheet.strip().lower() == 'Project upload'.lower():
+            # print("something in certificate")
+            detailsColCheck = wbproject.sheet_by_name(prosheet)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+
+            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                # print(dictDetailsEnv)
+                # sys.exit()
+                dictDetailsEnv = {
+                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                    for
+                    col_index_env in range(detailsEnvSheet.ncols)}
+                # print(keysEnv)
+                # print(detailsEnvSheet)
+                projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
+                projectLevelEvidance = dictDetailsEnv["Project Level Evidence"]
+    addcetificateFilePath = projectName_for_folder_path + '/Add certificate/'
+    # taskFilePath = projectName_for_folder_path + '/taskUpload/'
+    file_exists = os.path.isfile(projectName_for_folder_path + '/Add certificate/Addcertificate.text')
+    if not os.path.exists(addcetificateFilePath):
+        os.mkdir(addcetificateFilePath)
+    urladdcertificate = config.get(environment, 'Addcertificatetemplate')
+    headeraddcertificateApi = {
+        'Authorization': config.get(environment, 'Authorization'),
+        'X-authenticated-user-token': accessToken,
+        'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        'internal-access-token': config.get(environment, 'internal-access-token'),
+        'Content-Type': 'application/json'
+
+
+    }
+
+    if str(projectLevelEvidance).strip().lower() == "yes":
+      payload = {
+
+            "criteria": {
+                "validationText": "Complete validation message",
+                "expression": "",
+                                "conditions": {
+                                    "C1": {
+                                        "validationText": "Submit your project.",
+                                        "expression": "C1",
+                                        "conditions": {
+                                            "C1": {
+                                                "scope": "project",
+                                                "key": "status",
+                                                "operator": "==",
+                                                "value": "submitted"
+                                            }
+                                        }
+                                    },
+                                    "C2": {
+                                        "validationText": "",
+                                        "expression": "C1",
+                                        "conditions": {
+                                            "C1": {
+                                                "scope": "project",
+                                                "key": "attachments",
+                                                "function": "count",
+                                                "filter": {
+                                                    "key": "type",
+                                                    "value": "all"
+                                                },
+                                                "operator": ">=",
+                                                "value": ""
+                                            }
+                                        }
+                                    },
+
+                                }
+            },
+            "issuer": {
+                "name": ""
+            },
+            "status": "active",
+            "solutionId": solutionId,
+            "programId": programID,
+            "baseTemplateId": ""
+
+    }
+    elif str(projectLevelEvidance).strip().lower() == "no":
+
+      payload={
+    "criteria": {
+        "validationText": "Complete validation message",
+        "expression": "",
+        "conditions": {
+            "C1": {
+                "validationText": "Submit your project.",
+                "expression": "C1",
+                "conditions": {
+                    "C1": {
+                        "scope": "project",
+                        "key": "status",
+                        "operator": "==",
+                        "value": "submitted"
+                    }
+                }
+            }
+        }
+    },
+    "issuer": {
+        "name": ""
+        },
+        "status": "active",
+        "solutionId": solutionId,
+        "programId": programID,
+        "baseTemplateId": ""
+        
+    
+}
+
+
+
+    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
+    projectsheetforcertificate = wbproject.sheet_names()
+    for prosheet in projectsheetforcertificate:
+        if prosheet.strip().lower() == 'Project upload'.lower():
+            # print("something in certificate")
+            detailsColCheck = wbproject.sheet_by_name(prosheet)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+
+            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                # print(dictDetailsEnv)
+                # sys.exit()
+                dictDetailsEnv = {
+                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                    for
+                    col_index_env in range(detailsEnvSheet.ncols)}
+                # print(keysEnv)
+                # print(detailsEnvSheet)
+                
+                projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
+                
+                if projectLevelEvidance == "Yes":
+                    if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
+                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        projectminnoofEvidence = "Add 1  evidences at the project level"
+                    elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
+                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        projectminnoofEvidence = "Add  evidences at the project level"
+                    else:
+                        intProjectMinNOofEvidence = int(projectMinNooEvide)
+                        projectminnoofEvidence = f"Add {intProjectMinNOofEvidence}  evidences at the project level"
+                        print(projectminnoofEvidence)
+                # sys.exit()
+                    payload["criteria"]["conditions"]["C2"]["validationText"] = projectminnoofEvidence
+                # print(projectminnoofEvidence)
+                # payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = projectminnoofEvidence
+                    if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
+                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = 1
+                    elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
+                           dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                           payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = ""
+
+                    else:
+                        payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = projectMinNooEvide
+                else:
+                    continue
+                    
+                # print(Minsob)
+        if prosheet.strip().lower() == 'Certificate details'.lower():
+            print("--->Checking Certificate details  sheet...")
+            detailsColCheck = wbproject.sheet_by_name(prosheet)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+            # print(keysColCheckDetai)
+            # print(certificateCols)
+
+            # terminatingMessage('Columns is missing in certificate details sheet')
+            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                # print(dictDetailsEnv)
+                # sys.exit()
+                dictDetailsEnv = {
+                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                    for
+                    col_index_env in range(detailsEnvSheet.ncols)}
+                certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv[
+                    'Certificate issuer'] else terminatingMessage(
+                    "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
+                payload["issuer"]["name"] = certificateissuer
+                # print(certificateissuer)
+                Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in [
+                    "One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature",
+                    "Two Logo - Two Signature"] else terminatingMessage(
+                    "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
+
+                if environment == 'pre-prod':
+                  if Typeofcertificate == "One Logo - One Signature":
+                      payload["baseTemplateId"] = "63f345b25d10260008d69ef5"
+
+                  elif Typeofcertificate == "One Logo - Two Signature":
+                       payload["baseTemplateId"] = "63f3464c53ce80000893706d"
+
+                  elif Typeofcertificate == "Two Logo - One Signature":
+                       payload["baseTemplateId"] = "63f3461053ce800008937069"
+
+                  elif Typeofcertificate == "Two Logo - Two Signature":
+                      payload["baseTemplateId"] = "63f3468053ce80000893706f"
+
+                elif environment == 'production-with-vpn':
+                    if Typeofcertificate == "One Logo - One Signature":
+                        payload["baseTemplateId"] = "6411ce7280b5f300083c9477"
+
+                    elif Typeofcertificate == "One Logo - Two Signature":
+                        payload["baseTemplateId"] = "6418058680b5f300083df8dd"
+
+                    elif Typeofcertificate == "Two Logo - One Signature":
+                        payload["baseTemplateId"] = "641848d280b5f300083e05d5"
+
+                    elif Typeofcertificate == "Two Logo - Two Signature":
+                        payload["baseTemplateId"] = "64184da580b5f300083e0656"
+
+                elif environment == 'staging':
+                    # sys.exit()
+                    if Typeofcertificate == "One Logo - One Signature":
+                        payload["baseTemplateId"] = "641d5c3fad848b0008fd7a4d"
+
+                    elif Typeofcertificate == "One Logo - Two Signature":
+                        payload["baseTemplateId"] = "641d5c7dad848b0008fd7a54"
+
+                    elif Typeofcertificate == "Two Logo - One Signature":
+                        payload["baseTemplateId"] = "641d5c5fad848b0008fd7a52"
+
+                    elif Typeofcertificate == "Two Logo - Two Signature":
+                        payload["baseTemplateId"] = "641d5c94ad848b0008fd7a56"
+
+                # sys.exit()
+
+                # sys.exit()
+
+
+    projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r')
+    projectInternalfile = csv.DictReader(projectInternalfile)
+    for projectInternal in projectInternalfile:
+        projectExternalId = projectInternal["externalId"]
+        project_id = projectInternal["_SYSTEM_ID"]
+        # payload[]
+    taskinternalfile = open(projectName_for_folder_path + '/taskUpload/taskInternal.csv', mode='r')
+    taskinternalfile = csv.DictReader(taskinternalfile)
+    projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
+    projectTemplatefile = csv.DictReader(projectTemplatefile)
+    for Projecttemp in projectTemplatefile:
+        projectTemplateId = Projecttemp["duplicateTemplate_id"]
+    # tasklevelevidece = dictDetailsEnv['Task Level Evidence']
+    # taskminnoofevidence = dictDetailsEnv['Minimum No. of Evidence']
+    # print(taskminnoofevidence)
+
+    # sys.exit()
+    c = 2
+    for task in taskinternalfile:
+        # print(task)
+        hasAparent = task["hasAParentTask"]
+        if hasAparent == "NO":
+           task_id = task["_SYSTEM_ID"]
+           # print(task_id)
+
+
+           c = c + 1
+           cn = "C"+str(c)
+           taskconditions = {cn: {
+           "validationText": "",
+           "expression": "C1",
+           "conditions": {
+               "C1": {
+                   "scope": "task",
+                   "key": "attachments",
+                   "function": "count",
+                   "filter": {
+                       "key": "type",
+                       "value": "all"
+                   },
+                   "operator": ">=",
+                   "value": "",
+                   "taskDetails": [
+                               task_id
+                   ]
+               }
+           }
+    }
+}
+           payload["criteria"]["conditions"].update(taskconditions)
+
+
+
+    # print(payload)
+    wbproject1 = xlrd.open_workbook(filePathAddProject, on_demand=True)
+    projectsheetforcertificate = wbproject.sheet_names()
+    for prosheet1 in projectsheetforcertificate:
+        if prosheet1.strip().lower() == 'Tasks upload'.lower():
+            print("--->Checking Tasks upload sheet...")
+
+            detailsColCheck = wbproject1.sheet_by_name(prosheet1)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+            # print(keysColCheckDetai)
+            # print(taskUploadCols)
+            # if len(keysColCheckDetai) != len(taskUploadCols) or set(keysColCheckDetai) == set(taskUploadCols):
+            #     terminatingMessage('Columns is missing in details sheet')
+            detailsEnvSheet = wbproject1.sheet_by_name(prosheet1)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            c = 2
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                                  for
+                                  col_index_env in range(detailsEnvSheet.ncols)}
+                taskminnoofEvidence = dictDetailsEnv["Minimum No. of Evidence"]
+                taskname = dictDetailsEnv['TaskTitle']
+                tasklevelevidece = dictDetailsEnv['Task Level Evidence']
+                
+                c = c + 1
+                cn = "C" + str(c)
+                # print("cn", cn)
+                if tasklevelevidece == "Yes":
+                    if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(
+                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        taskvalidationminnoofEvidence = f"Add  1  evidences for the task {taskname}"
+                    elif str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "no" and str(
+                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        taskvalidationminnoofEvidence = f"Add evidences for task {taskname}"
+                    else:
+                        intTaskMinNOofEvidence = int(taskminnoofEvidence)
+                        taskvalidationminnoofEvidence = f"Add {intTaskMinNOofEvidence}  evidences for the task  {taskname} "
+                        print(projectminnoofEvidence)
+                # sys.exit()
+                    payload["criteria"]["conditions"][cn]["validationText"] = taskvalidationminnoofEvidence
+                    # print(taskvalidationminnoofEvidence)
+
+                    # print(dictDetailsEnv['Task Level Evidence'])
+                    if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes":
+                        # print(dictDetailsEnv['Task Level Evidence'])
+                        # print(taskminnoofEvidence)
+                    # print(cn)
+
+                        if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                            payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = 1
+                        elif str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "no" and str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                            payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = ""
+                        else:
+                            payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = taskminnoofEvidence
+                else:
+                    continue
+                
+
+    condition = ""
+    for a, i in enumerate(payload["criteria"]["conditions"]):
+        if a == 0:
+            condition = condition + str(i)
+        else:
+            condition = condition + "&&" + str(i)
+    # print(condition)
+    payload["criteria"]["expression"] = condition
+    # print(payload)
+
+    # sys.exit()
+    # print(json.dumps(payload, indent=1))
+    responseaddcertificateUploadApi = requests.request("POST",url=urladdcertificate, headers=headeraddcertificateApi,
+                                           data=json.dumps(payload))
+    # print(responseaddcertificateUploadApi.json())
+    # sys.exit()
+    messageArr = ["Add certificate json is prepared",
+                  "File path : " + projectName_for_folder_path + '/Add certificate/Addcertificate.text']
+    messageArr.append("URL : " + str(responseaddcertificateUploadApi))
+    messageArr.append("Upload status code : " + str(responseaddcertificateUploadApi.status_code))
+    createAPILog(projectName_for_folder_path, messageArr)
+    with open(projectName_for_folder_path + '/Add certificate/Addcertificatejson.json',
+              'w+') as tasksRes:
+        tasksRes.write(json.dumps(payload))
+    # print("Tasks are uploaded successfully")
+
+    # if responseaddcertificateUploadApi.status_code == 200:
+        # successLogger.debug('CriteriaUploadApi Success')
+    if responseaddcertificateUploadApi.status_code == 200:
+        responseaddcetificate = responseaddcertificateUploadApi.json()
+        certificatetemplateid = responseaddcetificate['result']['id']
+        print("-->Certificate template id generated <--", certificatetemplateid)
+       
+
+        with open(projectName_for_folder_path + '/Add certificate/Addcertificate.text',
+                  'w+') as tasksRes:
+            tasksRes.write(responseaddcertificateUploadApi.text)
+    # return responseaddcertificateUploadApi['result']['id']
+    else:
+        print("Add certificate mission failed please check logs")
+        messageArr.append("Response : " + str(responseaddcertificateUploadApi.text))
+        createAPILog(projectName_for_folder_path, messageArr)
+        sys.exit()
+
+    urluploadcertificatepi = config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
+    # print(certificatetemplateid)
+    headeruploadcertificateApi = {
+        'Authorization': config.get(environment, 'Authorization'),
+        'X-authenticated-user-token': accessToken,
+        'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        'internal-access-token': config.get(environment, 'internal-access-token')
+    }
+    task_payload = {}
+    task_file = []
+    certificateaddtotemplate = ('file', ( 'Dowloaded.svg',open(projectName_for_folder_path + '/Dowloadedsvg/Dowloaded.svg', 'rb'), 'image/svg+xml'))
+    task_file.append(certificateaddtotemplate)
+
+
+    responseTasksUploadApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,
+                                           data=task_payload,
+                                           files=task_file)
+    if responseTasksUploadApi.status_code == 200:
+        # print(responseTasksUploadApi.json())
+        responseeditsvg = responseTasksUploadApi.json()
+        svgid = responseeditsvg['result']['data']['templateId']
+        # print(svgid)
+
+        urlsolutionupdateapi = config.get(environment, 'updatecertificatesolu') + solutionId
+        # print(solutionId)
+        # print(urlsolutionupdateapi)
+        headersolutionupdateApi = {
+            'Authorization': config.get(environment, 'Authorization'),
+            'X-authenticated-user-token': accessToken,
+            'X-Channel-id': config.get(environment, 'X-Channel-id'),
+            'internal-access-token': config.get(environment, 'internal-access-token'),
+            'Content-Type': 'application/json'
+        }
+
+        certificate_payload = json.dumps({
+            'certificateTemplateId':certificatetemplateid
+        })
+        responseupdatecertificateApi = requests.request("POST", url=urlsolutionupdateapi,
+                                                  headers=headersolutionupdateApi,
+                                                  data=certificate_payload)
+
+
+        if responseupdatecertificateApi.status_code == 200:
+            print(responseupdatecertificateApi)
+
+        else:
+            print("error in updating solution")
+            sys.exit()
+
+        urlprojecttemplateapi = config.get(environment, 'updateprojecttemplate') + projectTemplateId
+        # print(project_id)
+        # print(urlprojecttemplateapi)
+        headerprojectrtemplateupdateApi = {
+            'Authorization': config.get(environment, 'Authorization'),
+            'X-authenticated-user-token': accessToken,
+            'X-Channel-id': config.get(environment, 'X-Channel-id'),
+            'internal-access-token': config.get(environment, 'internal-access-token'),
+            'Content-Type': 'application/json'
+        }
+
+        certificate_payload = json.dumps({
+            'certificateTemplateId': certificatetemplateid
+        })
+        responseupdatecertificateApi = requests.request("POST", url=urlprojecttemplateapi,
+                                                        headers=headerprojectrtemplateupdateApi,
+                                                        data=certificate_payload)
+        if responseupdatecertificateApi.status_code == 200:
+            print(responseupdatecertificateApi.json())
+
+        else:
+            print("error in updating certificate with project")
+            sys.exit()
+
+
+
+
+
+        # json_object = json.loads(responseTasksUploadApi)
+        # print(json.dumps(json_object, indent=1))
+
+
+def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
+
+    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
+    projectsheetforcertificate = wbproject.sheet_names()
+    for prosheet in projectsheetforcertificate:
+        if prosheet.strip().lower() == 'Certificate details'.lower():
+            print("--->Checking Certificate details  sheet...")
+            detailsColCheck = wbproject.sheet_by_name(prosheet)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+
+            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                # print(dictDetailsEnv)
+                # sys.exit()
+                dictDetailsEnv = {
+                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                    for
+                    col_index_env in range(detailsEnvSheet.ncols)}
+                certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv[
+                    'Certificate issuer'] else terminatingMessage(
+                    "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
+                # payload['issuer']['name'] = certificateissuer
+                # print(certificateissuer)
+                Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in [
+                    "One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature",
+                    "Two Logo - Two Signature"] else terminatingMessage(
+                    "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
+                Certificateisuuer = dictDetailsEnv['Certificate issuer']
+                # print(Certificateisuuer)
+                Logo1 = dictDetailsEnv['Logo - 1']
+                authsignaturelogo1 = dictDetailsEnv['Authorised Signature Image - 1']
+                authrigedsignaturename1 = dictDetailsEnv['Authorised Signature Name - 1']
+                authrigeddesignation1 = dictDetailsEnv['Authorised Designation - 1']
+                authrigedlogo2 = dictDetailsEnv['Authorised Signature Image - 2']
+                authrigedsignaturename2 = dictDetailsEnv['Authorised Signature Name - 2']
+                authrigeddesignation2 = dictDetailsEnv['Authorised Designation - 2']
+
+                payload = {}
+                downloadedfiles = []
+                baseTemplateId = ''
+                if Typeofcertificate == 'One Logo - One Signature':
+                    print("-->This is One Logo - One Signature<--")
+
+                    # sys.exit()
+                    stateLogo1 = ('stateLogo1',('logo1.jpg',open(projectName_for_folder_path +'/Logofile/logo1.jpg' ,'rb'),'image/jpeg'))
+                    downloadedfiles.append(stateLogo1)
+
+                    print(downloadedfiles)
+                    # sys.exit()
+                    payload['stateTitle'] = Certificateisuuer
+                    signatureImg1 = ('signatureImg1',('signature1.jpg',open(projectName_for_folder_path +'/Logofile/signature1.jpg','rb'),'image/jpeg'))
+                    downloadedfiles.append(signatureImg1)
+                    payload['signatureTitleName1'] = authrigedsignaturename1
+                    payload['signatureTitleDesignation1'] = authrigeddesignation1
+                    if environment == 'pre-prod':
+                        baseTemplateId = '63f345b25d10260008d69ef5'
+                    elif environment == 'production-with-vpn':
+                        baseTemplateId = '6411ce7280b5f300083c9477'
+                    elif environment == 'staging':
+                        baseTemplateId = '641d5c3fad848b0008fd7a4d'
+
+                elif Typeofcertificate == 'One Logo - Two Signature':
+                    print("-->This is One Logo - Two Signature<--")
+
+                    stateLogo1 = ('stateLogo1', (
+                    'logo1.jpg', open(projectName_for_folder_path + '/Logofile/logo1.jpg', 'rb'), 'image/jpeg'))
+                    downloadedfiles.append(stateLogo1)
+                    payload['stateTitle'] = Certificateisuuer
+                    signatureImg1 = ('signatureImg1', (
+                    'signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),
+                    'image/jpeg'))
+                    downloadedfiles.append(signatureImg1)
+                    signatureImg2 = ('signatureImg2', (
+                        'signature2.jpg', open(projectName_for_folder_path + '/Logofile/signature2.jpg', 'rb'),
+                        'image/jpeg'))
+                    downloadedfiles.append(signatureImg2)
+                    payload['signatureTitleName1'] = authrigedsignaturename1
+                    payload['signatureTitleDesignation1'] = authrigeddesignation1
+                    payload['signatureTitleName2'] = authrigedsignaturename2
+                    payload['signatureTitleDesignation2'] = authrigeddesignation2
+                    if environment == 'pre-prod':
+                        baseTemplateId = '63f3464c53ce80000893706d'
+                    elif environment == 'production-with-vpn':
+                        baseTemplateId = '6418058680b5f300083df8dd'
+                    elif environment == 'staging':
+                        baseTemplateId = '641d5c7dad848b0008fd7a54'
+
+                elif Typeofcertificate == 'Two Logo - One Signature':
+                    print("-->This is Two Logo - One Signature<--")
+                    stateLogo1 = ('stateLogo1', (
+                        'logo1.jpg', open(projectName_for_folder_path + '/Logofile/logo1.jpg', 'rb'), 'image/jpeg'))
+                    downloadedfiles.append(stateLogo1)
+                    payload['stateTitle'] = Certificateisuuer
+                    signatureImg1 = ('signatureImg1', (
+                        'signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),
+                        'image/jpeg'))
+                    downloadedfiles.append(signatureImg1)
+                    stateLogo2 = ('stateLogo2', (
+                        'logo2.jpg', open(projectName_for_folder_path + '/Logofile/logo2.jpg', 'rb'), 'image/jpeg'))
+                    downloadedfiles.append(stateLogo2)
+                    payload['signatureTitleName1'] = authrigedsignaturename1
+                    payload['signatureTitleDesignation1'] = authrigeddesignation1
+                    if environment == 'pre-prod':
+                        baseTemplateId = '63f3461053ce800008937069'
+                    elif environment == 'production-with-vpn':
+                        baseTemplateId = '641848d280b5f300083e05d5'
+                    elif environment == 'staging':
+                        baseTemplateId = '641d5c5fad848b0008fd7a52'
+
+                elif Typeofcertificate == 'Two Logo - Two Signature':
+                    print("-->This is Two Logo - Two Signature<--")
+                    stateLogo1 = ('stateLogo1', (
+                        'logo1.jpg', open(projectName_for_folder_path + '/Logofile/logo1.jpg', 'rb'), 'image/jpeg'))
+                    downloadedfiles.append(stateLogo1)
+                    payload['stateTitle'] = Certificateisuuer
+                    signatureImg1 = ('signatureImg1', (
+                        'signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),
+                        'image/jpeg'))
+                    downloadedfiles.append(signatureImg1)
+                    stateLogo2 = ('stateLogo2', (
+                        'logo2.jpg', open(projectName_for_folder_path + '/Logofile/logo2.jpg', 'rb'), 'image/jpeg'))
+                    downloadedfiles.append(stateLogo2)
+                    signatureImg2 = ('signatureImg2', (
+                        'signature2.jpg', open(projectName_for_folder_path + '/Logofile/signature2.jpg', 'rb'),
+                        'image/jpeg'))
+                    downloadedfiles.append(signatureImg2)
+                    payload['signatureTitleName1'] = authrigedsignaturename1
+                    payload['signatureTitleDesignation1'] = authrigeddesignation1
+                    payload['signatureTitleName2'] = authrigedsignaturename2
+                    payload['signatureTitleDesignation2'] = authrigeddesignation2
+                    if environment == 'pre-prod':
+                        baseTemplateId = '63f3468053ce80000893706f'
+                    elif environment == 'production-with-vpn':
+                        baseTemplateId = '64184da580b5f300083e0656'
+                    elif environment == 'staging':
+                        baseTemplateId = '641d5c94ad848b0008fd7a56'
+
+                # print(payload)
+                # print(downloadedfiles)
+                # print(baseTemplateId)
+
+                urleditnigsvgApi = config.get(environment, 'editsvgtemp') + baseTemplateId
+                headereditingsvgApi = {
+                    'Authorization': config.get(environment, 'Authorization'),
+                    'X-authenticated-user-token': accessToken,
+                    'X-Channel-id': config.get(environment, 'X-Channel-id'),
+                    'internal-access-token': config.get(environment, 'internal-access-token')
+
+                }
+                responseeditsvg = requests.request("POST",url=urleditnigsvgApi, headers=headereditingsvgApi,
+                                                data=payload, files=downloadedfiles)
+
+                if responseeditsvg.status_code == 200:
+                    responseeditsvg = responseeditsvg.json()
+                    svgid = responseeditsvg['result']['url']
+                    # print(svgid)
+                    filesvg = svgid
+                    Logofilepath = projectName_for_folder_path + '/Dowloadedsvg/'
+                    if not os.path.exists(Logofilepath):
+                        os.mkdir(Logofilepath)
+                    dest_file = Logofilepath + 'Dowloaded.svg'
+                    Logofile1 = gdown.download(filesvg, dest_file, quiet=False)
+
+                else:
+                    print("-->Error in downloading SVG file please check logs<--")
+
 def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, listOfFoundRoles, accessToken):
     SolutionFilePath = projectName_for_folder_path + '/solutionDetails/'
     if not os.path.exists(SolutionFilePath):
@@ -4322,7 +4978,7 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
                 certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv[
                     'Certificate issuer'] else terminatingMessage(
                     "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
-                print(certificateissuer)
+                # print(certificateissuer)
                 typeOfCertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv[
                     'Type of certificate'] else terminatingMessage(
                     "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
@@ -4330,167 +4986,149 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
                 if typeOfCertificate == 'One Logo - One Signature':
                    Logo1 = dictDetailsEnv['Logo - 1']
                    logo_split = str(Logo1).split('/')[5]
-                   print(logo_split)
+                #    print(logo_split)
 
                    file_url = 'https://drive.google.com/uc?export=download&id='+logo_split
-                   print("file_url")
-                   print(file_url)
+                
                    Logofilepath = projectName_for_folder_path + '/Logofile/'
                    if not os.path.exists(Logofilepath):
                        os.mkdir(Logofilepath)
                    dest_file = Logofilepath + '/logo1.jpg'
                    Logofile1 = gdown.download(file_url, dest_file,quiet=False)
-                   print(Logofile1)
-                   print("sdfsdffg")
+                
 
                    Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
                    logo_split = str(Authsign1).split('/')[5]
-                   print(logo_split)
+                #    print(logo_split)
 
                    file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                   print("file_url")
-                   print(file_url)
+               
 
                    dest_file = Logofilepath + '/signature1.jpg'
                    signature1 = gdown.download(file_url, dest_file, quiet=False)
-                   print(signature1)
+                #    print(signature1)
 
                 elif typeOfCertificate == 'One Logo - Two Signature':
 
                     Logo1 = dictDetailsEnv['Logo - 1']
                     logo_split = str(Logo1).split('/')[5]
-                    print(logo_split)
+                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                   
                     Logofilepath = projectName_for_folder_path + '/Logofile/'
                     if not os.path.exists(Logofilepath):
                         os.mkdir(Logofilepath)
                     dest_file = Logofilepath + '/logo1.jpg'
                     Logofile1 = gdown.download(file_url, dest_file, quiet=False)
-                    print(Logofile1)
-                    print("sdfsdffg")
+                    
 
                     Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
                     logo_split = str(Authsign1).split('/')[5]
-                    print(logo_split)
+                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/signature1.jpg'
                     signature1 = gdown.download(file_url, dest_file, quiet=False)
-                    print(signature1)
+                    # print(signature1)
 
                     Authsign2 = dictDetailsEnv['Authorised Signature Image - 2']
                     logo_split = str(Authsign1).split('/')[5]
-                    print(logo_split)
+                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/signature2.jpg'
                     signature2 = gdown.download(file_url, dest_file, quiet=False)
-                    print(signature2)
+                    # print(signature2)
 
                 elif typeOfCertificate == 'Two Logo - One Signature':
 
                     Logo1 = dictDetailsEnv['Logo - 1']
                     logo_split = str(Logo1).split('/')[5]
-                    print(logo_split)
+                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
                     Logofilepath = projectName_for_folder_path + '/Logofile/'
                     if not os.path.exists(Logofilepath):
                         os.mkdir(Logofilepath)
                     dest_file = Logofilepath + '/logo1.jpg'
                     Logofile1 = gdown.download(file_url, dest_file, quiet=False)
-                    print(Logofile1)
-                    print("sdfsdffg")
+                    
 
                     Logo2 = dictDetailsEnv['Logo - 2']
                     logo_split = str(Logo2).split('/')[5]
-                    print(logo_split)
+                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/logo2.jpg'
                     Logofile2 = gdown.download(file_url, dest_file, quiet=False)
-                    print(Logofile2)
-                    print("sdfsdffg")
+                   
 
                     Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
                     logo_split = str(Authsign1).split('/')[5]
-                    print(logo_split)
+                    
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/signature1.jpg'
                     signature1 = gdown.download(file_url, dest_file, quiet=False)
-                    print(signature1)
+                    
 
                 elif typeOfCertificate == 'Two Logo - Two Signature':
 
                     Logo1 = dictDetailsEnv['Logo - 1']
                     logo_split = str(Logo1).split('/')[5]
-                    print(logo_split)
+                    
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
                     Logofilepath = projectName_for_folder_path + '/Logofile/'
                     if not os.path.exists(Logofilepath):
                         os.mkdir(Logofilepath)
                     dest_file = Logofilepath + '/logo1.jpg'
                     Logofile1 = gdown.download(file_url, dest_file, quiet=False)
-                    print(Logofile1)
-                    print("sdfsdffg")
+                    
 
                     Logo2 = dictDetailsEnv['Logo - 2']
                     logo_split = str(Logo2).split('/')[5]
-                    print(logo_split)
+                   
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/logo2.jpg'
                     Logofile2 = gdown.download(file_url, dest_file, quiet=False)
-                    print(Logofile2)
-                    print("sdfsdffg")
+                    
 
                     Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
                     logo_split = str(Authsign1).split('/')[5]
-                    print(logo_split)
+                    
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/signature1.jpg'
                     signature1 = gdown.download(file_url, dest_file, quiet=False)
-                    print(signature1)
+                    
 
                     Authsign2 = dictDetailsEnv['Authorised Signature Image - 2']
                     logo_split = str(Authsign1).split('/')[5]
-                    print(logo_split)
+                    
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    print("file_url")
-                    print(file_url)
+                    
 
                     dest_file = Logofilepath + '/signature2.jpg'
                     signature2 = gdown.download(file_url, dest_file, quiet=False)
-                    print(signature2)
+                   
 
 
 
