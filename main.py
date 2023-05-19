@@ -116,7 +116,7 @@ def courseMapToProgram(accessToken, courseLink, parentFolder):
 #     getDo = courseLink.split("/do_")
 #     cleanDo = getDo[1].split("/")
 #     # content read url
-#     ReadCourseURL = config.get(environment, 'readCourseURL') + "do_" + str(cleanDo[0])
+#     ReadCourseURL = config.get(environment, 'host') + config.get(environment, 'readCourseURL') + "do_" + str(cleanDo[0])
 #     # content read payload 
 #     payload = {}
 #     # content read headers
@@ -145,7 +145,7 @@ def courseMapToProgram(accessToken, courseLink, parentFolder):
 #         createAPILog(parentFolder, messageArr)
 
 #         # course solution creation  
-#         PGM_COURSE_MAPPINGurl = config.get(environment, 'courseProgramMapping')
+#         PGM_COURSE_MAPPINGurl = config.get(environment, 'host') + config.get(environment, 'courseProgramMapping')
 
 #         # course solution payload
 #         payload = json.dumps({
@@ -189,7 +189,7 @@ def courseMapToProgram(accessToken, courseLink, parentFolder):
 
 def checkIfObsMappedToProgram(accessToken, obsExt, parentFolder):
     # fetch observation solution details API end points 
-    fetchSolutionDetailsURL = config.get(environment,'fetchSolutionDetails') + "observation&page=1&limit=10&search=" + str(obsExt)
+    fetchSolutionDetailsURL = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "observation&page=1&limit=10&search=" + str(obsExt)
     # fetch observation solution details payload
     payload = {}
     # fetch observation solution header
@@ -207,7 +207,7 @@ def checkIfObsMappedToProgram(accessToken, obsExt, parentFolder):
 
         # iterate through each _id of solution and fetch the solution dump 
         for eachSol in responseSearchSol['result']['data']:
-            fetchSolutionDumpURL = config.get(environment, 'fetchSolutionDump') + eachSol['_id']
+            fetchSolutionDumpURL = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDump') + eachSol['_id']
             headersSolutionDumpURL = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + config.get(environment, 'Authorization'),
@@ -232,7 +232,7 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
     messageArr = []
     messageArr.append("++++++++++++ Program Creation ++++++++++++")
     # program creation url 
-    programCreationurl = config.get(environment, 'programCreationurl')
+    programCreationurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'programCreationurl')
     messageArr.append("Program Creation URL : " + programCreationurl)
     # program creation payload
     payload = json.dumps({
@@ -400,7 +400,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
 # this function is used for call the api and map the pdpm roles which we created
 def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
-    urlpdpmapi = config.get(environment, 'Pdpmurl')
+    urlpdpmapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'Pdpmurl')
     headerpdpmApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -644,12 +644,12 @@ def envCheck():
 def generateAccessToken(solutionName_for_folder_path):
     # production search user api - start
     headerKeyClockUser = {'Content-Type': config.get(environment, 'keyclockAPIContent-Type')}
-    keyclockAPIBody = "client_id=lms&client_secret=80ea98b5-f8a3-4745-8994-8bf41d75642e&grant_type=client_credentials&scope=offline_access"
-    responseKeyClockUser = requests.post(url=config.get(environment, 'keyclockAPIUrl'), headers=headerKeyClockUser,
+    
+    responseKeyClockUser = requests.post(url=config.get(environment, 'host') + config.get(environment, 'keyclockAPIUrl'), headers=headerKeyClockUser,
                                          data=config.get(environment, 'keyclockAPIBody'))
     messageArr = []
     messageArr.append("URL : " + str(config.get(environment, 'keyclockAPIUrl')))
-    messageArr.append("Body : " + str(keyclockAPIBody))
+    messageArr.append("Body : " + str(config.get(environment, 'keyclockAPIBody')))
     messageArr.append("Status Code : " + str(responseKeyClockUser.status_code))
     if responseKeyClockUser.status_code == 200:
         responseKeyClockUser = responseKeyClockUser.json()
@@ -659,8 +659,8 @@ def generateAccessToken(solutionName_for_folder_path):
         fileheader = ["Access Token","Access Token succesfully genarated","Passed"]
         apicheckslog(solutionName_for_folder_path,fileheader)
         print("--->Access Token Generated!")
-        # sys.exit()
         return accessTokenUser
+    
     print("Error in generating Access token")
     print("Status code : " + str(responseKeyClockUser.status_code))
     createAPILog(solutionName_for_folder_path, messageArr)
@@ -674,7 +674,7 @@ def generateAccessToken(solutionName_for_folder_path):
 def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp):
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
-    programUrl = config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
+    programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
@@ -793,7 +793,7 @@ def checkEmailValidation(email):
 
 # Fetch user details 
 def fetchUserDetails(environment, accessToken, dikshaId):
-    url = config.get(environment, 'userInfoApiUrl')
+    url = config.get(environment, 'host') + config.get(environment, 'userInfoApiUrl')
     messageArr = ["User search API called."]
     headers = {'Content-Type': 'application/json',
                'Authorization': config.get(environment, 'AuthorizationForHost'),
@@ -827,7 +827,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
 
 # fetch org Ids 
 def fetchOrgId(environment, accessToken, parentFolder, OrgName):
-    url = config.get(environment, 'fetchOrgDetails')
+    url = config.get(environment, 'host') + config.get(environment, 'fetchOrgDetails')
     messageArr = ["Org search API called."]
     headers = {'Content-Type': 'application/json',
                'Authorization': config.get(environment, 'Authorization'),
@@ -887,7 +887,7 @@ def terminatingMessage(msg):
 
 
 def fetchEntityId(solutionName_for_folder_path, accessToken, entitiesNameList, scopeEntityType):
-    urlFetchEntityListApi = config.get(environment, 'searchForLocation')
+    urlFetchEntityListApi = config.get(environment, 'host')+config.get(environment, 'searchForLocation')
     headerFetchEntityListApi = {
         'Content-Type': config.get(environment, 'Content-Type'),
         'Authorization': config.get(environment, 'AuthorizationForHost'),
@@ -938,7 +938,7 @@ def fetchEntityId(solutionName_for_folder_path, accessToken, entitiesNameList, s
         terminatingMessage("---> Error in location search.")
 
 def fetchScopeRole(solutionName_for_folder_path, accessToken, roleNameList):
-    urlFetchRolesListApi = config.get(environment, 'listOfRolesApi')
+    urlFetchRolesListApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'listOfRolesApi')
     headerFetchRolesListApi = {
         'Content-Type': config.get(environment, 'Content-Type'),
         'Authorization': config.get(environment, 'Authorization'),
@@ -1689,7 +1689,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
                     writerCriteriaUpload.writeheader()
                 writerCriteriaUpload.writerow(dictCriteria)
 
-    urlCriteriaUploadApi = config.get(environment, 'criteriaUploadApiUrl')
+    urlCriteriaUploadApi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'criteriaUploadApiUrl')
     headerCriteriaUploadApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -1846,7 +1846,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
     frameworkDocInsertObj['license']['licenseDetails']['url'] = "https://creativecommons.org/licenses/by/4.0/legalcode"
     frameworkDocInsertObj['license']['licenseDetails']['description'] = "For details see below:"
  
-    urlCreateFrameworkApi = config.get(environment, 'frameworkCreationApi')
+    urlCreateFrameworkApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'frameworkCreationApi')
     frameworkFilePath = solutionName_for_folder_path + '/framework/'
     file_exists_framework = os.path.isfile(solutionName_for_folder_path + '/framework/uploadFile.json')
     if not os.path.exists(frameworkFilePath):
@@ -1930,7 +1930,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
                     writerthemeUpload.writeheader()
                 writerthemeUpload.writerow(themesUploadCsv)
 
-    urlThemesUploadApi = config.get(environment, 'themeUploadApiUrl') + frameworkExternalId
+    urlThemesUploadApi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'themeUploadApiUrl') + frameworkExternalId
     headerThemesUploadApi = {'Authorization': config.get(environment, 'Authorization'),
                              'X-authenticated-user-token': accessToken,
                              'X-Channel-id': config.get(environment, 'X-Channel-id')}
@@ -1952,7 +1952,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
 
 
 def createSolutionFromFramework(solutionName_for_folder_path, accessToken, frameworkExternalId):
-    urlCreateSolutionApi = config.get(environment, 'solutionCreationApiUrl')
+    urlCreateSolutionApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'solutionCreationApiUrl')
     headerCreateSolutionApi = {
         'Content-Type': config.get(environment, 'Content-Type'),
         'Authorization': config.get(environment, 'Authorization'),
@@ -1983,7 +1983,7 @@ def createSolutionFromFramework(solutionName_for_folder_path, accessToken, frame
 
 
 def solutionUpdate(solutionName_for_folder_path, accessToken, solutionId, bodySolutionUpdate):
-    solutionUpdateApi = config.get(environment, 'solutionUpdateApi') + str(solutionId)
+    solutionUpdateApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'solutionUpdateApi') + str(solutionId)
     headerUpdateSolutionApi = {'Content-Type': 'application/json',
                                'Authorization': config.get(environment, 'Authorization'),
                                'X-authenticated-user-token': accessToken,
@@ -2723,7 +2723,7 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
     bodySolutionUpdate = {"questionSequenceByEcm": questionSeqByEcmDict}
     solutionUpdate(solutionName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
 
-    urlQuestionsUploadApi = config.get(environment, 'questionUploadApiUrl')
+    urlQuestionsUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'questionUploadApiUrl')
     headerQuestionUploadApi = {'Authorization': config.get(environment, 'Authorization'),
                                'X-authenticated-user-token': accessToken,
                                'X-Channel-id': config.get(environment, 'X-Channel-id')}
@@ -2820,8 +2820,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
                 criteriaRubricUpload['L1'] = '0<=SCORE<=100000'
                 writerQuestionUpload.writerow(criteriaRubricUpload)
 
-    urlCriteriaRubricUploadApi = config.get(environment,
-                                            'criteriaRubricUploadApiUrl') + frameworkExternalId + "-OBSERVATION-TEMPLATE"
+    urlCriteriaRubricUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'criteriaRubricUploadApiUrl') + frameworkExternalId + "-OBSERVATION-TEMPLATE"
     headerCriteriaRubricUploadApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -2847,7 +2846,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
 
 
 def fetchSolutionCriteria(solutionName_for_folder_path, observationId, accessToken):
-    url = config.get(environment, 'ferchSolutionCriteria') + observationId
+    url = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'ferchSolutionCriteria') + observationId
 
     headers = {
         'Authorization': config.get(environment, 'Authorization'),
@@ -2924,8 +2923,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
             themeRubricUpload['weightage'] = 1
             themeRubricUpload['L1'] = '0<=SCORE<=100000'
             writerThemeRubricsUpload.writerow(themeRubricUpload)
-    urlThemeRubricUploadApi = config.get(environment,
-                                         'themeRubricUploadApiUrl') + frameworkExternalId + "-OBSERVATION-TEMPLATE"
+    urlThemeRubricUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'themeRubricUploadApiUrl') + frameworkExternalId + "-OBSERVATION-TEMPLATE"
     headerThemeRubricUploadApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -2952,7 +2950,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
 
 def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFile, solutionId, accessToken):
     global solutionRolesArray, solutionStartDate, solutionEndDate
-    urlFetchSolutionApi = config.get(environment, 'fetchSolutionDoc') + solutionId
+    urlFetchSolutionApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solutionId
     headerFetchSolutionApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -3014,7 +3012,7 @@ def prepareProgramSuccessSheet(MainFilePath, solutionName_for_folder_path, progr
     if responseFetchSolutionApi.status_code == 200:
         print('Fetch solution Api Success')
         solutionName = responseFetchSolutionJson["result"]["name"]
-    urlFetchSolutionLinkApi = config.get(environment, 'fetchLink') + solutionId
+    urlFetchSolutionLinkApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchLink') + solutionId
     headerFetchSolutionLinkApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -3207,7 +3205,7 @@ def prepareSuccessSheet(solutionName_for_folder_path, filePathAddObs, observatio
 
 def createChild(solutionName_for_folder_path, observationExternalId, accessToken):
     childObservationExternalId = str(observationExternalId + "_CHILD")
-    urlSol_prog_mapping = config.get(environment,'solutionToprogramMAppingApiUrl') + "?solutionId=" + observationExternalId + "&entityType=" + entityType
+    urlSol_prog_mapping = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'solutionToprogramMAppingApiUrl') + "?solutionId=" + observationExternalId + "&entityType=" + entityType
     
     payloadSol_prog_mapping = {
         "externalId": childObservationExternalId,
@@ -3295,7 +3293,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                             surveySolutionCreationReqBody["endDate"] = ""
                         enDt = surveySolutionCreationReqBody["endDate"]
                         
-                        urlCreateSolutionApi = config.get(environment, 'surveySolutionCreationApiUrl')
+                        urlCreateSolutionApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'surveySolutionCreationApiUrl')
                         headerCreateSolutionApi = {
                             'Content-Type': config.get(environment, 'Content-Type'),
                             'Authorization': config.get(environment, 'Authorization'),
@@ -3317,9 +3315,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                         apicheckslog(parentFolder,fileheader)
                         if responseCreateSolutionApi.status_code == 200:
                             responseCreateSolutionApi = responseCreateSolutionApi.json()
-                            urlSearchSolution = config.get(environment,
-                                                           'fetchSolutionDetails') + "survey&page=1&limit=10&search=" + str(
-                                surveySolutionExternalId)
+                            urlSearchSolution = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "survey&page=1&limit=10&search=" + str(surveySolutionExternalId)
                             responseSearchSolution = requests.request("POST", urlSearchSolution,
                                                                       headers=headerCreateSolutionApi)
                             messageArr = ["********* Search Survey Solution *********", "URL : " + urlSearchSolution,
@@ -3615,7 +3611,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                     writerQuestionUpload.writerow(questionFileObj)
                     # print(questionFileObj)
                 # terminatingMessage("Question")
-            urlQuestionsUploadApi = config.get(environment, 'questionUploadApiUrl')
+            urlQuestionsUploadApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'questionUploadApiUrl')
             headerQuestionUploadApi = {
                 'Authorization': config.get(environment, 'Authorization'),
                 'X-authenticated-user-token': accessToken,
@@ -3637,12 +3633,9 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                 messageArr1 = ["Questions","Question upload Success","Passed",str(responseQuestionUploadApi.status_code)]
                 apicheckslog(parentFolder,messageArr1)
                 # sys.exit()
-                with open(parentFolder + '/questionUpload/uploadInternalIdsSheet.csv', 'w+',
-                          encoding='utf-8') as questionRes:
+                with open(parentFolder + '/questionUpload/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as questionRes:
                     questionRes.write(responseQuestionUploadApi.text)
-                urlImportSoluTemplate = config.get(environment,
-                                                   'importSurveySolutionTemplateUrl') + str(
-                    surveyParentSolutionId) + "?appName=manage-learn"
+                urlImportSoluTemplate = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'importSurveySolutionTemplateUrl') + str(surveyParentSolutionId) + "?appName=manage-learn"
                 headerImportSoluTemplateApi = {
                     'Authorization': config.get(environment, 'Authorization'),
                     'X-authenticated-user-token': accessToken,
@@ -3659,8 +3652,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                     createAPILog(parentFolder, messageArr)
                     responseImportSoluTemplateApi = responseImportSoluTemplateApi.json()
                     solutionIdSuc = responseImportSoluTemplateApi["result"]["solutionId"]
-                    urlSurveyProgramMapping = config.get(environment, "importSurveySolutionToProgramUrl") + str(
-                        solutionIdSuc) + "?programId=" + programExternalId.lstrip().rstrip()
+                    urlSurveyProgramMapping = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, "importSurveySolutionToProgramUrl") + str(solutionIdSuc) + "?programId=" + programExternalId.lstrip().rstrip()
                     headeSurveyProgramMappingApi = {
                         'Authorization': config.get(environment, 'Authorization'),
                         'X-authenticated-user-token': accessToken,
@@ -3716,8 +3708,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
 
 
 def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessToken):
-    searchSolutionurl = config.get(environment,
-                                   'fetchSolutionDetails') + "observation&page=1&limit=100&search=" + solutionNameOrId
+    searchSolutionurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "observation&page=1&limit=100&search=" + solutionNameOrId
 
     searchSolutionpayload = {}
     searchSolutionheaders = {
@@ -4076,7 +4067,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
 
 
 def projectUpload(projectFile, projectName_for_folder_path, accessToken):
-    urlProjectUploadApi = config.get(environment, 'projectUploadApi')
+    urlProjectUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'projectUploadApi')
     headerProjectUploadApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -4114,7 +4105,7 @@ def taskUpload(projectFile, projectName_for_folder_path, accessToken):
         projectExternalId = projectInternal["externalId"]
         project_id = projectInternal["_SYSTEM_ID"]
         if str(project_id).strip() == "Could not pushed to kafka":
-            fetchProjectIdApi = config.get(environment, 'FetchProjectList')
+            fetchProjectIdApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'FetchProjectList')
             headerfetchProjectIdApi = {
                 'Authorization': config.get(environment, 'Authorization'),
                 'X-authenticated-user-token': accessToken,
@@ -4143,7 +4134,7 @@ def taskUpload(projectFile, projectName_for_folder_path, accessToken):
                 createAPILog(projectName_for_folder_path, messageArr)
                 terminatingMessage("project fetch api failed.")
 
-        urlTasksUploadApi = config.get(environment, 'taskUploadApi') + project_id
+        urlTasksUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'taskUploadApi') + project_id
         headerTasksUploadApi = {
             'Authorization': config.get(environment, 'Authorization'),
             'X-authenticated-user-token': accessToken,
@@ -4205,7 +4196,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
     file_exists = os.path.isfile(projectName_for_folder_path + '/Add certificate/Addcertificate.text')
     if not os.path.exists(addcetificateFilePath):
         os.mkdir(addcetificateFilePath)
-    urladdcertificate = config.get(environment, 'Addcertificatetemplate')
+    urladdcertificate = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'Addcertificatetemplate')
     headeraddcertificateApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -4581,7 +4572,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
         createAPILog(projectName_for_folder_path, messageArr)
         sys.exit()
 
-    urluploadcertificatepi = config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
+    urluploadcertificatepi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
     # print(certificatetemplateid)
     headeruploadcertificateApi = {
         'Authorization': config.get(environment, 'Authorization'),
@@ -4604,7 +4595,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
         svgid = responseeditsvg['result']['data']['templateId']
         # print(svgid)
 
-        urlsolutionupdateapi = config.get(environment, 'updatecertificatesolu') + solutionId
+        urlsolutionupdateapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'updatecertificatesolu') + solutionId
         # print(solutionId)
         # print(urlsolutionupdateapi)
         headersolutionupdateApi = {
@@ -4630,7 +4621,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             print("error in updating solution")
             sys.exit()
 
-        urlprojecttemplateapi = config.get(environment, 'updateprojecttemplate') + projectTemplateId
+        urlprojecttemplateapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'updateprojecttemplate') + projectTemplateId
         # print(project_id)
         # print(urlprojecttemplateapi)
         headerprojectrtemplateupdateApi = {
@@ -4806,7 +4797,7 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                 # print(downloadedfiles)
                 # print(baseTemplateId)
 
-                urleditnigsvgApi = config.get(environment, 'editsvgtemp') + baseTemplateId
+                urleditnigsvgApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'editsvgtemp') + baseTemplateId
                 headereditingsvgApi = {
                     'Authorization': config.get(environment, 'Authorization'),
                     'X-authenticated-user-token': accessToken,
@@ -4854,7 +4845,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
             projectEntityType = "school"
         solutionExternalId = projectExternalId + "-PROJECT-SOLUTION"
 
-        urlCreateProjectSolutionApi = config.get(environment, 'projectSolutionCreationApi')
+        urlCreateProjectSolutionApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'projectSolutionCreationApi')
         headerCreateSolutionApi = {
             'Content-Type': config.get(environment, 'Content-Type'),
             'Authorization': config.get(environment, 'Authorization'),
@@ -4885,7 +4876,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
             print("ProjectSolutionCreationApi Success")
             duplicateTemplateExtId = projectExternalId + '_IMPORTED'
             queryparamsMapProjectSolutionApi = projectExternalId + '?solutionId=' + solutionExternalId
-            urlMapProjectSolutionApi = config.get(environment, 'mapSolutionToProject')
+            urlMapProjectSolutionApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'mapSolutionToProject')
             headerMapSolutionProject = {
                 'Content-Type': config.get(environment, 'Content-Type'),
                 'Authorization': config.get(environment, 'Authorization'),
