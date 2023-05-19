@@ -321,16 +321,11 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                 dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                                   for
                                   col_index_env in range(detailsEnvSheet.ncols)}
-                programNameInp = dictDetailsEnv['Title of the Program'] if dictDetailsEnv[
-                    'Title of the Program'] else terminatingMessage(
-                    "\"Title of the Program\" must not be Empty in \"Program details\" sheet")
-                print(programNameInp)
-            extIdPGM = dictDetailsEnv['Program ID'] if dictDetailsEnv['Program ID'] else terminatingMessage(
-                "\"Program ID\" must not be Empty in \"Program details\" sheet")
-            print(extIdPGM)
-            programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'] if dictDetailsEnv['Program ID'] else terminatingMessage(
-                "\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
-            print(programdesigner)
+                programNameInp = dictDetailsEnv['Title of the Program'] if dictDetailsEnv['Title of the Program'] else terminatingMessage("\"Title of the Program\" must not be Empty in \"Program details\" sheet")
+
+            extIdPGM = dictDetailsEnv['Program ID'] if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
+
+            programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'] if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
             if environment == "staging":
                 userDetails = ["5d7255bb-1216-460e-9228-59b60230b1c1","stagingpd_wjtv","Stagingpd",["PROGRAM_DESIGNER"],"",""]
             else:
@@ -365,9 +360,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                     programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'] if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
                 else:
                     try :
-                        programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'] if dictDetailsEnv[
-                            'Login ID on DIKSHA'] else terminatingMessage(
-                            "\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
+                        programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'] if dictDetailsEnv['Login ID on DIKSHA'] else terminatingMessage("\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
                         userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
                     except :
                         programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'] if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
@@ -395,7 +388,6 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
                 fileheader = [creatorName,"program manager mapped succesfully","Passed"]
                 apicheckslog(parentFolder,fileheader)
-                # sys.exit()
 
 
 # this function is used for call the api and map the pdpm roles which we created
@@ -421,7 +413,6 @@ def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
     createAPILog(parentFolder, messageArr)
 
     if responseProgrammappingApi.status_code == 200:
-        # successLogger.debug('CriteriaUploadApi Success')
         print('--->program manager and designer mapping is Success')
         with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+') as projectRes:
             projectRes.write(responseProgrammappingApi.text)
@@ -629,7 +620,6 @@ def valid_file(param):
         raise argparse.ArgumentTypeError('File must have a csv extension')
     return param
 
-
 # function to check environment 
 def envCheck():
     try:
@@ -638,7 +628,6 @@ def envCheck():
     except Exception as e:
         print(e)
         return False
-
 
 # Generate access token for the APIs. 
 def generateAccessToken(solutionName_for_folder_path):
@@ -771,9 +760,6 @@ def apicheckslog(solutionName_for_folder_path, messageArr):
     file_exists = solutionName_for_folder_path + '/apiHitLogs/apiLogs.csv'
     # global fileheader
     fileheader = ["Resource","Process","Status","Remark"]
-    # with open(file_exists, 'w',newline='') as file:
-    #      writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',')
-    #      writer.writerows([fileheader])
 
     if not path.exists(file_exists):
         with open(file_exists, 'w', newline='') as file:
@@ -783,7 +769,6 @@ def apicheckslog(solutionName_for_folder_path, messageArr):
     with open(file_exists, 'a', newline='') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',')
         writer.writerows([messageArr])
-
 
 def checkEmailValidation(email):
     if (re.search(regex, email)):
@@ -1491,38 +1476,18 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                                       for
                                       col_index_env in range(detailsEnvSheet.ncols)}
-                    # projectTaskId = dictDetailsEnv['TaskId'] if dictDetailsEnv['TaskId'] else terminatingMessage(
-                    #     "\"TaskId\" must not be Empty in \"Tasks Upload\" sheet")
-                    # print(dictDetailsEnv['TaskId'])
-                    # projectTaskTitle = dictDetailsEnv['TaskTitle'] if dictDetailsEnv[
-                    #     'TaskTitle'] else terminatingMessage(
-                    #     "\"TaskTitle\" must not be Empty in \"Tasks Upload\" sheet")
-                    # # projectsubtask = dictDetailsEnv['Subtask'] if dictDetailsEnv[
-                    # #     'Subtask'] else terminatingMessage(
-                    # #     "\"Subtask\" must not be Empty in \"Tasks Upload\" sheet")
-                    # print(projectsubtask)
                     projectTaskMandatory = dictDetailsEnv['Mandatory task(Yes or No)'] if dictDetailsEnv[
                         'Mandatory task(Yes or No)'] else terminatingMessage(
                         "\"Mandatory task(Yes or No)\" must not be Empty in \"Tasks Upload\" sheet")
-                    print(projectTaskMandatory)
-                    # sys.exit()
-                    # tasklevelevidence = dictDetailsEnv['Task Level Evidence'] if dictDetailsEnv[
-                    #     'Task Level Evidence'] else terminatingMessage(
-                    #     "\"Task Level Evidence\" must not be Empty in \"Tasks Upload\" sheet")
-                    # taskminnoofevidence = dictDetailsEnv['Minimum No. of Evidence'] if dictDetailsEnv[
-                    #     'Minimum No. of Evidence'] else terminatingMessage(
-                    #     "\"Minimum No. of Evidence\" must not be Empty in \"Tasks Upload\" sheet")
-
+                    
 
             if sheetColCheck.strip().lower() == 'Certificate details'.lower():
                 print("--->Checking Certificate details  sheet...")
-                print("nonpo")
-                # sys.exit()
+
                 detailsColCheck = wbObservation1.sheet_by_name(sheetColCheck)
                 keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                          range(detailsColCheck.ncols)]
-                # print(keysColCheckDetai)
-                # print(certificateCols)
+
                 if len(keysColCheckDetai) != len(certificateCols) or set(keysColCheckDetai) == set(
                             certificateCols):
                     print("certificate not found")
@@ -1531,13 +1496,11 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                 keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                                range(detailsEnvSheet.ncols)]
                 for row_index_env in range(2, detailsEnvSheet.nrows):
-                    # print(dictDetailsEnv)
-                    # sys.exit()
+
                     dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                                       for
                                       col_index_env in range(detailsEnvSheet.ncols)}
 
-                    # if str(projectcertificate).strip().lower() == "yes".lower():
                     certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv['Certificate issuer'] else terminatingMessage(
                     "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
                     print(certificateissuer)
@@ -1548,36 +1511,10 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     Logo1 = dictDetailsEnv['Logo - 1'] if dictDetailsEnv[
                         'Logo - 1'] else terminatingMessage(
                         "\"Logo - 1\" must not be Empty in \"Certificate details\" sheet")
-                    print(Logo1)
-                    # Logo2 = dictDetailsEnv['Logo - 2'] if dictDetailsEnv[
-                    #     'Logo - 2'] else terminatingMessage(
-                    #     "\"Logo - 2\" must not be Empty in \"Certificate details\" sheet")
-                    Authorisedsignlogo1 = dictDetailsEnv['Authorised Signature Image - 1'] if dictDetailsEnv[
-                        'Authorised Signature Image - 1'] else terminatingMessage(
-                        "\"Authorised Signature Image - 1\" must not be Empty in \"Certificate details\" sheet")
-                    Authorisedsignname1 = dictDetailsEnv['Authorised Signature Name - 1'] if dictDetailsEnv[
-                        'Authorised Signature Name - 1'] else terminatingMessage(
-                        "\"Authorised Signature Name - 1\" must not be Empty in \"Certificate details\" sheet")
-                    Authoriseddesifnation1 = dictDetailsEnv['Authorised Designation - 1'] if dictDetailsEnv[
-                            'Authorised Designation - 1'] else terminatingMessage(
-                            "\"Authorised Designation - 1\" must not be Empty in \"Certificate details\" sheet")
-                    # Logo1 = dictDetailsEnv['Logo - 1'] if dictDetailsEnv[
-                    #     'Logo - 1'] else terminatingMessage(
-                    #     "\"Logo - 1\" must not be Empty in \"Certificate details\" sheet")
-                    # logo1download = str(logo1download).split('/')[5]
-                    # # print(resourceLinkOrExtPGM)
-                    # file_url = 'https://drive.google.com/file/d/' + logo1download + '/view'
-                    # if not os.path.isdir('Logodownload'):
-                    #     os.mkdir('Logodownload')
-                    # dest_file = 'Logodownload'
-                    # logo1downloadpalce = wget.download(file_url, dest_file)
-                    # print("sdfsdffg")
 
-
-
-
-
-
+                    Authorisedsignlogo1 = dictDetailsEnv['Authorised Signature Image - 1'] if dictDetailsEnv['Authorised Signature Image - 1'] else terminatingMessage("\"Authorised Signature Image - 1\" must not be Empty in \"Certificate details\" sheet")
+                    Authorisedsignname1 = dictDetailsEnv['Authorised Signature Name - 1'] if dictDetailsEnv['Authorised Signature Name - 1'] else terminatingMessage("\"Authorised Signature Name - 1\" must not be Empty in \"Certificate details\" sheet")
+                    Authoriseddesifnation1 = dictDetailsEnv['Authorised Designation - 1'] if dictDetailsEnv['Authorised Designation - 1'] else terminatingMessage("\"Authorised Designation - 1\" must not be Empty in \"Certificate details\" sheet")
 
     return typeofSolutin
 
@@ -1597,8 +1534,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
             impsToCriteria = wbObservation.sheet_by_name('Imp mapping')
             keysFromImpSheet = [impsToCriteria.cell(1, col_index).value for col_index in range(impsToCriteria.ncols)]
             for row_indexImp in range(2, impsToCriteria.nrows):
-                dictImp = {keysFromImpSheet[col_index]: impsToCriteria.cell(row_indexImp, col_index).value for col_index
-                           in range(impsToCriteria.ncols)}
+                dictImp = {keysFromImpSheet[col_index]: impsToCriteria.cell(row_indexImp, col_index).value for col_index in range(impsToCriteria.ncols)}
                 criteriaImpDict[dictImp['criteriaId'].strip()] = {}
                 for levls in range(1, countImps + 1):
                     criteriaImpDict[dictImp['criteriaId'].strip()].update({'L' + str(levls) + '-improvement-projects': dictImp['L' + str(levls) + '-improvement-projects'].strip()})
@@ -1877,8 +1813,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
         sys.exit()
 
 
-def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, accessToken, frameworkExternalId,
-                 obsWORubWS):
+def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, accessToken, frameworkExternalId,obsWORubWS):
     global dictCritLookUp
     with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r') as criteriaInternalFile:
         criteriaInternalReader = csv.DictReader(criteriaInternalFile)
@@ -1984,16 +1919,15 @@ def createSolutionFromFramework(solutionName_for_folder_path, accessToken, frame
 
 def solutionUpdate(solutionName_for_folder_path, accessToken, solutionId, bodySolutionUpdate):
     solutionUpdateApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'solutionUpdateApi') + str(solutionId)
-    headerUpdateSolutionApi = {'Content-Type': 'application/json',
-                               'Authorization': config.get(environment, 'Authorization'),
-                               'X-authenticated-user-token': accessToken,
-                               'X-Channel-id': config.get(environment, 'X-Channel-id'),
-                               "internal-access-token": config.get(environment, 'internal-access-token')}
-    responseUpdateSolutionApi = requests.post(url=solutionUpdateApi, headers=headerUpdateSolutionApi,
-                                              data=json.dumps(bodySolutionUpdate))
-    messageArr = ["Solution Update API called.", "URL : " + str(solutionUpdateApi), "Body : " + str(bodySolutionUpdate),
-                  "Response : " + str(responseUpdateSolutionApi.text),
-                  "Status Code : " + str(responseUpdateSolutionApi.status_code)]
+    headerUpdateSolutionApi = {
+        'Content-Type': 'application/json',
+        'Authorization': config.get(environment, 'Authorization'),
+        'X-authenticated-user-token': accessToken,
+        'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        "internal-access-token": config.get(environment, 'internal-access-token')
+        }
+    responseUpdateSolutionApi = requests.post(url=solutionUpdateApi, headers=headerUpdateSolutionApi,data=json.dumps(bodySolutionUpdate))
+    messageArr = ["Solution Update API called.", "URL : " + str(solutionUpdateApi), "Body : " + str(bodySolutionUpdate),"Response : " + str(responseUpdateSolutionApi.text),"Status Code : " + str(responseUpdateSolutionApi.status_code)]
     createAPILog(solutionName_for_folder_path, messageArr)
     if responseUpdateSolutionApi.status_code == 200:
         print("Solution Update Success.")
@@ -2001,7 +1935,6 @@ def solutionUpdate(solutionName_for_folder_path, accessToken, solutionId, bodySo
     else:
         print("Solution Update Failed.")
         return False
-
 
 # question sheet prepration and upload 
 def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExternalId, millisAddObs, accessToken,
@@ -2113,9 +2046,7 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
             questionUploadFieldnames = questionUploadExceptSliderFieldnames + questionUploadSliderFieldNames
         else:
             questionUploadFieldnames = questionUploadExceptSliderFieldnames
-    # print(questionsList)
     for ques in questionsList:
-        # print(ques)
         questionFilePath = solutionName_for_folder_path + '/questionUpload/'
         file_exists_ques = os.path.isfile(solutionName_for_folder_path + '/questionUpload/uploadSheet.csv')
         if not os.path.exists(questionFilePath):
@@ -3023,9 +2954,7 @@ def prepareProgramSuccessSheet(MainFilePath, solutionName_for_folder_path, progr
 
     responseFetchSolutionLinkApi = requests.post(url=urlFetchSolutionLinkApi, headers=headerFetchSolutionLinkApi,
                                                  data=payloadFetchSolutionLinkApi)
-    messageArr = ["Solution Fetch Link.",
-                  "solution id : " + solutionId,
-                  "solution ExternalId : " + solutionExternalId]
+    messageArr = ["Solution Fetch Link.","solution id : " + solutionId,"solution ExternalId : " + solutionExternalId]
     messageArr.append("Upload status code : " + str(responseFetchSolutionLinkApi.status_code))
     createAPILog(solutionName_for_folder_path, messageArr)
 
@@ -3551,7 +3480,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         questionFileObj['fileUploadType'] = None
                         questionFileObj['minFileCount'] = None
                         questionFileObj['maxFileCount'] = None
-                    # questionFileObj['allowAudioRecording'] = ques['allow_audio_recording']
+
                     questionFileObj['caption'] = 'FALSE'
                     questionFileObj['questionGroup'] = 'A1'
                     questionFileObj['modeOfCollection'] = 'onfield'
@@ -3624,7 +3553,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                                                       headers=headerQuestionUploadApi, files=filesQuestion)
             if responseQuestionUploadApi.status_code == 200:
                 print('Question upload Success')
-                # errorLogger.error(responseQuestionUploadApi)
+
                 messageArr = ["********* Question Upload api *********", "URL : " + urlQuestionsUploadApi,
                               "Path : " + str(parentFolder) + str('/questionUpload/uploadSheet.csv'),
                               "Status code : " + str(responseQuestionUploadApi.status_code),
@@ -3632,7 +3561,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                 createAPILog(parentFolder, messageArr)
                 messageArr1 = ["Questions","Question upload Success","Passed",str(responseQuestionUploadApi.status_code)]
                 apicheckslog(parentFolder,messageArr1)
-                # sys.exit()
+
                 with open(parentFolder + '/questionUpload/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as questionRes:
                     questionRes.write(responseQuestionUploadApi.text)
                 urlImportSoluTemplate = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'importSurveySolutionTemplateUrl') + str(surveyParentSolutionId) + "?appName=manage-learn"
@@ -3658,8 +3587,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         'X-authenticated-user-token': accessToken,
                         'X-Channel-id': config.get(environment, 'X-Channel-id')
                     }
-                    responseSurveyProgramMappingApi = requests.get(url=urlSurveyProgramMapping,
-                                                                   headers=headeSurveyProgramMappingApi)
+                    responseSurveyProgramMappingApi = requests.get(url=urlSurveyProgramMapping,headers=headeSurveyProgramMappingApi)
                     if responseSurveyProgramMappingApi.status_code == 200:
                         print('Program Mapping Success')
                         
@@ -3667,7 +3595,6 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                                       "Status code : " + str(responseSurveyProgramMappingApi.status_code),
                                       "Response : " + responseSurveyProgramMappingApi.text]
                         createAPILog(parentFolder, messageArr)
-
                         surveyLink = None
                         solutionIdSuc = None
                         surveyExternalIdSuc = None
@@ -3793,10 +3720,10 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
     learningResource_count = 0
     for projectHeader in keysProject:
         if str(projectHeader).startswith('learningResources'):
-            # print(projectHeader)
+
             learningResource_count += 1
     learningResource_count = int(learningResource_count) / 2
-    # print(learningResource_count)
+
     lr_count = 1
     for lr in range(0, int(learningResource_count)):
         projectColnames1.append("learningResources" + str(lr_count) + "-name")
@@ -3912,8 +3839,6 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                taskType = "content"
            else:
                taskType = "simple"
-           # print(taskType)
-
 
            hasAParentTask = "NO"
            parentTaskOperator = ""
@@ -3926,7 +3851,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                solutionDetailsInTask = checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessToken)
                solutionSubType = solutionDetailsInTask[0]
                solutionId = solutionDetailsInTask[1]
-               # print("solutionDetailsInTask",solutionDetailsInTask)
+
                projectUpload = pd.read_csv(projectFilePath + "projectUpload.csv")
                # updating the column value/data
                projectUpload.loc[0, 'entityType'] = solutionDetailsInTask[0]
@@ -4051,7 +3976,6 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                 else:
                     projecttaskType = "simple"
 
-
             subtaskId = str(dictTasksDetails["TaskId"]).strip() + "-" + str(millisecond) + "-subtask-" + str(
                 tasksDetailsSheet.nrows)
 
@@ -4062,8 +3986,6 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
             with open(taskFilePath + 'taskUpload.csv', 'a') as file:
                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',')
                 writer.writerows([subtaskvalues])
-
-
 
 
 def projectUpload(projectFile, projectName_for_folder_path, accessToken):
@@ -4079,11 +4001,8 @@ def projectUpload(projectFile, projectName_for_folder_path, accessToken):
         'projectTemplates': open(projectName_for_folder_path + '/projectUpload/projectUpload.csv', 'rb')
     }
 
-    responseProjectUploadApi = requests.post(url=urlProjectUploadApi, headers=headerProjectUploadApi,
-                                             data=project_payload,
-                                             files=filesProject)
-    messageArr = ["program mapping is success.",
-                  "File path : " + projectName_for_folder_path + '/projectUpload/projectUpload.csv']
+    responseProjectUploadApi = requests.post(url=urlProjectUploadApi, headers=headerProjectUploadApi,data=project_payload,files=filesProject)
+    messageArr = ["program mapping is success.","File path : " + projectName_for_folder_path + '/projectUpload/projectUpload.csv']
     messageArr.append("Upload status code : " + str(responseProjectUploadApi.status_code))
     createAPILog(projectName_for_folder_path, messageArr)
 
@@ -4096,7 +4015,6 @@ def projectUpload(projectFile, projectName_for_folder_path, accessToken):
         messageArr.append("Response : " + str(responseProjectUploadApi.text))
         createAPILog(projectName_for_folder_path, messageArr)
         sys.exit()
-
 
 def taskUpload(projectFile, projectName_for_folder_path, accessToken):
     projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r')
@@ -4181,18 +4099,16 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-                # print(dictDetailsEnv)
-                # sys.exit()
+
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
-                # print(keysEnv)
-                # print(detailsEnvSheet)
+
                 projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
                 projectLevelEvidance = dictDetailsEnv["Project Level Evidence"]
     addcetificateFilePath = projectName_for_folder_path + '/Add certificate/'
-    # taskFilePath = projectName_for_folder_path + '/taskUpload/'
+
     file_exists = os.path.isfile(projectName_for_folder_path + '/Add certificate/Addcertificate.text')
     if not os.path.exists(addcetificateFilePath):
         os.mkdir(addcetificateFilePath)
@@ -4293,7 +4209,6 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
     projectsheetforcertificate = wbproject.sheet_names()
     for prosheet in projectsheetforcertificate:
         if prosheet.strip().lower() == 'Project upload'.lower():
-            # print("something in certificate")
             detailsColCheck = wbproject.sheet_by_name(prosheet)
             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                  range(detailsColCheck.ncols)]
@@ -4302,14 +4217,10 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-                # print(dictDetailsEnv)
-                # sys.exit()
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
-                # print(keysEnv)
-                # print(detailsEnvSheet)
                 
                 projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
                 
@@ -4324,38 +4235,29 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                         intProjectMinNOofEvidence = int(projectMinNooEvide)
                         projectminnoofEvidence = f"Add {intProjectMinNOofEvidence}  evidences at the project level"
                         print(projectminnoofEvidence)
-                # sys.exit()
+
                     payload["criteria"]["conditions"]["C2"]["validationText"] = projectminnoofEvidence
-                # print(projectminnoofEvidence)
-                # payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = projectminnoofEvidence
                     if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
                         dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
                         payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = 1
                     elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
                            dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
                            payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = ""
-
                     else:
                         payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = projectMinNooEvide
                 else:
                     continue
                     
-                # print(Minsob)
         if prosheet.strip().lower() == 'Certificate details'.lower():
             print("--->Checking Certificate details  sheet...")
             detailsColCheck = wbproject.sheet_by_name(prosheet)
             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                  range(detailsColCheck.ncols)]
-            # print(keysColCheckDetai)
-            # print(certificateCols)
 
-            # terminatingMessage('Columns is missing in certificate details sheet')
             detailsEnvSheet = wbproject.sheet_by_name(prosheet)
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-                # print(dictDetailsEnv)
-                # sys.exit()
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
@@ -4364,7 +4266,6 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                     'Certificate issuer'] else terminatingMessage(
                     "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
                 payload["issuer"]["name"] = certificateissuer
-                # print(certificateissuer)
                 Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in [
                     "One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature",
                     "Two Logo - Two Signature"] else terminatingMessage(
@@ -4397,7 +4298,6 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                         payload["baseTemplateId"] = "64184da580b5f300083e0656"
 
                 elif environment == 'staging':
-                    # sys.exit()
                     if Typeofcertificate == "One Logo - One Signature":
                         payload["baseTemplateId"] = "641d5c3fad848b0008fd7a4d"
 
@@ -4410,28 +4310,18 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                     elif Typeofcertificate == "Two Logo - Two Signature":
                         payload["baseTemplateId"] = "641d5c94ad848b0008fd7a56"
 
-                # sys.exit()
-
-                # sys.exit()
-
-
     projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r')
     projectInternalfile = csv.DictReader(projectInternalfile)
     for projectInternal in projectInternalfile:
         projectExternalId = projectInternal["externalId"]
         project_id = projectInternal["_SYSTEM_ID"]
-        # payload[]
     taskinternalfile = open(projectName_for_folder_path + '/taskUpload/taskInternal.csv', mode='r')
     taskinternalfile = csv.DictReader(taskinternalfile)
     projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
     projectTemplatefile = csv.DictReader(projectTemplatefile)
     for Projecttemp in projectTemplatefile:
         projectTemplateId = Projecttemp["duplicateTemplate_id"]
-    # tasklevelevidece = dictDetailsEnv['Task Level Evidence']
-    # taskminnoofevidence = dictDetailsEnv['Minimum No. of Evidence']
-    # print(taskminnoofevidence)
 
-    # sys.exit()
     c = 2
     for task in taskinternalfile:
         # print(task)
@@ -4466,9 +4356,6 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
 }
            payload["criteria"]["conditions"].update(taskconditions)
 
-
-
-    # print(payload)
     wbproject1 = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
     for prosheet1 in projectsheetforcertificate:
@@ -4478,10 +4365,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             detailsColCheck = wbproject1.sheet_by_name(prosheet1)
             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                  range(detailsColCheck.ncols)]
-            # print(keysColCheckDetai)
-            # print(taskUploadCols)
-            # if len(keysColCheckDetai) != len(taskUploadCols) or set(keysColCheckDetai) == set(taskUploadCols):
-            #     terminatingMessage('Columns is missing in details sheet')
+            
             detailsEnvSheet = wbproject1.sheet_by_name(prosheet1)
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
@@ -4496,7 +4380,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                 
                 c = c + 1
                 cn = "C" + str(c)
-                # print("cn", cn)
+
                 if tasklevelevidece == "Yes":
                     if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(
                         dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
@@ -4508,15 +4392,10 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                         intTaskMinNOofEvidence = int(taskminnoofEvidence)
                         taskvalidationminnoofEvidence = f"Add {intTaskMinNOofEvidence}  evidences for the task  {taskname} "
                         print(projectminnoofEvidence)
-                # sys.exit()
-                    payload["criteria"]["conditions"][cn]["validationText"] = taskvalidationminnoofEvidence
-                    # print(taskvalidationminnoofEvidence)
 
-                    # print(dictDetailsEnv['Task Level Evidence'])
+                    payload["criteria"]["conditions"][cn]["validationText"] = taskvalidationminnoofEvidence
+
                     if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes":
-                        # print(dictDetailsEnv['Task Level Evidence'])
-                        # print(taskminnoofEvidence)
-                    # print(cn)
 
                         if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
                             payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = 1
@@ -4534,7 +4413,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             condition = condition + str(i)
         else:
             condition = condition + "&&" + str(i)
-    # print(condition)
+
     payload["criteria"]["expression"] = condition
     # print(payload)
 
@@ -4586,18 +4465,12 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
     task_file.append(certificateaddtotemplate)
 
 
-    responseTasksUploadApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,
-                                           data=task_payload,
-                                           files=task_file)
+    responseTasksUploadApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,data=task_payload,files=task_file)
     if responseTasksUploadApi.status_code == 200:
-        # print(responseTasksUploadApi.json())
         responseeditsvg = responseTasksUploadApi.json()
         svgid = responseeditsvg['result']['data']['templateId']
-        # print(svgid)
 
         urlsolutionupdateapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'updatecertificatesolu') + solutionId
-        # print(solutionId)
-        # print(urlsolutionupdateapi)
         headersolutionupdateApi = {
             'Authorization': config.get(environment, 'Authorization'),
             'X-authenticated-user-token': accessToken,
@@ -4609,9 +4482,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
         certificate_payload = json.dumps({
             'certificateTemplateId':certificatetemplateid
         })
-        responseupdatecertificateApi = requests.request("POST", url=urlsolutionupdateapi,
-                                                  headers=headersolutionupdateApi,
-                                                  data=certificate_payload)
+        responseupdatecertificateApi = requests.request("POST", url=urlsolutionupdateapi,headers=headersolutionupdateApi,data=certificate_payload)
 
 
         if responseupdatecertificateApi.status_code == 200:
@@ -4622,8 +4493,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             sys.exit()
 
         urlprojecttemplateapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'updateprojecttemplate') + projectTemplateId
-        # print(project_id)
-        # print(urlprojecttemplateapi)
+
         headerprojectrtemplateupdateApi = {
             'Authorization': config.get(environment, 'Authorization'),
             'X-authenticated-user-token': accessToken,
@@ -4635,22 +4505,13 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
         certificate_payload = json.dumps({
             'certificateTemplateId': certificatetemplateid
         })
-        responseupdatecertificateApi = requests.request("POST", url=urlprojecttemplateapi,
-                                                        headers=headerprojectrtemplateupdateApi,
-                                                        data=certificate_payload)
+        responseupdatecertificateApi = requests.request("POST", url=urlprojecttemplateapi,headers=headerprojectrtemplateupdateApi,data=certificate_payload)
         if responseupdatecertificateApi.status_code == 200:
             print(responseupdatecertificateApi.json())
 
         else:
             print("error in updating certificate with project")
             sys.exit()
-
-
-
-
-
-        # json_object = json.loads(responseTasksUploadApi)
-        # print(json.dumps(json_object, indent=1))
 
 
 def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
@@ -4668,8 +4529,7 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-                # print(dictDetailsEnv)
-                # sys.exit()
+                
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
@@ -4677,14 +4537,12 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                 certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv[
                     'Certificate issuer'] else terminatingMessage(
                     "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
-                # payload['issuer']['name'] = certificateissuer
-                # print(certificateissuer)
+                
                 Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in [
                     "One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature",
                     "Two Logo - Two Signature"] else terminatingMessage(
                     "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
                 Certificateisuuer = dictDetailsEnv['Certificate issuer']
-                # print(Certificateisuuer)
                 Logo1 = dictDetailsEnv['Logo - 1']
                 authsignaturelogo1 = dictDetailsEnv['Authorised Signature Image - 1']
                 authrigedsignaturename1 = dictDetailsEnv['Authorised Signature Name - 1']
@@ -4699,12 +4557,8 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                 if Typeofcertificate == 'One Logo - One Signature':
                     print("-->This is One Logo - One Signature<--")
 
-                    # sys.exit()
                     stateLogo1 = ('stateLogo1',('logo1.jpg',open(projectName_for_folder_path +'/Logofile/logo1.jpg' ,'rb'),'image/jpeg'))
                     downloadedfiles.append(stateLogo1)
-
-                    print(downloadedfiles)
-                    # sys.exit()
                     payload['stateTitle'] = Certificateisuuer
                     signatureImg1 = ('signatureImg1',('signature1.jpg',open(projectName_for_folder_path +'/Logofile/signature1.jpg','rb'),'image/jpeg'))
                     downloadedfiles.append(signatureImg1)
@@ -4728,9 +4582,7 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     'signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),
                     'image/jpeg'))
                     downloadedfiles.append(signatureImg1)
-                    signatureImg2 = ('signatureImg2', (
-                        'signature2.jpg', open(projectName_for_folder_path + '/Logofile/signature2.jpg', 'rb'),
-                        'image/jpeg'))
+                    signatureImg2 = ('signatureImg2', ('signature2.jpg', open(projectName_for_folder_path + '/Logofile/signature2.jpg', 'rb'),'image/jpeg'))
                     downloadedfiles.append(signatureImg2)
                     payload['signatureTitleName1'] = authrigedsignaturename1
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
@@ -4749,12 +4601,9 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                         'logo1.jpg', open(projectName_for_folder_path + '/Logofile/logo1.jpg', 'rb'), 'image/jpeg'))
                     downloadedfiles.append(stateLogo1)
                     payload['stateTitle'] = Certificateisuuer
-                    signatureImg1 = ('signatureImg1', (
-                        'signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),
-                        'image/jpeg'))
+                    signatureImg1 = ('signatureImg1', ('signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),'image/jpeg'))
                     downloadedfiles.append(signatureImg1)
-                    stateLogo2 = ('stateLogo2', (
-                        'logo2.jpg', open(projectName_for_folder_path + '/Logofile/logo2.jpg', 'rb'), 'image/jpeg'))
+                    stateLogo2 = ('stateLogo2', ('logo2.jpg', open(projectName_for_folder_path + '/Logofile/logo2.jpg', 'rb'), 'image/jpeg'))
                     downloadedfiles.append(stateLogo2)
                     payload['signatureTitleName1'] = authrigedsignaturename1
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
@@ -4767,20 +4616,14 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
 
                 elif Typeofcertificate == 'Two Logo - Two Signature':
                     print("-->This is Two Logo - Two Signature<--")
-                    stateLogo1 = ('stateLogo1', (
-                        'logo1.jpg', open(projectName_for_folder_path + '/Logofile/logo1.jpg', 'rb'), 'image/jpeg'))
+                    stateLogo1 = ('stateLogo1', ('logo1.jpg', open(projectName_for_folder_path + '/Logofile/logo1.jpg', 'rb'), 'image/jpeg'))
                     downloadedfiles.append(stateLogo1)
                     payload['stateTitle'] = Certificateisuuer
-                    signatureImg1 = ('signatureImg1', (
-                        'signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),
-                        'image/jpeg'))
+                    signatureImg1 = ('signatureImg1', ('signature1.jpg', open(projectName_for_folder_path + '/Logofile/signature1.jpg', 'rb'),'image/jpeg'))
                     downloadedfiles.append(signatureImg1)
-                    stateLogo2 = ('stateLogo2', (
-                        'logo2.jpg', open(projectName_for_folder_path + '/Logofile/logo2.jpg', 'rb'), 'image/jpeg'))
+                    stateLogo2 = ('stateLogo2', ('logo2.jpg', open(projectName_for_folder_path + '/Logofile/logo2.jpg', 'rb'), 'image/jpeg'))
                     downloadedfiles.append(stateLogo2)
-                    signatureImg2 = ('signatureImg2', (
-                        'signature2.jpg', open(projectName_for_folder_path + '/Logofile/signature2.jpg', 'rb'),
-                        'image/jpeg'))
+                    signatureImg2 = ('signatureImg2', ('signature2.jpg', open(projectName_for_folder_path + '/Logofile/signature2.jpg', 'rb'),'image/jpeg'))
                     downloadedfiles.append(signatureImg2)
                     payload['signatureTitleName1'] = authrigedsignaturename1
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
@@ -4793,10 +4636,6 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     elif environment == 'staging':
                         baseTemplateId = '641d5c94ad848b0008fd7a56'
 
-                # print(payload)
-                # print(downloadedfiles)
-                # print(baseTemplateId)
-
                 urleditnigsvgApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'editsvgtemp') + baseTemplateId
                 headereditingsvgApi = {
                     'Authorization': config.get(environment, 'Authorization'),
@@ -4805,13 +4644,11 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     'internal-access-token': config.get(environment, 'internal-access-token')
 
                 }
-                responseeditsvg = requests.request("POST",url=urleditnigsvgApi, headers=headereditingsvgApi,
-                                                data=payload, files=downloadedfiles)
+                responseeditsvg = requests.request("POST",url=urleditnigsvgApi, headers=headereditingsvgApi,data=payload, files=downloadedfiles)
 
                 if responseeditsvg.status_code == 200:
                     responseeditsvg = responseeditsvg.json()
                     svgid = responseeditsvg['result']['url']
-                    # print(svgid)
                     filesvg = svgid
                     Logofilepath = projectName_for_folder_path + '/Dowloadedsvg/'
                     if not os.path.exists(Logofilepath):
@@ -4861,13 +4698,9 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
             "name": project_name,
             "description": project_description
         }
-        responseCreateSolutionApi = requests.post(url=urlCreateProjectSolutionApi,
-                                                  headers=headerCreateSolutionApi, data=json.dumps(sol_payload))
+        responseCreateSolutionApi = requests.post(url=urlCreateProjectSolutionApi,headers=headerCreateSolutionApi, data=json.dumps(sol_payload))
 
-        messageArr = ["Project Solution Created.",
-                      "URL : " + str(urlCreateProjectSolutionApi),
-                      "Status Code : " + str(responseCreateSolutionApi.status_code),
-                      "Response : " + str(responseCreateSolutionApi.text)]
+        messageArr = ["Project Solution Created.","URL : " + str(urlCreateProjectSolutionApi),"Status Code : " + str(responseCreateSolutionApi.status_code),"Response : " + str(responseCreateSolutionApi.text)]
         if responseCreateSolutionApi.status_code == 200:
             responseCreateSolutionApi = responseCreateSolutionApi.json()
             solutionId = responseCreateSolutionApi['result']['_id']
@@ -4915,7 +4748,6 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                     "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
 
-                
                 if environment == "staging":
                     userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
                 else:
@@ -4952,34 +4784,24 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
         if prosheet.strip().lower() == 'Certificate details'.lower():
             print("--->Checking Certificate details  sheet...")
             detailsColCheck = wbproject.sheet_by_name(prosheet)
-            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
-                                 range(detailsColCheck.ncols)]
-            # print(keysColCheckDetai)
-            # print(certificateCols)
-
-            # terminatingMessage('Columns is missing in certificate details sheet')
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in range(detailsColCheck.ncols)]
+            
             detailsEnvSheet = wbproject.sheet_by_name(prosheet)
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-                # print(dictDetailsEnv)
-                # sys.exit()
+
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
-                certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv[
-                    'Certificate issuer'] else terminatingMessage(
-                    "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
-                # print(certificateissuer)
-                typeOfCertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv[
-                    'Type of certificate'] else terminatingMessage(
-                    "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
+                certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv['Certificate issuer'] else terminatingMessage("\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
+
+                typeOfCertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] else terminatingMessage("\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
 
                 if typeOfCertificate == 'One Logo - One Signature':
                    Logo1 = dictDetailsEnv['Logo - 1']
                    logo_split = str(Logo1).split('/')[5]
-                #    print(logo_split)
 
                    file_url = 'https://drive.google.com/uc?export=download&id='+logo_split
                 
@@ -4992,20 +4814,17 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
 
                    Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
                    logo_split = str(Authsign1).split('/')[5]
-                #    print(logo_split)
 
                    file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
                
 
                    dest_file = Logofilepath + '/signature1.jpg'
                    signature1 = gdown.download(file_url, dest_file, quiet=False)
-                #    print(signature1)
 
                 elif typeOfCertificate == 'One Logo - Two Signature':
 
                     Logo1 = dictDetailsEnv['Logo - 1']
                     logo_split = str(Logo1).split('/')[5]
-                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
                    
@@ -5018,31 +4837,25 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
 
                     Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
                     logo_split = str(Authsign1).split('/')[5]
-                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                    
 
                     dest_file = Logofilepath + '/signature1.jpg'
                     signature1 = gdown.download(file_url, dest_file, quiet=False)
-                    # print(signature1)
 
                     Authsign2 = dictDetailsEnv['Authorised Signature Image - 2']
                     logo_split = str(Authsign1).split('/')[5]
-                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
                     
 
                     dest_file = Logofilepath + '/signature2.jpg'
                     signature2 = gdown.download(file_url, dest_file, quiet=False)
-                    # print(signature2)
 
                 elif typeOfCertificate == 'Two Logo - One Signature':
 
                     Logo1 = dictDetailsEnv['Logo - 1']
                     logo_split = str(Logo1).split('/')[5]
-                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
                     
@@ -5055,7 +4868,6 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
 
                     Logo2 = dictDetailsEnv['Logo - 2']
                     logo_split = str(Logo2).split('/')[5]
-                    # print(logo_split)
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
                     
@@ -5122,60 +4934,8 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
                     dest_file = Logofilepath + '/signature2.jpg'
                     signature2 = gdown.download(file_url, dest_file, quiet=False)
                    
-
-
-
-
-                # Logo2 = dictDetailsEnv['Logo - 2']
-                # logo_split = str(Logo2).split('/')[5]
-                # print(logo_split)
-                #
-                # file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                # print("file_url")
-                # print(file_url)
-                #
-                # dest_file = Logofilepath + '/logo2.jpg'
-                # Logofile2 = gdown.download(file_url, dest_file, quiet=False)
-                # print(Logofile2)
-                # print("sdfsdffg")
-                #
-                # Authsign1 = dictDetailsEnv['Authorised Signature Image - 1']
-                # logo_split = str(Authsign1).split('/')[5]
-                # print(logo_split)
-                #
-                # file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                # print("file_url")
-                # print(file_url)
-                #
-                # dest_file = Logofilepath + '/signature1.jpg'
-                # signature1 = gdown.download(file_url, dest_file, quiet=False)
-                # print(signature1)
-                #
-                # Authsign2 = dictDetailsEnv['Authorised Signature Image - 2']
-                # logo_split = str(Authsign2).split('/')[5]
-                # print(logo_split)
-                #
-                # file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
-                # print("file_url")
-                # print(file_url)
-                #
-                # dest_file = Logofilepath + '/signature2.jpg'
-                # signature2 = gdown.download(file_url, dest_file, quiet=False)
-                # print("Logos and signatures are download siccessfully")
-                # # messageArr["Logos and signatures are downloaded succseefully"]
                 else:
                     print("--->Logos and signature downlading are failed(check if drive link are  Anyone with the link or not)<---")
-            # messageArr["--->Please provide an access to the drive<----"]
-            # sys.exit()
-
-
-
-
-
-
-
-
-
 
 def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isProgramnamePresent, isCourse,
              scopeEntityType=scopeEntityType):
@@ -5227,12 +4987,14 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                         dictECMs['Is ECM Mandatory?'] = True
                 else:
                     dictECMs['Is ECM Mandatory?'] = False
-                ecm_update[EMC_ID] = {"externalId": EMC_ID, "tip": None, "name": ECM_NAME, "description": None,
-                                      "modeOfCollection": "onfield",
-                                      "canBeNotApplicable": dictECMs['Is ECM Mandatory?'],
-                                      "notApplicable": False, "canBeNotAllowed": dictECMs['Is ECM Mandatory?'],
-                                      "remarks": None,
-                                      "sequenceNo": ecmSeqCount}
+                ecm_update[EMC_ID] = {
+                    "externalId": EMC_ID, "tip": None, "name": ECM_NAME, "description": None,
+                    "modeOfCollection": "onfield",
+                    "canBeNotApplicable": dictECMs['Is ECM Mandatory?'],
+                    "notApplicable": False, "canBeNotAllowed": dictECMs['Is ECM Mandatory?'],
+                    "remarks": None,
+                    "sequenceNo": ecmSeqCount
+                    }
                 ecmSeqCount += 1
             ecm_dict['evidenceMethods'] = ecm_update
             bodySolutionUpdate = ecm_dict
@@ -5242,9 +5004,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             bodySolutionUpdate = {"status": "active", "isDeleted": False, "criteriaLevelReport": criteriaLevelsReport}
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             excelBook = open_workbook(addObservationSolution)
-            questionUpload(addObservationSolution, parentFolder, frameworkExternalId, millisecond, accessToken,
-                           solutionId,
-                           typeofSolution)
+            questionUpload(addObservationSolution, parentFolder, frameworkExternalId, millisecond, accessToken,solutionId,typeofSolution)
             if not pointBasedValue.lower() == "null":
                 bodySolutionUpdate = {"isRubricDriven": True}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
@@ -5471,27 +5231,17 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                                     print("this is certificate with project")
                                     downloadlogosign(filePathAddProject,projectName_for_folder_path)
                                     editsvg(accessToken,filePathAddProject,projectName_for_folder_path)
-                                    # sys.exit()
-                                    prepareProjectAndTasksSheets(addObservationSolution, projectName_for_folder_path,
-                                                                 accessToken)
-                                    # sys.exit()
+                                    prepareProjectAndTasksSheets(addObservationSolution, projectName_for_folder_path,accessToken)
                                     projectUpload(addObservationSolution, projectName_for_folder_path, accessToken)
                                     taskUpload(addObservationSolution, projectName_for_folder_path, accessToken)
-                                    ProjectSolutionResp = solutionCreationAndMapping(projectName_for_folder_path,
-                                                                                     entityToUpload,
-                                                                                     listOfFoundRoles, accessToken)
+                                    ProjectSolutionResp = solutionCreationAndMapping(projectName_for_folder_path,entityToUpload,listOfFoundRoles, accessToken)
                                     ProjectSolutionExternalId = ProjectSolutionResp[0]
                                     ProjectSolutionId = ProjectSolutionResp[1]
                                     certificatetemplateid= prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path, accessToken,ProjectSolutionId,programID)
-                                    # sys.exit()
+
                                     prepareProgramSuccessSheet(MainFilePath, projectName_for_folder_path, programFile,
                                                                ProjectSolutionExternalId,
                                                                ProjectSolutionId, accessToken)
-                                    # editsvg(accessToken)
-                    # else:
-                    #     print("project upload not found......")
-
-
 
             except:
                 print("Terminated")
@@ -5500,14 +5250,6 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
 
             addProjectFunc(addObservationSolution, parentFolder, millisecond,validateSheets)
             print("Done.")
-
-    # elif isCourse:
-    # Course comented out since it the feature is on hold by the products team.
-    #     parentFolder = createFileStruct(MainFilePath, programFile)
-    #     accessToken = generateAccessToken(parentFolder)
-
-    #     programsFileCheck(programFile, accessToken, parentFolder, MainFilePath)
-
 
 #main execution
 start_time = time.time()
@@ -5569,7 +5311,6 @@ if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
                 resourceTypePGM = dictDetailsEnv['Type of resources'] if dictDetailsEnv['Type of resources'] else terminatingMessage("\"Type of resources\" must not be Empty in \"Resource Details\" sheet")
                 resourceLinkOrExtPGM = dictDetailsEnv['Resource Link'] if dictDetailsEnv['Resource Link'] else terminatingMessage("\"Resource Link\" must not be Empty in \"Resource Details\" sheet")
                 if str(dictDetailsEnv['Type of resources']).lower().strip() == "course":
-                    # isCourse = True
                     isCourse = False
                 else:
                     isCourse = False
