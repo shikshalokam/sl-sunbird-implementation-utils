@@ -3311,31 +3311,10 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
             questionSeqByEcmArr = []
             quesSeqCnt = 1.0
             questionUploadFieldnames = []
-            questionUploadFieldnames = ['solutionId', 'instanceParentQuestionId',
-                                        'hasAParentQuestion', 'parentQuestionOperator',
-                                        'parentQuestionValue', 'parentQuestionId',
-                                        'externalId', 'question0', 'question1', 'tip',
-                                        'hint', 'instanceIdentifier', 'responseType',
-                                        'dateFormat', 'autoCapture', 'validation',
-                                        'validationIsNumber', 'validationRegex',
-                                        'validationMax', 'validationMin', 'file',
-                                        'fileIsRequired', 'fileUploadType',
-                                        'allowAudioRecording', 'minFileCount',
-                                        'maxFileCount', 'caption', 'questionGroup',
-                                        'modeOfCollection', 'accessibility', 'showRemarks',
-                                        'rubricLevel', 'isAGeneralQuestion', 'R1',
-                                        'R1-hint', 'R2', 'R2-hint', 'R3', 'R3-hint', 'R4',
-                                        'R4-hint', 'R5', 'R5-hint', 'R6', 'R6-hint', 'R7',
-                                        'R7-hint', 'R8', 'R8-hint', 'R9', 'R9-hint', 'R10',
-                                        'R10-hint', 'R11', 'R11-hint', 'R12', 'R12-hint',
-                                        'R13', 'R13-hint', 'R14', 'R14-hint', 'R15',
-                                        'R15-hint', 'R16', 'R16-hint', 'R17', 'R17-hint',
-                                        'R18', 'R18-hint', 'R19', 'R19-hint', 'R20',
-                                        'R20-hint', 'sectionHeader', 'page',
-                                        'questionNumber', '_arrayFields']
+            questionUploadFieldnames = ['solutionId', 'instanceParentQuestionId','hasAParentQuestion', 'parentQuestionOperator','parentQuestionValue', 'parentQuestionId','externalId', 'question0', 'question1', 'tip','hint', 'instanceIdentifier', 'responseType','dateFormat', 'autoCapture', 'validation','validationIsNumber', 'validationRegex','validationMax', 'validationMin', 'file','fileIsRequired', 'fileUploadType','allowAudioRecording', 'minFileCount','maxFileCount', 'caption', 'questionGroup','modeOfCollection', 'accessibility', 'showRemarks','rubricLevel', 'isAGeneralQuestion', 'R1','R1-hint', 'R2', 'R2-hint', 'R3', 'R3-hint', 'R4','R4-hint', 'R5', 'R5-hint', 'R6', 'R6-hint', 'R7','R7-hint', 'R8', 'R8-hint', 'R9', 'R9-hint', 'R10','R10-hint', 'R11', 'R11-hint', 'R12', 'R12-hint','R13', 'R13-hint', 'R14', 'R14-hint', 'R15','R15-hint', 'R16', 'R16-hint', 'R17', 'R17-hint','R18', 'R18-hint', 'R19', 'R19-hint', 'R20','R20-hint', 'sectionHeader', 'page','questionNumber', '_arrayFields']
 
             for ques in questionsList:
-                # print(ques)
+
                 questionFilePath = parentFolder + '/questionUpload/'
                 file_exists_ques = os.path.isfile(
                     parentFolder + '/questionUpload/uploadSheet.csv')
@@ -4085,7 +4064,114 @@ def taskUpload(projectFile, projectName_for_folder_path, accessToken):
             terminatingMessage("--->Tasks Upload failed.")
 
 
-def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path, accessToken,solutionId,programID):
+def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID):
+    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
+    projectsheetforcertificate = wbproject.sheet_names()
+    for prosheet in projectsheetforcertificate:
+        if prosheet.strip().lower() == 'Project upload'.lower():
+            detailsColCheck = wbproject.sheet_by_name(prosheet)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+
+            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                dictDetailsEnv = {
+                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                    for col_index_env in range(detailsEnvSheet.ncols)}
+
+                projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
+                projectLevelEvidance = dictDetailsEnv["Project Level Evidence"]
+
+    addcetificateFilePath = projectName_for_folder_path + '/Add certificate/'
+    if not os.path.exists(addcetificateFilePath):
+        os.mkdir(addcetificateFilePath)
+
+    urladdcertificate = config.get(environment, 'Addcertificatetemplate')
+    headeraddcertificateApi = {
+        'Authorization': config.get(environment, 'Authorization'),
+        'X-authenticated-user-token': accessToken,
+        'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        'internal-access-token': config.get(environment, 'internal-access-token'),
+        'Content-Type': 'application/json'
+    }
+
+    if str(projectLevelEvidance).strip().lower() == "yes":
+        payload = {
+            "criteria": {
+                "validationText": "Complete validation message",
+                "expression": "",
+                "conditions": {
+                    "C1": {
+                        "validationText": "Submit your project.",
+                        "expression": "C1",
+                        "conditions": {
+                            "C1": {
+                                "scope": "project",
+                                "key": "status",
+                                "operator": "==",
+                                "value": "submitted"
+                            }
+                        }
+                    },
+                    "C2": {
+                        "validationText": "",
+                        "expression": "C1",
+                        "conditions": {
+                            "C1": {
+                                "scope": "project",
+                                "key": "attachments",
+                                "function": "count",
+                                "filter": {
+                                    "key": "type",
+                                    "value": "all"
+                                },
+                                "operator": ">=",
+                                "value": ""
+                            }
+                        }
+                    }
+                }
+            },
+            "issuer": {
+                "name": ""
+            },
+            "status": "active",
+            "solutionId": solutionId,
+            "programId": programID,
+            "baseTemplateId": ""
+        }
+    else:
+        # str(projectLevelEvidance).strip().lower() == "no"
+        payload = {
+            "criteria": {
+                "validationText": "Complete validation message",
+                "expression": "C1",
+                "conditions": {
+                    "C1": {
+                        "validationText": "Submit your project.",
+                        "expression": "C1",
+                        "conditions": {
+                            "C1": {
+                                "scope": "project",
+                                "key": "status",
+                                "operator": "==",
+                                "value": "submitted"
+                            }
+                        }
+                    }
+                }
+            },
+            "issuer": {
+                "name": ""
+            },
+            "status": "active",
+            "solutionId": solutionId,
+            "programId": programID,
+            "baseTemplateId": ""
+        }
+
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
     for prosheet in projectsheetforcertificate:
@@ -4099,135 +4185,21 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-
+                # print(dictDetailsEnv)
+                # sys.exit()
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
+                # print(keysEnv)
+                # print(detailsEnvSheet)
 
                 projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
-                projectLevelEvidance = dictDetailsEnv["Project Level Evidence"]
-    addcetificateFilePath = projectName_for_folder_path + '/Add certificate/'
 
-    file_exists = os.path.isfile(projectName_for_folder_path + '/Add certificate/Addcertificate.text')
-    if not os.path.exists(addcetificateFilePath):
-        os.mkdir(addcetificateFilePath)
-    urladdcertificate = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'Addcertificatetemplate')
-    headeraddcertificateApi = {
-        'Authorization': config.get(environment, 'Authorization'),
-        'X-authenticated-user-token': accessToken,
-        'X-Channel-id': config.get(environment, 'X-Channel-id'),
-        'internal-access-token': config.get(environment, 'internal-access-token'),
-        'Content-Type': 'application/json'
-
-
-    }
-
-    if str(projectLevelEvidance).strip().lower() == "yes":
-      payload = {
-
-            "criteria": {
-                "validationText": "Complete validation message",
-                "expression": "",
-                                "conditions": {
-                                    "C1": {
-                                        "validationText": "Submit your project.",
-                                        "expression": "C1",
-                                        "conditions": {
-                                            "C1": {
-                                                "scope": "project",
-                                                "key": "status",
-                                                "operator": "==",
-                                                "value": "submitted"
-                                            }
-                                        }
-                                    },
-                                    "C2": {
-                                        "validationText": "",
-                                        "expression": "C1",
-                                        "conditions": {
-                                            "C1": {
-                                                "scope": "project",
-                                                "key": "attachments",
-                                                "function": "count",
-                                                "filter": {
-                                                    "key": "type",
-                                                    "value": "all"
-                                                },
-                                                "operator": ">=",
-                                                "value": ""
-                                            }
-                                        }
-                                    },
-
-                                }
-            },
-            "issuer": {
-                "name": ""
-            },
-            "status": "active",
-            "solutionId": solutionId,
-            "programId": programID,
-            "baseTemplateId": ""
-
-    }
-    elif str(projectLevelEvidance).strip().lower() == "no":
-
-      payload={
-    "criteria": {
-        "validationText": "Complete validation message",
-        "expression": "",
-        "conditions": {
-            "C1": {
-                "validationText": "Submit your project.",
-                "expression": "C1",
-                "conditions": {
-                    "C1": {
-                        "scope": "project",
-                        "key": "status",
-                        "operator": "==",
-                        "value": "submitted"
-                    }
-                }
-            }
-        }
-    },
-    "issuer": {
-        "name": ""
-        },
-        "status": "active",
-        "solutionId": solutionId,
-        "programId": programID,
-        "baseTemplateId": ""
-        
-    
-}
-
-
-
-    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
-    projectsheetforcertificate = wbproject.sheet_names()
-    for prosheet in projectsheetforcertificate:
-        if prosheet.strip().lower() == 'Project upload'.lower():
-            detailsColCheck = wbproject.sheet_by_name(prosheet)
-            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
-                                 range(detailsColCheck.ncols)]
-
-            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
-                       range(detailsEnvSheet.ncols)]
-            for row_index_env in range(2, detailsEnvSheet.nrows):
-                dictDetailsEnv = {
-                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                    for
-                    col_index_env in range(detailsEnvSheet.ncols)}
-                
-                projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
-                
                 if projectLevelEvidance == "Yes":
                     if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
                         dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        projectminnoofEvidence = "Add 1  evidences at the project level"
+                        projectminnoofEvidence = "Add 1  evidence at the project level"
                     elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
                         dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
                         projectminnoofEvidence = "Add  evidences at the project level"
@@ -4237,39 +4209,38 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                         print(projectminnoofEvidence)
 
                     payload["criteria"]["conditions"]["C2"]["validationText"] = projectminnoofEvidence
+                
                     if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
                         dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
                         payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = 1
                     elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
                            dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
                            payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = ""
+
                     else:
                         payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = projectMinNooEvide
                 else:
-                    continue
-                    
+                    pass
+
         if prosheet.strip().lower() == 'Certificate details'.lower():
             print("--->Checking Certificate details  sheet...")
             detailsColCheck = wbproject.sheet_by_name(prosheet)
             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                  range(detailsColCheck.ncols)]
-
+            
             detailsEnvSheet = wbproject.sheet_by_name(prosheet)
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
+
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
-                certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv[
-                    'Certificate issuer'] else terminatingMessage(
-                    "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
+                certificateissuer = dictDetailsEnv['Certificate issuer'] if dictDetailsEnv['Certificate issuer'] else terminatingMessage("\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
                 payload["issuer"]["name"] = certificateissuer
-                Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in [
-                    "One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature",
-                    "Two Logo - Two Signature"] else terminatingMessage(
-                    "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
+
+                Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature","Two Logo - Two Signature"] else terminatingMessage("\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
 
                 if environment == 'pre-prod':
                   if Typeofcertificate == "One Logo - One Signature":
@@ -4298,6 +4269,7 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
                         payload["baseTemplateId"] = "64184da580b5f300083e0656"
 
                 elif environment == 'staging':
+
                     if Typeofcertificate == "One Logo - One Signature":
                         payload["baseTemplateId"] = "641d5c3fad848b0008fd7a4d"
 
@@ -4315,97 +4287,86 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
     for projectInternal in projectInternalfile:
         projectExternalId = projectInternal["externalId"]
         project_id = projectInternal["_SYSTEM_ID"]
+
     taskinternalfile = open(projectName_for_folder_path + '/taskUpload/taskInternal.csv', mode='r')
     taskinternalfile = csv.DictReader(taskinternalfile)
     projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
     projectTemplatefile = csv.DictReader(projectTemplatefile)
     for Projecttemp in projectTemplatefile:
         projectTemplateId = Projecttemp["duplicateTemplate_id"]
-
     c = 2
     for task in taskinternalfile:
-        # print(task)
-        hasAparent = task["hasAParentTask"]
-        if hasAparent == "NO":
-           task_id = task["_SYSTEM_ID"]
-           # print(task_id)
-
-
-           c = c + 1
-           cn = "C"+str(c)
-           taskconditions = {cn: {
-           "validationText": "",
-           "expression": "C1",
-           "conditions": {
-               "C1": {
-                   "scope": "task",
-                   "key": "attachments",
-                   "function": "count",
-                   "filter": {
-                       "key": "type",
-                       "value": "all"
-                   },
-                   "operator": ">=",
-                   "value": "",
-                   "taskDetails": [
-                               task_id
-                   ]
-               }
-           }
-    }
-}
-           payload["criteria"]["conditions"].update(taskconditions)
+        if projectMinNooEvide == "Yes":
+            hasAparent = task["hasAParentTask"]
+            if hasAparent == "NO":
+                task_id = task["_SYSTEM_ID"]
+                c = c + 1
+                cn = "C" + str(c)
+                taskconditions = {
+                    cn: {
+                        "validationText": "",
+                        "expression": "C1",
+                        "conditions": {
+                            "C1": {
+                                "scope": "task",
+                                "key": "attachments",
+                                "function": "count",
+                                "filter": {
+                                    "key": "type",
+                                    "value": "all"
+                                },
+                                "operator": ">=",
+                                "value": "",
+                                "taskDetails": [
+                                    task_id
+                                ]
+                            }
+                        }
+                    }
+                }
+                payload["criteria"]["conditions"].update(taskconditions)
+                print(payload)
 
     wbproject1 = xlrd.open_workbook(filePathAddProject, on_demand=True)
-    projectsheetforcertificate = wbproject.sheet_names()
+    projectsheetforcertificate = wbproject1.sheet_names()
     for prosheet1 in projectsheetforcertificate:
         if prosheet1.strip().lower() == 'Tasks upload'.lower():
             print("--->Checking Tasks upload sheet...")
 
-            detailsColCheck = wbproject1.sheet_by_name(prosheet1)
-            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
-                                 range(detailsColCheck.ncols)]
-            
             detailsEnvSheet = wbproject1.sheet_by_name(prosheet1)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
-                       range(detailsEnvSheet.ncols)]
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in range(detailsEnvSheet.ncols)]
             c = 2
             for row_index_env in range(2, detailsEnvSheet.nrows):
                 dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                                  for
-                                  col_index_env in range(detailsEnvSheet.ncols)}
+                                  for col_index_env in range(detailsEnvSheet.ncols)}
                 taskminnoofEvidence = dictDetailsEnv["Minimum No. of Evidence"]
                 taskname = dictDetailsEnv['TaskTitle']
                 tasklevelevidece = dictDetailsEnv['Task Level Evidence']
-                
+
                 c = c + 1
                 cn = "C" + str(c)
-
                 if tasklevelevidece == "Yes":
                     if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(
-                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        taskvalidationminnoofEvidence = f"Add  1  evidences for the task {taskname}"
+                            dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        taskvalidationminnoofEvidence = f"Add 1 evidence for the task {taskname}"
                     elif str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "no" and str(
-                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        taskvalidationminnoofEvidence = f"Add evidences for task {taskname}"
+                            dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                        taskvalidationminnoofEvidence = f"Add evidence for task {taskname}"
                     else:
                         intTaskMinNOofEvidence = int(taskminnoofEvidence)
-                        taskvalidationminnoofEvidence = f"Add {intTaskMinNOofEvidence}  evidences for the task  {taskname} "
-                        print(projectminnoofEvidence)
+                        taskvalidationminnoofEvidence = f"Add {intTaskMinNOofEvidence} evidence(s) for the task {taskname}"
+                        print(taskvalidationminnoofEvidence)
 
+                    if cn not in payload["criteria"]["conditions"]:
+                        payload["criteria"]["conditions"][cn] = {
+                            "conditions": {}}  # Add the key 'conditions' to the dictionary
                     payload["criteria"]["conditions"][cn]["validationText"] = taskvalidationminnoofEvidence
 
                     if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes":
-
-                        if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                            payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = 1
-                        elif str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "no" and str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                            payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = ""
+                        if str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                            payload["criteria"]["conditions"][cn]["conditions"]["C1"] = {"value": 1}
                         else:
-                            payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = taskminnoofEvidence
-                else:
-                    continue
-                
+                            payload["criteria"]["conditions"][cn]["conditions"]["C1"] = {"value": taskminnoofEvidence}
 
     condition = ""
     for a, i in enumerate(payload["criteria"]["conditions"]):
@@ -4413,16 +4374,12 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             condition = condition + str(i)
         else:
             condition = condition + "&&" + str(i)
-
     payload["criteria"]["expression"] = condition
-    # print(payload)
 
-    # sys.exit()
-    # print(json.dumps(payload, indent=1))
+
+    print(json.dumps(payload, indent=1))
     responseaddcertificateUploadApi = requests.request("POST",url=urladdcertificate, headers=headeraddcertificateApi,
                                            data=json.dumps(payload))
-    # print(responseaddcertificateUploadApi.json())
-    # sys.exit()
     messageArr = ["Add certificate json is prepared",
                   "File path : " + projectName_for_folder_path + '/Add certificate/Addcertificate.text']
     messageArr.append("URL : " + str(responseaddcertificateUploadApi))
@@ -4431,28 +4388,25 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
     with open(projectName_for_folder_path + '/Add certificate/Addcertificatejson.json',
               'w+') as tasksRes:
         tasksRes.write(json.dumps(payload))
-    # print("Tasks are uploaded successfully")
 
-    # if responseaddcertificateUploadApi.status_code == 200:
-        # successLogger.debug('CriteriaUploadApi Success')
     if responseaddcertificateUploadApi.status_code == 200:
         responseaddcetificate = responseaddcertificateUploadApi.json()
         certificatetemplateid = responseaddcetificate['result']['id']
         print("-->Certificate template id generated <--", certificatetemplateid)
-       
+
 
         with open(projectName_for_folder_path + '/Add certificate/Addcertificate.text',
                   'w+') as tasksRes:
             tasksRes.write(responseaddcertificateUploadApi.text)
-    # return responseaddcertificateUploadApi['result']['id']
+
     else:
         print("Add certificate mission failed please check logs")
         messageArr.append("Response : " + str(responseaddcertificateUploadApi.text))
         createAPILog(projectName_for_folder_path, messageArr)
         sys.exit()
 
-    urluploadcertificatepi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
-    # print(certificatetemplateid)
+    urluploadcertificatepi = config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
+
     headeruploadcertificateApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -4465,12 +4419,15 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
     task_file.append(certificateaddtotemplate)
 
 
-    responseTasksUploadApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,data=task_payload,files=task_file)
+    responseTasksUploadApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,
+                                           data=task_payload,
+                                           files=task_file)
     if responseTasksUploadApi.status_code == 200:
         responseeditsvg = responseTasksUploadApi.json()
         svgid = responseeditsvg['result']['data']['templateId']
 
-        urlsolutionupdateapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'updatecertificatesolu') + solutionId
+        urlsolutionupdateapi = config.get(environment, 'updatecertificatesolu') + solutionId
+
         headersolutionupdateApi = {
             'Authorization': config.get(environment, 'Authorization'),
             'X-authenticated-user-token': accessToken,
@@ -4482,7 +4439,9 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
         certificate_payload = json.dumps({
             'certificateTemplateId':certificatetemplateid
         })
-        responseupdatecertificateApi = requests.request("POST", url=urlsolutionupdateapi,headers=headersolutionupdateApi,data=certificate_payload)
+        responseupdatecertificateApi = requests.request("POST", url=urlsolutionupdateapi,
+                                                  headers=headersolutionupdateApi,
+                                                  data=certificate_payload)
 
 
         if responseupdatecertificateApi.status_code == 200:
@@ -4492,8 +4451,9 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
             print("error in updating solution")
             sys.exit()
 
-        urlprojecttemplateapi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'updateprojecttemplate') + projectTemplateId
-
+        urlprojecttemplateapi = config.get(environment, 'updateprojecttemplate') + projectTemplateId
+        # print(project_id)
+        # print(urlprojecttemplateapi)
         headerprojectrtemplateupdateApi = {
             'Authorization': config.get(environment, 'Authorization'),
             'X-authenticated-user-token': accessToken,
@@ -4505,13 +4465,22 @@ def prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path,
         certificate_payload = json.dumps({
             'certificateTemplateId': certificatetemplateid
         })
-        responseupdatecertificateApi = requests.request("POST", url=urlprojecttemplateapi,headers=headerprojectrtemplateupdateApi,data=certificate_payload)
+        responseupdatecertificateApi = requests.request("POST", url=urlprojecttemplateapi,
+                                                        headers=headerprojectrtemplateupdateApi,
+                                                        data=certificate_payload)
         if responseupdatecertificateApi.status_code == 200:
             print(responseupdatecertificateApi.json())
 
         else:
             print("error in updating certificate with project")
             sys.exit()
+
+
+
+
+
+        # json_object = json.loads(responseTasksUploadApi)
+        # print(json.dumps(json_object, indent=1))
 
 
 def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
