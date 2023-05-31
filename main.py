@@ -4435,8 +4435,8 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                                            data=task_payload,
                                            files=task_file)
     print(responseDownloadsvgApi)
-    if responseTasksUploadApi.status_code == 200:
-        responseeditsvg = responseTasksUploadApi.json()
+    if responseDownloadsvgApi.status_code == 200:
+        responseeditsvg = responseDownloadsvgApi.json()
         svgid = responseeditsvg['result']['data']['templateId']
 
         urlsolutionupdateapi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'updatecertificatesolu') + solutionId
