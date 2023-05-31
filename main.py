@@ -46,6 +46,7 @@ currentDirectory = os.getcwd()
 config = ConfigParser()
 config.read('common_config/config.ini')
 
+
 # email regex
 regex = "\"?([-a-zA-Z0-9.`?{}]+@\w+\.\w+)\"?"
 
@@ -664,6 +665,7 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
     programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
+    terminatingMessage
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
@@ -2922,7 +2924,7 @@ def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFi
 
 
 def prepareProgramSuccessSheet(MainFilePath, solutionName_for_folder_path, programFile, solutionExternalId, solutionId,accessToken):
-    urlFetchSolutionApi = config.get(environment, 'fetchSolutionDoc') + solutionId
+    urlFetchSolutionApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solutionId
     headerFetchSolutionApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -3638,7 +3640,7 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
             messageArr.append("solution found : " + str(solution_id))
             createAPILog(projectName_for_folder_path, messageArr)
             print("searchSolutionApi Success")
-            solutionDetailsurl = config.get(environment, 'fetchSolutionDoc') + solution_id
+            solutionDetailsurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solution_id
 
             solutionDetailspayload = {}
             solutionDetailsheaders = {
@@ -4064,7 +4066,61 @@ def taskUpload(projectFile, projectName_for_folder_path, accessToken):
             terminatingMessage("--->Tasks Upload failed.")
 
 
-def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID):
+def fetchCertificateBaseTemplate(filePathAddProject,accessToken):
+    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
+    projectsheetforcertificate = wbproject.sheet_names()
+    for prosheet in projectsheetforcertificate:
+        if prosheet.strip().lower() == 'Certificate details'.lower():
+            detailsColCheck = wbproject.sheet_by_name(prosheet)
+            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                 range(detailsColCheck.ncols)]
+
+            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                       range(detailsEnvSheet.ncols)]
+            for row_index_env in range(2, detailsEnvSheet.nrows):
+                dictDetailsEnv = {
+                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                    for col_index_env in range(detailsEnvSheet.ncols)}
+
+                typeOfCertificate = dictDetailsEnv["Type of certificate"]
+                
+    urldbFind = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'dbfindapi')
+    headerdbFindApi = {
+        'Authorization': config.get(environment, 'Authorization'),
+        'X-authenticated-user-token': accessToken,
+        'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        'internal-access-token': config.get(environment, 'internal-access-token'),
+        'Content-Type': 'application/json'
+    }
+    payload = json.dumps({
+        "query": {},
+        "mongoIdKeys": []
+    })
+
+    responsedbFindApi = requests.request("POST", url=urldbFind, headers=headerdbFindApi,
+                                         data=payload)
+    if responsedbFindApi.status_code == 200:
+        responseaddcetificate = responsedbFindApi.json()
+        result_list = responseaddcetificate['result']
+        baseTemplateLookup = {}
+        for i in result_list:
+            baseTemplateLookup[i['code']] = i['_id']
+        typeOfCertificate=typeOfCertificate.lower()
+        baseTemplateCode=config.get(environment,typeOfCertificate.replace(" ",""))
+
+        return baseTemplateLookup[baseTemplateCode]
+        
+    else:
+        print("--->Error in fetching DBfind data please give proper code value<---")
+        messageArr.append("Response : " + str(responseaddcetificate.text))
+        createAPILog(projectName_for_folder_path, messageArr)
+        sys.exit()
+
+
+    
+
+def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
     for prosheet in projectsheetforcertificate:
@@ -4084,11 +4140,11 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                 projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
                 projectLevelEvidance = dictDetailsEnv["Project Level Evidence"]
 
-    addcetificateFilePath = projectName_for_folder_path + '/Add certificate/'
+    addcetificateFilePath = projectName_for_folder_path + '/addCertificate/'
     if not os.path.exists(addcetificateFilePath):
         os.mkdir(addcetificateFilePath)
 
-    urladdcertificate = config.get(environment, 'Addcertificatetemplate')
+    urladdcertificate = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'Addcertificatetemplate')
     headeraddcertificateApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
@@ -4176,7 +4232,6 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     projectsheetforcertificate = wbproject.sheet_names()
     for prosheet in projectsheetforcertificate:
         if prosheet.strip().lower() == 'Project upload'.lower():
-            # print("something in certificate")
             detailsColCheck = wbproject.sheet_by_name(prosheet)
             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                  range(detailsColCheck.ncols)]
@@ -4185,15 +4240,11 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
             for row_index_env in range(2, detailsEnvSheet.nrows):
-                # print(dictDetailsEnv)
-                # sys.exit()
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
-                # print(keysEnv)
-                # print(detailsEnvSheet)
-
+                
                 projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
 
                 if projectLevelEvidance == "Yes":
@@ -4241,47 +4292,9 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                 payload["issuer"]["name"] = certificateissuer
 
                 Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature","Two Logo - Two Signature"] else terminatingMessage("\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
-
-                if environment == 'pre-prod':
-                  if Typeofcertificate == "One Logo - One Signature":
-                      payload["baseTemplateId"] = "63f345b25d10260008d69ef5"
-
-                  elif Typeofcertificate == "One Logo - Two Signature":
-                       payload["baseTemplateId"] = "63f3464c53ce80000893706d"
-
-                  elif Typeofcertificate == "Two Logo - One Signature":
-                       payload["baseTemplateId"] = "63f3461053ce800008937069"
-
-                  elif Typeofcertificate == "Two Logo - Two Signature":
-                      payload["baseTemplateId"] = "63f3468053ce80000893706f"
-
-                elif environment == 'production-with-vpn':
-                    if Typeofcertificate == "One Logo - One Signature":
-                        payload["baseTemplateId"] = "6411ce7280b5f300083c9477"
-
-                    elif Typeofcertificate == "One Logo - Two Signature":
-                        payload["baseTemplateId"] = "6418058680b5f300083df8dd"
-
-                    elif Typeofcertificate == "Two Logo - One Signature":
-                        payload["baseTemplateId"] = "641848d280b5f300083e05d5"
-
-                    elif Typeofcertificate == "Two Logo - Two Signature":
-                        payload["baseTemplateId"] = "64184da580b5f300083e0656"
-
-                elif environment == 'staging':
-
-                    if Typeofcertificate == "One Logo - One Signature":
-                        payload["baseTemplateId"] = "641d5c3fad848b0008fd7a4d"
-
-                    elif Typeofcertificate == "One Logo - Two Signature":
-                        payload["baseTemplateId"] = "641d5c7dad848b0008fd7a54"
-
-                    elif Typeofcertificate == "Two Logo - One Signature":
-                        payload["baseTemplateId"] = "641d5c5fad848b0008fd7a52"
-
-                    elif Typeofcertificate == "Two Logo - Two Signature":
-                        payload["baseTemplateId"] = "641d5c94ad848b0008fd7a56"
-
+                
+                payload["baseTemplateId"]=baseTemplate_id
+               
     projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r')
     projectInternalfile = csv.DictReader(projectInternalfile)
     for projectInternal in projectInternalfile:
@@ -4362,11 +4375,11 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                             "conditions": {}}  # Add the key 'conditions' to the dictionary
                     payload["criteria"]["conditions"][cn]["validationText"] = taskvalidationminnoofEvidence
 
-                    if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes":
-                        if str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                            payload["criteria"]["conditions"][cn]["conditions"]["C1"] = {"value": 1}
-                        else:
-                            payload["criteria"]["conditions"][cn]["conditions"]["C1"] = {"value": taskminnoofEvidence}
+                    if 'Task Level Evidence' in dictDetailsEnv and 'Minimum No. of Evidence' in dictDetailsEnv:
+                        if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
+                            payload["criteria"]["conditions"][cn]["conditions"].setdefault("C1", {})["value"] = 1
+                    else:
+                        payload["criteria"]["conditions"][cn]["conditions"].setdefault("C1", {})["value"] = taskminnoofEvidence
 
     condition = ""
     for a, i in enumerate(payload["criteria"]["conditions"]):
@@ -4381,11 +4394,11 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     responseaddcertificateUploadApi = requests.request("POST",url=urladdcertificate, headers=headeraddcertificateApi,
                                            data=json.dumps(payload))
     messageArr = ["Add certificate json is prepared",
-                  "File path : " + projectName_for_folder_path + '/Add certificate/Addcertificate.text']
+                  "File path : " + projectName_for_folder_path + '/addCertificate/Addcertificate.text']
     messageArr.append("URL : " + str(responseaddcertificateUploadApi))
     messageArr.append("Upload status code : " + str(responseaddcertificateUploadApi.status_code))
     createAPILog(projectName_for_folder_path, messageArr)
-    with open(projectName_for_folder_path + '/Add certificate/Addcertificatejson.json',
+    with open(projectName_for_folder_path + '/addCertificate/Addcertificatejson.json',
               'w+') as tasksRes:
         tasksRes.write(json.dumps(payload))
 
@@ -4395,7 +4408,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         print("-->Certificate template id generated <--", certificatetemplateid)
 
 
-        with open(projectName_for_folder_path + '/Add certificate/Addcertificate.text',
+        with open(projectName_for_folder_path + '/addCertificate/Addcertificate.text',
                   'w+') as tasksRes:
             tasksRes.write(responseaddcertificateUploadApi.text)
 
@@ -4405,7 +4418,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         createAPILog(projectName_for_folder_path, messageArr)
         sys.exit()
 
-    urluploadcertificatepi = config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
+    urluploadcertificatepi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'uploadcertificatetosvg') + certificatetemplateid
 
     headeruploadcertificateApi = {
         'Authorization': config.get(environment, 'Authorization'),
@@ -4426,7 +4439,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         responseeditsvg = responseTasksUploadApi.json()
         svgid = responseeditsvg['result']['data']['templateId']
 
-        urlsolutionupdateapi = config.get(environment, 'updatecertificatesolu') + solutionId
+        urlsolutionupdateapi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'updatecertificatesolu') + solutionId
 
         headersolutionupdateApi = {
             'Authorization': config.get(environment, 'Authorization'),
@@ -4445,15 +4458,13 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
 
         if responseupdatecertificateApi.status_code == 200:
-            print(responseupdatecertificateApi)
+            print("--->certificate added to the solution<---")
 
         else:
             print("error in updating solution")
             sys.exit()
 
-        urlprojecttemplateapi = config.get(environment, 'updateprojecttemplate') + projectTemplateId
-        # print(project_id)
-        # print(urlprojecttemplateapi)
+        urlprojecttemplateapi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'updateprojecttemplate') + projectTemplateId
         headerprojectrtemplateupdateApi = {
             'Authorization': config.get(environment, 'Authorization'),
             'X-authenticated-user-token': accessToken,
@@ -4469,21 +4480,13 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                                                         headers=headerprojectrtemplateupdateApi,
                                                         data=certificate_payload)
         if responseupdatecertificateApi.status_code == 200:
-            print(responseupdatecertificateApi.json())
+            print("--->Certificate added to project<---")
 
         else:
             print("error in updating certificate with project")
             sys.exit()
 
-
-
-
-
-        # json_object = json.loads(responseTasksUploadApi)
-        # print(json.dumps(json_object, indent=1))
-
-
-def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
+def editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTemplate_id):
 
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
@@ -4533,12 +4536,8 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     downloadedfiles.append(signatureImg1)
                     payload['signatureTitleName1'] = authrigedsignaturename1
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
-                    if environment == 'pre-prod':
-                        baseTemplateId = '63f345b25d10260008d69ef5'
-                    elif environment == 'production-with-vpn':
-                        baseTemplateId = '6411ce7280b5f300083c9477'
-                    elif environment == 'staging':
-                        baseTemplateId = '641d5c3fad848b0008fd7a4d'
+                    baseTemplateId=baseTemplate_id
+                    
 
                 elif Typeofcertificate == 'One Logo - Two Signature':
                     print("-->This is One Logo - Two Signature<--")
@@ -4557,13 +4556,8 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
                     payload['signatureTitleName2'] = authrigedsignaturename2
                     payload['signatureTitleDesignation2'] = authrigeddesignation2
-                    if environment == 'pre-prod':
-                        baseTemplateId = '63f3464c53ce80000893706d'
-                    elif environment == 'production-with-vpn':
-                        baseTemplateId = '6418058680b5f300083df8dd'
-                    elif environment == 'staging':
-                        baseTemplateId = '641d5c7dad848b0008fd7a54'
-
+                    baseTemplateId=baseTemplate_id
+                   
                 elif Typeofcertificate == 'Two Logo - One Signature':
                     print("-->This is Two Logo - One Signature<--")
                     stateLogo1 = ('stateLogo1', (
@@ -4576,12 +4570,7 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     downloadedfiles.append(stateLogo2)
                     payload['signatureTitleName1'] = authrigedsignaturename1
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
-                    if environment == 'pre-prod':
-                        baseTemplateId = '63f3461053ce800008937069'
-                    elif environment == 'production-with-vpn':
-                        baseTemplateId = '641848d280b5f300083e05d5'
-                    elif environment == 'staging':
-                        baseTemplateId = '641d5c5fad848b0008fd7a52'
+                    baseTemplateId=baseTemplate_id
 
                 elif Typeofcertificate == 'Two Logo - Two Signature':
                     print("-->This is Two Logo - Two Signature<--")
@@ -4598,12 +4587,7 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path):
                     payload['signatureTitleDesignation1'] = authrigeddesignation1
                     payload['signatureTitleName2'] = authrigedsignaturename2
                     payload['signatureTitleDesignation2'] = authrigeddesignation2
-                    if environment == 'pre-prod':
-                        baseTemplateId = '63f3468053ce80000893706f'
-                    elif environment == 'production-with-vpn':
-                        baseTemplateId = '64184da580b5f300083e0656'
-                    elif environment == 'staging':
-                        baseTemplateId = '641d5c94ad848b0008fd7a56'
+                    baseTemplateId=baseTemplate_id
 
                 urleditnigsvgApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'editsvgtemp') + baseTemplateId
                 headereditingsvgApi = {
@@ -5165,7 +5149,6 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                     projectsheetforcertificate = wbproject.sheet_names()
                     for prosheet in projectsheetforcertificate:
                         if prosheet.strip().lower() == 'Project upload'.lower():
-                            print("something in certificate")
                             detailsColCheck = wbproject.sheet_by_name(prosheet)
                             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                                  range(detailsColCheck.ncols)]
@@ -5198,15 +5181,18 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                                 elif str(dictDetailsEnv['has certificate']).lower()== 'Yes'.lower():
 
                                     print("this is certificate with project")
+                                    baseTemplate_id=fetchCertificateBaseTemplate(filePathAddProject,accessToken)
+                                    print(baseTemplate_id)
+                                    # sys.exit()
                                     downloadlogosign(filePathAddProject,projectName_for_folder_path)
-                                    editsvg(accessToken,filePathAddProject,projectName_for_folder_path)
+                                    editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTemplate_id)
                                     prepareProjectAndTasksSheets(addObservationSolution, projectName_for_folder_path,accessToken)
                                     projectUpload(addObservationSolution, projectName_for_folder_path, accessToken)
                                     taskUpload(addObservationSolution, projectName_for_folder_path, accessToken)
                                     ProjectSolutionResp = solutionCreationAndMapping(projectName_for_folder_path,entityToUpload,listOfFoundRoles, accessToken)
                                     ProjectSolutionExternalId = ProjectSolutionResp[0]
                                     ProjectSolutionId = ProjectSolutionResp[1]
-                                    certificatetemplateid= prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path, accessToken,ProjectSolutionId,programID)
+                                    certificatetemplateid= prepareaddingcertificatetemp(filePathAddProject,projectName_for_folder_path, accessToken,ProjectSolutionId,programID,baseTemplate_id)
 
                                     prepareProgramSuccessSheet(MainFilePath, projectName_for_folder_path, programFile,
                                                                ProjectSolutionExternalId,
