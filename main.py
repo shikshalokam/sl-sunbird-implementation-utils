@@ -3230,7 +3230,6 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                             'Authorization': config.get(environment, 'Authorization'),
                             'X-authenticated-user-token': accessToken,
                             'X-Channel-id': config.get(environment, 'X-Channel-id'),
-                            'gpsLocation': config.get(environment, 'gpsLocation'),
                             'appName': config.get(environment, 'appName')
                         }
                         responseCreateSolutionApi = requests.post(url=urlCreateSolutionApi,
@@ -4432,11 +4431,12 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     task_file.append(certificateaddtotemplate)
 
 
-    responseTasksUploadApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,
+    responseDownloadsvgApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,
                                            data=task_payload,
                                            files=task_file)
-    if responseTasksUploadApi.status_code == 200:
-        responseeditsvg = responseTasksUploadApi.json()
+    print(responseDownloadsvgApi)
+    if responseDownloadsvgApi.status_code == 200:
+        responseeditsvg = responseDownloadsvgApi.json()
         svgid = responseeditsvg['result']['data']['templateId']
 
         urlsolutionupdateapi = config.get(environment, 'INTERNAL_KONG_IP')+config.get(environment, 'updatecertificatesolu') + solutionId
@@ -4598,6 +4598,7 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTempl
 
                 }
                 responseeditsvg = requests.request("POST",url=urleditnigsvgApi, headers=headereditingsvgApi,data=payload, files=downloadedfiles)
+                print(responseeditsvg)
 
                 if responseeditsvg.status_code == 200:
                     responseeditsvg = responseeditsvg.json()
