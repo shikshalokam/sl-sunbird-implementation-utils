@@ -485,14 +485,17 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
-                    # checking resource types and calling relevant functions 
-                    # if startDateOfProgram:
-                    #     startDateArr = str(startDateOfProgram).split("-")
-                    #     bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
-                    #     solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
-                    # if endDateOfProgram:
-                    #     endDateArr = str(endDateOfProgram).split("-")
-                    #     bodySolutionUpdate = {"endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+
+                    # taking the start date of program from program template and converting YYYY-MM-DD 00:00:00 format
+                    
+                    startDateArr = str(startDateOfProgram).split("-")
+                    startDateOfProgram = startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"
+
+                    # taking the end date of program from program template and converting YYYY-MM-DD 00:00:00 format
+
+                    endDateArr = str(endDateOfProgram).split("-")
+                    endDateOfProgram = endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"
+                        
                     global scopeEntityType
                     scopeEntityType = "state"
 
@@ -509,6 +512,9 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global entitiesPGMID
                     entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                                                   entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
+
+                    # fetching the orId from fetchorgId function
+
                     global orgIds
                     if environment == "staging":
                         orgIds = "01269934121990553633"
@@ -516,9 +522,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         orgIds = "0137541424673095687"
                     else:
                         orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
-                    # print(orgIds)
-                    # sys.exit()
-
+                    
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
                         extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
                         if str(dictDetailsEnv['Program ID']).strip() == "Do not fill this field":
@@ -560,20 +564,16 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         scopeEntityType = EntityType
                         # fetch entity details 
                         entitiesPGMID = fetchEntityId(parentFolder, accessToken,entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
-                        print(entitiesPGMID)
-                        # sys.exit()
-                        # fetch sub-role details 
+                       
                         rolesPGMID = fetchScopeRole(parentFolder, accessToken, rolesPGM.lstrip().rstrip().split(","))
-                        print(rolesPGM)
-                        # sys.exit()
 
                         # call function to create program 
                         programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
                         # sys.exit()
-                        # programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                        programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
 
                         # map PM / PD to the program 
-                        # Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
+                        Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
 
                         # check if program is created or not 
                         if getProgramInfo(accessToken, parentFolder, extIdPGM):
@@ -1434,19 +1434,19 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     dictDetailsEnv = {
                         keysColCheckQues[col_index_env]: questionsColCheck.cell(row_index_env, col_index_env).value for
                         col_index_env in range(questionsColCheck.ncols)}
-                    question_sequenceSUR = dictDetailsEnv['question_sequence'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
+                    question_sequenceSUR = dictDetailsEnv['question_sequence'] if dictDetailsEnv[
                         'question_sequence'] else terminatingMessage(
                         "\"question_sequence\" must not be Empty in \"details\" sheet")
                     question_idSUR = dictDetailsEnv['question_id'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                         'question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"details\" sheet")
                     pageSUR = dictDetailsEnv['page'] if dictDetailsEnv['page'] else terminatingMessage(
                         "\"page\" must not be Empty in \"details\" sheet")
-                    question_numberSUR = dictDetailsEnv['question_number'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
+                    question_numberSUR = dictDetailsEnv['question_number'] if dictDetailsEnv[
                         'question_number'] else terminatingMessage(
                         "\"question_number\" must not be Empty in \"details\" sheet")
                     question_language1SUR = dictDetailsEnv['question_language1'].encode('utf-8').decode('utf-8') if not dictDetailsEnv['question_language1'] == None else terminatingMessage(
                         "\"question_language1\" must not be Empty in \"details\" sheet")
-                    question_response_typeSUR = dictDetailsEnv['question_response_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
+                    question_response_typeSUR = dictDetailsEnv['question_response_type'] if dictDetailsEnv[
                         'question_response_type'] else terminatingMessage(
                         "\"question_response_type\" must not be Empty in \"details\" sheet")
                     response_requiredSUR = dictDetailsEnv['response_required'] if dictDetailsEnv[
@@ -1991,6 +1991,7 @@ def solutionUpdate(solutionName_for_folder_path, accessToken, solutionId, bodySo
         print("Solution Update Failed.")
         return False
 
+
 # question sheet prepration and upload 
 def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExternalId, millisAddObs, accessToken,
                    solutionId, typeofSolution):
@@ -2390,72 +2391,72 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                     questionFileObj['R2'] = ques['response(R2)']
                 if type(ques['response(R2)_hint']) != str:
                     if (ques['response(R2)_hint'] and ques['response(R2)_hint'].is_integer() == True):
-                        questionFileObj['R2-hint'] = int(ques['response(R2)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R2-hint'] = int(ques['response(R2)_hint'])
                     elif (ques['response(R2)_hint'] and ques['response(R2)_hint'].is_integer() == False):
-                        questionFileObj['R2-hint'] = ques['response(R2)_hint'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R2-hint'] = ques['response(R2)_hint']
                 else:
                     questionFileObj['R2-hint'] = ques['response(R2)_hint']
                 if type(ques['response(R3)']) != str:
                     if (ques['response(R3)'] and ques['response(R3)'].is_integer() == True):
-                        questionFileObj['R3'] = int(ques['response(R3)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R3'] = int(ques['response(R3)'])
                     elif (ques['response(R3)'] and ques['response(R3)'].is_integer() == False):
-                        questionFileObj['R3'] = ques['response(R3)'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R3'] = ques['response(R3)']
                 else:
                     questionFileObj['R3'] = ques['response(R3)']
                 if type(ques['response(R3)_hint']) != str:
                     if (ques['response(R3)_hint'] and ques['response(R3)_hint'].is_integer() == True):
-                        questionFileObj['R3-hint'] = int(ques['response(R3)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R3-hint'] = int(ques['response(R3)_hint'])
                     elif (ques['response(R3)_hint'] and ques['response(R3)_hint'].is_integer() == False):
-                        questionFileObj['R3-hint'] = ques['response(R3)_hint'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R3-hint'] = ques['response(R3)_hint']
                 else:
                     questionFileObj['R3-hint'] = ques['response(R3)_hint']
                 if type(ques['response(R4)']) != str:
                     if (ques['response(R4)'] and ques['response(R4)'].is_integer() == True):
-                        questionFileObj['R4'] = int(ques['response(R4)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R4'] = int(ques['response(R4)'])
                     elif (ques['response(R4)'] and ques['response(R4)'].is_integer() == False):
-                        questionFileObj['R4'] = ques['response(R4)'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R4'] = ques['response(R4)']
                 else:
                     questionFileObj['R4'] = ques['response(R4)']
                 if type(ques['response(R4)_hint']) != str:
                     if (ques['response(R4)_hint'] and ques['response(R4)_hint'].is_integer() == True):
-                        questionFileObj['R4-hint'] = int(ques['response(R4)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R4-hint'] = int(ques['response(R4)_hint'])
                     elif (ques['response(R4)_hint'] and ques['response(R4)_hint'].is_integer() == False):
-                        questionFileObj['R4-hint'] = ques['response(R4)_hint'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R4-hint'] = ques['response(R4)_hint']
                 else:
                     questionFileObj['R4-hint'] = ques['response(R4)_hint']
                 if type(ques['response(R5)']) != str:
                     if (ques['response(R5)'] and ques['response(R5)'].is_integer() == True):
-                        questionFileObj['R5'] = int(ques['response(R5)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R5'] = int(ques['response(R5)'])
                     elif (ques['response(R5)'] and ques['response(R5)'].is_integer() == False):
-                        questionFileObj['R5'] = ques['response(R5)'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R5'] = ques['response(R5)']
                 else:
                     questionFileObj['R5'] = ques['response(R5)']
                 if type(ques['response(R5)_hint']) != str:
                     if (ques['response(R5)_hint'] and ques['response(R5)_hint'].is_integer() == True):
-                        questionFileObj['R5-hint'] = int(ques['response(R5)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R5-hint'] = int(ques['response(R5)_hint'])
                     elif (ques['response(R5)_hint'] and ques['response(R5)_hint'].is_integer() == False):
-                        questionFileObj['R5-hint'] = ques['response(R5)_hint'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R5-hint'] = ques['response(R5)_hint']
                 else:
                     questionFileObj['R5-hint'] = ques['response(R5)_hint']
                 if type(ques['response(R6)']) != str:
                     if (ques['response(R6)'] and ques['response(R6)'].is_integer() == True):
-                        questionFileObj['R6'] = int(ques['response(R6)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R6'] = int(ques['response(R6)'])
                     elif (ques['response(R6)'] and ques['response(R6)'].is_integer() == False):
-                        questionFileObj['R6'] = ques['response(R6)'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R6'] = ques['response(R6)']
                 else:
                     questionFileObj['R6'] = ques['response(R6)']
                 if type(ques['response(R6)_hint']) != str:
                     if (ques['response(R6)_hint'] and ques['response(R6)_hint'].is_integer() == True):
-                        questionFileObj['R6-hint'] = int(ques['response(R6)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R6-hint'] = int(ques['response(R6)_hint'])
                     elif (ques['response(R6)_hint'] and ques['response(R6)_hint'].is_integer() == False):
-                        questionFileObj['R6-hint'] = ques['response(R6)_hint'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R6-hint'] = ques['response(R6)_hint']
                 else:
                     questionFileObj['R6-hint'] = ques['response(R6)_hint']
                 if type(ques['response(R7)']) != str:
                     if (ques['response(R7)'] and ques['response(R7)'].is_integer() == True):
-                        questionFileObj['R7'] = int(ques['response(R7)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R7'] = int(ques['response(R7)'])
                     elif (ques['response(R7)'] and ques['response(R7)'].is_integer() == False):
-                        questionFileObj['R7'] = ques['response(R7)'].encode('utf-8').decode('utf-8')
+                        questionFileObj['R7'] = ques['response(R7)']
                 else:
                     questionFileObj['R7'] = ques['response(R7)']
                 if type(ques['response(R7)_hint']) != str:
@@ -2712,12 +2713,16 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
     urlQuestionsUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'questionUploadApiUrl')
     headerQuestionUploadApi = {'Authorization': config.get(environment, 'Authorization'),
                                'X-authenticated-user-token': accessToken,
-                               'X-Channel-id': config.get(environment, 'X-Channel-id')}
+                               'X-Channel-id': config.get(environment, 'X-Channel-id'),
+                               'internal-access-token': config.get(environment, 'internal-access-token')
+                               }
+
     filesQuestion = {
         'questions': open(solutionName_for_folder_path + '/questionUpload/uploadSheet.csv', 'rb')
     }
     responseQuestionUploadApi = requests.post(url=urlQuestionsUploadApi, headers=headerQuestionUploadApi,
                                               files=filesQuestion)
+    print(responseQuestionUploadApi)
     messageArr = ["Question Upload sheet prepared.",
                   "File loc : " + solutionName_for_folder_path + '/questionUpload/uploadSheet.csv',
                   "Question upload API called.", "Status code : " + str(responseQuestionUploadApi.status_code)]
@@ -3253,6 +3258,9 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                 else:    
                     userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
                 surveySolutionCreationReqBody['author'] = userDetails[0]
+
+                # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax 
+
                 if dictDetailsEnv["survey_start_date"]:
                     if type(dictDetailsEnv["survey_start_date"]) == str:
                         startDateArr = None
@@ -3270,7 +3278,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                             endDateArr = None
                             endDateArr = (dictDetailsEnv["survey_end_date"]).split("-")
                             surveySolutionCreationReqBody["endDate"] = endDateArr[2] + "-" + endDateArr[1] + "-" + \
-                                                                       endDateArr[0] + "T23:59:59.000Z"
+                                                                       endDateArr[0] + " 23:59:59"
                         elif type(dictDetailsEnv["survey_end_date"]) == float:
                             surveySolutionCreationReqBody["endDate"] = (
                                 xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_end_date"],
@@ -4843,6 +4851,9 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 bodySolutionUpdate = {
                     "creator": projectCreator, "author": matchedShikshalokamLoginId}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
+
+                # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
                 if solutionDetails[1]:
                     startDateArr = str(solutionDetails[1]).split("-")
                     bodySolutionUpdate = {
@@ -5103,6 +5114,9 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             bodySolutionUpdate = {'allowMultipleAssessemts': allow_multiple_submissions, "creator": creator}
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
+
+            # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
@@ -5123,6 +5137,9 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                     bodySolutionUpdate = {
                         "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                     solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+
+                    # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+                    
                     if solutionDetails[1]:
                         startDateArr = str(solutionDetails[1]).split("-")
                         bodySolutionUpdate = {
@@ -5173,6 +5190,9 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
 
             solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
+
+            # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
