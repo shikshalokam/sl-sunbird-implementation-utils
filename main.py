@@ -298,8 +298,6 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
     pdpmsheet = MainFilePath+ "/pdpmmapping/"
     if not os.path.exists(pdpmsheet):
         os.mkdir(pdpmsheet)
-    print(program_file)
-    print(MainFilePath)
 
     wbproject = xlrd.open_workbook(program_file, on_demand=True)
     projectSheetNames = wbproject.sheet_names()
@@ -498,8 +496,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         orgIds = "0137541424673095687"
                     else:
                         orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
-                    # print(orgIds)
-                    # sys.exit()
+
 
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
                         extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
@@ -536,11 +533,11 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         scopeEntityType = EntityType
                         # fetch entity details 
                         entitiesPGMID = fetchEntityId(parentFolder, accessToken,entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
-                        print(entitiesPGMID)
+                        
                         # sys.exit()
                         # fetch sub-role details 
                         rolesPGMID = fetchScopeRole(parentFolder, accessToken, rolesPGM.lstrip().rstrip().split(","))
-                        print(rolesPGM)
+                        
                         # sys.exit()
 
                         # call function to create program 
@@ -1064,13 +1061,12 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         isProgramnamePresent = False
                     else:
                         isProgramnamePresent = True
-                    print(programName)
-                    print(scopeEntityType)
+                   
                     userEntity = dictProgramDetails['Targeted state at program level'].encode('utf-8').decode('utf-8').lstrip().rstrip().split(",") if \
                         dictProgramDetails[
                             'Targeted state at program level'] else terminatingMessage(
                         "\"scope_entity\" must not be Empty in \"details\" sheet")
-                    print(userEntity)
+                    
 
         for sheetEnv in sheetNames1:
             if sheetEnv == "Instructions":
@@ -1439,9 +1435,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                      range(detailsColCheck.ncols)]
                 if len(keysColCheckDetai) != len(projectDetailsCols) or set(keysColCheckDetai) == set(
                         projectDetailsCols):
-                    # print(keysColCheckDetai)
-                    # print(projectDetailsCols)
-                    # print(keysColCheckDetai)
+                   
                     terminatingMessage('Columns is missing in Project Upload sheet')
                 detailsEnvSheet = wbObservation1.sheet_by_name(sheetColCheck)
                 keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
@@ -1486,8 +1480,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                 detailsColCheck = wbObservation1.sheet_by_name(sheetColCheck)
                 keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                      range(detailsColCheck.ncols)]
-                # print(keysColCheckDetai)
-                # print(taskUploadCols)
+               
                 if len(keysColCheckDetai) != len(taskUploadCols) or set(keysColCheckDetai) == set(taskUploadCols):
                     terminatingMessage('Columns is missing in details sheet')
                 detailsEnvSheet = wbObservation1.sheet_by_name(sheetColCheck)
@@ -1524,9 +1517,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
 
                     certificateissuer = dictDetailsEnv['Certificate issuer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Certificate issuer'] else terminatingMessage(
                     "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
-                    print(certificateissuer)
-                    print(dictDetailsEnv['Type of certificate'])
-                    print("something")
+                    
+                    
                     Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature","One Logo - Two Signature","Two Logo - One Signature","Two Logo - Two Signature"]  else terminatingMessage(
                         "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
                     Logo1 = dictDetailsEnv['Logo - 1'] if dictDetailsEnv[
@@ -5262,7 +5254,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                                 elif str(dictDetailsEnv['has certificate']).lower()== 'Yes'.lower():
                                     print(str(dictDetailsEnv['has certificate']).lower()== 'Yes'.lower())
                                     print(str(dictDetailsEnv['has certificate']))
-                                    print("this is certificate with project")
+                                    print("---->this is certificate with project<---")
                                     baseTemplate_id=fetchCertificateBaseTemplate(filePathAddProject,accessToken,projectName_for_folder_path)
                                     print(baseTemplate_id)
                                     # sys.exit()
