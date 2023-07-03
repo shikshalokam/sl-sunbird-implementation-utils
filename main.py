@@ -546,10 +546,10 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         # call function to create program 
                         programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
                         # sys.exit()
-                        # programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                        programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
 
                         # map PM / PD to the program 
-                        # Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
+                        Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
 
                         # check if program is created or not 
                         if getProgramInfo(accessToken, parentFolder, extIdPGM):
