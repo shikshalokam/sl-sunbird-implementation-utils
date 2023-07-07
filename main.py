@@ -342,12 +342,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
             extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
 
             programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
-            if environment == "staging":
-                    userDetails = ["16953686-0e88-4482-b86f-b34bbfb79e80","stagingpm_up5b","Stagingpm",["PROGRAM_MANAGER"],"",""]
-            elif environment == "dev":
-                    userDetails = ["177b5bb4-60d3-43b9-8049-6b8d2a189be1","content","Contentreviewer",["CONTENT_CREATOR"],"",""]
-            else:
-                userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+            userDetails = fetchUserDetails(environment, accessToken, programdesigner)
             
             creatorKeyCloakId = userDetails[0]
             creatorName = userDetails[1]
@@ -385,12 +380,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                         programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
                         userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
 
-                if environment == "staging":
-                    userDetails = ["16953686-0e88-4482-b86f-b34bbfb79e80","stagingpm_up5b","Stagingpm",["PROGRAM_MANAGER"],"",""]
-                elif environment == "dev":
-                    userDetails = ["177b5bb4-60d3-43b9-8049-6b8d2a189be1","content","Contentreviewer",["CONTENT_CREATOR"],"",""]
-                else:
-                    userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+                userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
                 creatorKeyCloakId = userDetails[0]
                 creatorName = userDetails[1]
                 if "PROGRAM_MANAGER" in userDetails[3]:
@@ -512,9 +502,6 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global entitiesPGMID
                     entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                                                   entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
-
-                    # fetching the orId from fetchorgId function
-
                     global orgIds
                     if environment == "staging":
                         orgIds = "01269934121990553633"
@@ -522,7 +509,9 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         orgIds = "0137541424673095687"
                     else:
                         orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
-                    
+                    # print(orgIds)
+                    # sys.exit()
+
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
                         extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
                         if str(dictDetailsEnv['Program ID']).strip() == "Do not fill this field":
@@ -564,8 +553,12 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         scopeEntityType = EntityType
                         # fetch entity details 
                         entitiesPGMID = fetchEntityId(parentFolder, accessToken,entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
-                       
+                        print(entitiesPGMID)
+                        # sys.exit()
+                        # fetch sub-role details 
                         rolesPGMID = fetchScopeRole(parentFolder, accessToken, rolesPGM.lstrip().rstrip().split(","))
+                        print(rolesPGM)
+                        # sys.exit()
 
                         # call function to create program 
                         programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
@@ -1434,17 +1427,17 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     dictDetailsEnv = {
                         keysColCheckQues[col_index_env]: questionsColCheck.cell(row_index_env, col_index_env).value for
                         col_index_env in range(questionsColCheck.ncols)}
-                    question_sequenceSUR = dictDetailsEnv['question_sequence'] if dictDetailsEnv[
+                    question_sequenceSUR = dictDetailsEnv['question_sequence']if dictDetailsEnv[
                         'question_sequence'] else terminatingMessage(
                         "\"question_sequence\" must not be Empty in \"details\" sheet")
-                    question_idSUR = dictDetailsEnv['question_id'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
+                    question_idSUR = dictDetailsEnv['question_id'] if dictDetailsEnv[
                         'question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"details\" sheet")
                     pageSUR = dictDetailsEnv['page'] if dictDetailsEnv['page'] else terminatingMessage(
                         "\"page\" must not be Empty in \"details\" sheet")
                     question_numberSUR = dictDetailsEnv['question_number'] if dictDetailsEnv[
                         'question_number'] else terminatingMessage(
                         "\"question_number\" must not be Empty in \"details\" sheet")
-                    question_language1SUR = dictDetailsEnv['question_language1'].encode('utf-8').decode('utf-8') if not dictDetailsEnv['question_language1'] == None else terminatingMessage(
+                    question_language1SUR = dictDetailsEnv['question_language1']  if not dictDetailsEnv['question_language1'] == None else terminatingMessage(
                         "\"question_language1\" must not be Empty in \"details\" sheet")
                     question_response_typeSUR = dictDetailsEnv['question_response_type'] if dictDetailsEnv[
                         'question_response_type'] else terminatingMessage(
@@ -3678,8 +3671,9 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
 
 
 def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessToken):
-    searchSolutionurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "observation&page=1&limit=100&search=" + solutionNameOrId
 
+    searchSolutionurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "observation&page=1&limit=100&search=" + solutionNameOrId
+    
     searchSolutionpayload = {}
     searchSolutionheaders = {
         'X-authenticated-user-token': accessToken,
@@ -3693,6 +3687,9 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                   "URL : " + str(searchSolutionurl),
                   "Status Code : " + str(searchSolutionresponse.status_code),
                   "Response : " + str(searchSolutionresponse.text)]
+    createAPILog(projectName_for_folder_path, messageArr)
+    # print(messageArr)
+    messageArr = []
 
     if searchSolutionresponse.status_code == 200:
         searchSolutionjson = searchSolutionresponse.json()
@@ -3701,7 +3698,8 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
             solution_id = searchSolutionjson["result"]["data"][listOfSoulution]["_id"]
             messageArr.append("solution found : " + str(solution_id))
             createAPILog(projectName_for_folder_path, messageArr)
-            print("searchSolutionApi Success")
+            messageArr = []
+            # print("searchSolutionApi Success")
             solutionDetailsurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solution_id
 
             solutionDetailspayload = {}
@@ -3718,7 +3716,8 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                           "URL : " + str(solutionDetailsurl),
                           "Status Code : " + str(solutionDetailsresponse.status_code),
                           "Response : " + str(solutionDetailsresponse.text)]
-
+            createAPILog(projectName_for_folder_path, messageArr)
+            messageArr = []
             if solutionDetailsresponse.status_code == 200:
                 solutionDetailsjson = solutionDetailsresponse.json()
                 if solutionDetailsjson["result"]["isReusable"] == False:
@@ -3726,8 +3725,7 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                     solutionExternalId = solutionDetailsjson["result"]["externalId"]
                     messageArr.append("Task solution Entity Type found : " + str(solutionEntityType))
                     createAPILog(projectName_for_folder_path, messageArr)
-                    print("FetchSolutionDocApi Success")
-                    break
+                    # print("FetchSolutionDocApi Success")
             else:
                 
                 messageArr = ["Solution found",
@@ -5079,9 +5077,14 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                 section.update({dictECMs['section_id']: dictECMs['section_name']})
                 ecm_sections[EMC_ID] = dictECMs['section_id']
                 if dictECMs['Is ECM Mandatory?']:
-                    if dictECMs['Is ECM Mandatory?'] == "TRUE" or dictECMs['Is ECM Mandatory?'] == 1:
+                    print(dictECMs['Is ECM Mandatory?'])
+                    print("to print ECM",str(dictECMs['Is ECM Mandatory?']) == "TRUE" or dictECMs['Is ECM Mandatory?'] == 1 or dictECMs['Is ECM Mandatory?'] == True or str(dictECMs['Is ECM Mandatory?']).lower() == "true")
+                    print("same to print ECM",dictECMs['Is ECM Mandatory?'] == "FALSE" or dictECMs['Is ECM Mandatory?'] == 0 or dictECMs['Is ECM Mandatory?'] == False or str(dictECMs['Is ECM Mandatory?']).lower() == "false")
+                    # sys.exit()
+                    
+                    if str(dictECMs['Is ECM Mandatory?']) == "TRUE" or dictECMs['Is ECM Mandatory?'] == 1 or dictECMs['Is ECM Mandatory?'] == True or str(dictECMs['Is ECM Mandatory?']).lower() == "true" :
                         dictECMs['Is ECM Mandatory?'] = False
-                    elif dictECMs['Is ECM Mandatory?'] == "FALSE" or dictECMs['Is ECM Mandatory?'] == 0:
+                    elif dictECMs['Is ECM Mandatory?'] == "FALSE" or dictECMs['Is ECM Mandatory?'] == 0 or dictECMs['Is ECM Mandatory?'] == False or str(dictECMs['Is ECM Mandatory?']).lower() == "false" :
                         dictECMs['Is ECM Mandatory?'] = True
                 else:
                     dictECMs['Is ECM Mandatory?'] = False
@@ -5438,4 +5441,3 @@ if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
                         mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isProgramnamePresent,isCourse, )
 end_time = time.time()
 print("Execution time in sec : " + str(end_time - start_time))
-
