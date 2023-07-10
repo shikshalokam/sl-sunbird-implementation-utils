@@ -332,7 +332,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
             extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
 
             programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
-            userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+            userDetails = fetchUserDetails(environment, accessToken, programdesigner)
             
             creatorKeyCloakId = userDetails[0]
             creatorName = userDetails[1]
@@ -490,12 +490,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                                                   entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
                     global orgIds
-                    if environment == "staging":
-                        orgIds = "01269934121990553633"
-                    elif environment == "dev":
-                        orgIds = "0137541424673095687"
-                    else:
-                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
+                    orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
 
 
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
@@ -882,7 +877,6 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
             messageArr.append("orgApi : " + str(url))
             messageArr.append("headers : " + str(headers))
             messageArr.append("orgBody : " + str(orgBody))
-            # print(str(orgBody))
             createAPILog(parentFolder, messageArr)
             print(responseOrgSearch.text)
             terminatingMessage("Organisation/ State tenant fetch API failed. Check logs.")
@@ -3526,8 +3520,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         else:
                             questionFileObj['questionNumber'] = ques['question_number']
                     writerQuestionUpload.writerow(questionFileObj)
-                    # print(questionFileObj)
-                # terminatingMessage("Question")
+                    
             urlQuestionsUploadApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'questionUploadApiUrl')
             headerQuestionUploadApi = {
                 'Authorization': config.get(environment, 'Authorization'),
@@ -4127,7 +4120,7 @@ def fetchCertificateBaseTemplate(filePathAddProject,accessToken,projectName_for_
 
 
     
-
+# This function is used to find the base template id of the certificates
 def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
@@ -4162,6 +4155,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
     responsedbFindApi = requests.request("POST", url=urldbFind, headers=headerdbFindApi,
                                          data=payload)
+    # finding the _id of the certificate 
     if responsedbFindApi.status_code == 200:
         responseaddcetificate = responsedbFindApi.json()
         result_list = responseaddcetificate['result']
@@ -4171,6 +4165,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         typeOfCertificate=typeOfCertificate.lower()
         baseTemplateCode=config.get(environment,typeOfCertificate.replace(" ",""))
 
+# returning the base temp id
         return baseTemplateLookup[baseTemplateCode]
         
     else:
@@ -4181,7 +4176,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
 
     
-
+# This function is used to create json format to create certificate
 def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
@@ -4568,12 +4563,12 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         else:
             print("error in updating certificate with project")
             sys.exit()
-
+# This function is used to add SVG to the certificate based on type of certificate
 def editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTemplate_id):
 
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
-    for prosheet in projectsheetforcertificate:
+    for prosheet in projectsheetfoeditrcertificate:
         if prosheet.strip().lower() == 'Certificate details'.lower():
             print("--->Checking Certificate details  sheet...")
             detailsColCheck = wbproject.sheet_by_name(prosheet)
@@ -4808,7 +4803,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
             print("Project solution creation api failed.")
             sys.exit()
 
-
+# This function is used to download the logo's anf sign from project template
 def downloadlogosign(filePathAddProject,projectName_for_folder_path):
 
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
