@@ -563,13 +563,14 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         # call function to create program 
                         programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
                         # sys.exit()
-                        programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                        # programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
 
-                        # map PM / PD to the program 
-                        Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
+                        #S map PM / PD to the program 
+                        # Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
 
                         # check if program is created or not 
                         if getProgramInfo(accessToken, parentFolder, extIdPGM):
+                            
                             print("Program Created SuccessFully.")
                         else :
                             terminatingMessage("Program creation failed! Please check logs.")
@@ -577,6 +578,8 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
             elif sheetEnv.strip().lower() == 'resource details':
                 # checking Resource details sheet 
                 print("--->Checking Resource Details sheet...")
+                programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
                 detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
                 keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                            range(detailsEnvSheet.ncols)]
@@ -1137,6 +1140,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             else:
                                 isProgramnamePresent = True
                                 getProgramInfo(accessToken, parentFolder, programName)
+                               
                         else:
                             terminatingMessage("--->Columns Mismatch in Details Sheet.")
                 if sheetEnv.strip().lower() == 'framework':
@@ -1222,6 +1226,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             terminatingMessage("question_sequence cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_primary_language']:
                             terminatingMessage("question_primary_language cannot be empty in questions sheet.")
+                        if not dictDetailsEnv['question_weightage']:
+                            terminatingMessage("question_weightage cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_response_type']:
                             terminatingMessage("question_response_type cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_id']:
@@ -1273,10 +1279,12 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             for cl in criteriaLevels:
                                 if not dictDetailsEnv["L" + str(cl)]:
                                     terminatingMessage("L" + str(cl) + " must not be empty in criteria_rubric.")
-                            if dictDetailsEnv['criteriaId']:
+                            if not dictDetailsEnv['criteriaId']:
                                 terminatingMessage("criteriaId must be empty in criteria_rubric sheet.")
                             if not dictDetailsEnv['weightage']:
                                 terminatingMessage("weightage cannot be empty in criteria_rubric sheet.")
+                            
+
                         if not len(cR_extIds) == len(set(cR_extIds)):
                             terminatingMessage("Duplicate externalId detected in criteria_rubric sheet.")
                     if sheetEnv.strip().lower() == 'Domain(theme)_rubric_scoring':
@@ -1351,6 +1359,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         entityType = dictDetailsEnv['entity_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv['entity_type'] else terminatingMessage("\"entity_type\" must not be Empty in \"details\" sheet")
                         solutionLanguage = dictDetailsEnv['language'].encode('utf-8').decode('utf-8').split(",") if dictDetailsEnv['language'] else [""]
                         getProgramInfo(accessToken, parentFolder, programNameInp)
+                        
                 elif sheetEnv.strip().lower() == 'criteria':
                     print("--->Checking criteria sheet...")
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
@@ -2355,7 +2364,7 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                             sliValArr = sliVal.split(':')
                             questionFileObj['slider-value-' + str(sliValArr[0])] = sliValArr[0]
                             questionFileObj['slider-value-' + str(sliValArr[0]) + '-score'] = sliValArr[1]
-                if str(ques['question_weightage']):
+                if str(ques['question_weightage']):  
                     questionFileObj['weightage'] = ques['question_weightage']
                 else:
                     questionFileObj['weightage'] = 0
@@ -2750,7 +2759,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
             for crit in criteriaInternalReader:
                 dictSolCritLookUp[crit['criteriaID']] = [crit['criteriaInternalId'], crit['criteriaName']]
 
-    keys = [criteriaRubricSheet.cell(2, col_index).value for col_index in range(criteriaRubricSheet.ncols)]
+    keys = [criteriaRubricSheet.cell(1, col_index).value for col_index in range(criteriaRubricSheet.ncols)]
     criteriaRubricUploadFieldnames = ["externalId", "name", "criteriaId", "weightage", "expressionVariables"]
 
     if withRubricsFlag:
@@ -2764,7 +2773,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
     if not os.path.exists(criteriaRubricsFilePath):
         os.mkdir(criteriaRubricsFilePath)
     if withRubricsFlag:
-        for row_index in range(3, criteriaRubricSheet.nrows):
+        for row_index in range(2, criteriaRubricSheet.nrows):
             file_exists_ques = os.path.isfile(solutionName_for_folder_path + '/criteriaRubrics/uploadSheet.csv')
             with open(solutionName_for_folder_path + '/criteriaRubrics/uploadSheet.csv', 'a',
                       encoding='utf-8') as questionUploadFile:
@@ -2862,7 +2871,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
     themeRubricUpload = dict()
     if withRubricsFlag:
         themeRubricSheet = wbObservation.sheet_by_name('Domain(theme)_rubric_scoring')
-        keys = [themeRubricSheet.cell(2, col_index).value for col_index in range(themeRubricSheet.ncols)]
+        keys = [themeRubricSheet.cell(1, col_index).value for col_index in range(themeRubricSheet.ncols)]
         themeRubricUploadFieldnames = ["externalId", "name", "weightage"]
         if withRubricsFlag:
             for cl in criteriaLevels:
@@ -2870,7 +2879,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
         else:
             themeRubricUploadFieldnames.append("L1")
 
-        for row_index in range(3, themeRubricSheet.nrows):
+        for row_index in range(2, themeRubricSheet.nrows):
             file_exists_ques = os.path.isfile(solutionName_for_folder_path + '/themeRubrics/uploadSheet.csv')
             with open(solutionName_for_folder_path + '/themeRubrics/uploadSheet.csv', 'a',
                       encoding='utf-8') as themeRubricsUploadFile:
@@ -3726,6 +3735,7 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                     messageArr.append("Task solution Entity Type found : " + str(solutionEntityType))
                     createAPILog(projectName_for_folder_path, messageArr)
                     # print("FetchSolutionDocApi Success")
+                    
             else:
                 
                 messageArr = ["Solution found",
