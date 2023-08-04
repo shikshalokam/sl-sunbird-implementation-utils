@@ -112,6 +112,7 @@ OrgName = []
 ccRootOrgName = None
 ccRootOrgId  = None
 certificatetemplateid = None
+question_sequence_arr = []
 
 # function to map course to program
 
@@ -436,7 +437,12 @@ def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
         apicheckslog(parentFolder,fileheader)
         sys.exit()
 
-
+# This function checks for the sequince
+def check_sequence(arr):
+    for i in range(1, len(arr)):
+        if arr[i] != arr[i - 1] + 1:
+            return False
+    return True
 
 # Open and validate program sheet 
 def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
@@ -1037,7 +1043,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
     survey_sheet_names = ['Instructions', 'details', 'questions']
     project_sheet_names = ['Instructions', 'Project upload', 'Tasks upload','Certificate details']
 
-    # 1-with rubrics , 2 - with out rubrics , 3 - survey , 4 - Project 5 - With rubric and IMP
+    # 1-with rubrics , 2-with out rubrics , 3-survey , 4-Project, 5-With rubric and IMP
     typeofSolutin = 0
 
     global environment, observationId, solutionName, pointBasedValue, entityType, allow_multiple_submissions, programName, userEntity, roles, isProgramnamePresent, solutionLanguage, keyWords, entityTypeId, solutionDescription, creator, dikshaLoginId
@@ -1218,8 +1224,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             terminatingMessage("criteria_id cannot be empty in questions sheet.")
                         if not dictDetailsEnv['criteria_id'].lower() in criteriaExternalIds:
                             terminatingMessage("Criteria ID : " + dictDetailsEnv['criteria_id'] + " in question sheet not present in criteria sheet.")
-                        if not dictDetailsEnv['question_sequence']:
-                            terminatingMessage("question_sequence cannot be empty in questions sheet.")
+                        question_sequence = dictDetailsEnv['question_sequence'] if dictDetailsEnv['question_sequence'] else terminatingMessage("\"question_sequence\" must not be Empty in \"questions\" sheet")
+                        question_sequence_arr.append(question_sequence)
                         if not dictDetailsEnv['question_primary_language']:
                             terminatingMessage("question_primary_language cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_response_type']:
@@ -1230,10 +1236,12 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             terminatingMessage("criteria_id : " + str(
                                 dictDetailsEnv['criteria_id']) + "  cannot be empty in questions sheet.")
                         if not dictDetailsEnv['criteria_id'].lower() in criteriaExternalIds:
-                            terminatingMessage("criteria_id : " + str(dictDetailsEnv[
-                                                                          'criteria_id']) + " in questions sheet is not matching the criteria upload.")
+                            terminatingMessage("criteria_id : " + str(dictDetailsEnv['criteria_id']) + " in questions sheet is not matching the criteria upload.")
+                    if not len(question_sequence_arr) == len(set(question_sequence_arr)):
+                            terminatingMessage("\"question_sequence\" must be Unique in \"questions\" sheet")
                     if not len(quesExtIds) == len(set(quesExtIds)):
                         terminatingMessage("Duplicate question_id detected in questions sheet.")
+                    if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
                 if typeofSolutin == 5:
                     if sheetEnv.strip().lower() == 'imp mapping':
                         print("--->Checking Imp mapping sheet...")
@@ -1366,7 +1374,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     if not len(criteria_id_arr) == len(set(criteria_id_arr)):
                         terminatingMessage("\"criteria_id\" must be Unique in \"criteria\" sheet")
                 elif sheetEnv.strip().lower() == 'questions':
-                    print("--->Checking criteria sheet...")
+                    print("--->Checking questions sheet...")
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
                     ques_id_arr = list()
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
@@ -1377,8 +1385,13 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             col_index_env in range(detailsEnvSheet.ncols)}
                         criteria_id = dictDetailsEnv['criteria_id'].encode('utf-8').decode('utf-8') if dictDetailsEnv['criteria_id'] else terminatingMessage("\"criteria_id\" must not be Empty in \"questions\" sheet")
                         question_sequence = dictDetailsEnv['question_sequence'] if dictDetailsEnv['question_sequence'] else terminatingMessage("\"question_sequence\" must not be Empty in \"questions\" sheet")
+                        question_sequence_arr.append(question_sequence)
                         if not criteria_id in criteria_id_arr:
                             terminatingMessage("\"criteria_id\" in \"Questions\" sheet must be declared in \"criteria\" sheet")
+                        page = dictDetailsEnv['page'].encode('utf-8').decode('utf-8') if dictDetailsEnv['page'] else terminatingMessage("\"page\" must not be Empty in \"questions\" sheet")
+                        question_number = dictDetailsEnv['question_number'] if dictDetailsEnv['question_number'] else terminatingMessage("\"question_number\" must not be Empty in \"questions\" sheet")
+                        question_primary_language = dictDetailsEnv['question_primary_language'].encode('utf-8').decode('utf-8') if dictDetailsEnv['question_primary_language'] else terminatingMessage("\"question_primary_language\" must not be Empty in \"questions\" sheet")
+                        response_required = dictDetailsEnv['response_required'].encode('utf-8').decode('utf-8') if dictDetailsEnv['response_required'] else terminatingMessage("\"response_required\" must not be Empty in \"questions\" sheet")
                         question_id = dictDetailsEnv['question_id'] if dictDetailsEnv['question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"questions\" sheet")
                         ques_id_arr.append(question_id)
                         parent_question_id = dictDetailsEnv['question_id'].encode('utf-8').decode('utf-8')
@@ -1387,6 +1400,9 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         question_response_type = dictDetailsEnv['question_response_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                             'question_response_type'] else terminatingMessage(
                             "\"question_response_type\" must not be Empty in \"questions\" sheet")
+                    if not len(question_sequence_arr) == len(set(question_sequence_arr)):
+                            terminatingMessage("\"question_sequence\" must be Unique in \"questions\" sheet")
+                    if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
     elif typeofSolutin == 3:
         for sheetEnvCheck in sheetNames1:
             if sheetEnvCheck.strip().lower() == 'instructions' or sheetEnvCheck.strip().lower() == 'details' or sheetEnvCheck.strip().lower() == 'questions':
@@ -1427,9 +1443,10 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     dictDetailsEnv = {
                         keysColCheckQues[col_index_env]: questionsColCheck.cell(row_index_env, col_index_env).value for
                         col_index_env in range(questionsColCheck.ncols)}
-                    question_sequenceSUR = dictDetailsEnv['question_sequence']if dictDetailsEnv[
+                    question_sequence = dictDetailsEnv['question_sequence']if dictDetailsEnv[
                         'question_sequence'] else terminatingMessage(
                         "\"question_sequence\" must not be Empty in \"details\" sheet")
+                    question_sequence_arr.append(question_sequence)
                     question_idSUR = dictDetailsEnv['question_id'] if dictDetailsEnv[
                         'question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"details\" sheet")
                     pageSUR = dictDetailsEnv['page'] if dictDetailsEnv['page'] else terminatingMessage(
@@ -1445,6 +1462,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     response_requiredSUR = dictDetailsEnv['response_required'] if dictDetailsEnv[
                         'response_required'] else terminatingMessage(
                         "\"response_required\" must not be Empty in \"details\" sheet")
+                if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
     elif typeofSolutin == 4:
         criteria_id_arr = list()
         projectDetailsCols = ["title", "projectId", "is a SSO user?", "Diksha_loginId", "categories",
