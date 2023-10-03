@@ -286,6 +286,7 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
     
     # program creation 
     responsePgmCreate = requests.request("POST", programCreationurl, headers=headers, data=(payload))
+    print(responsePgmCreate.text)
     messageArr.append("Program Creation Status Code : " + str(responsePgmCreate.status_code))
     messageArr.append("Program Creation Response : " + str(responsePgmCreate.text))
     messageArr.append("Program body : " + str(payload))
@@ -567,8 +568,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         # sys.exit()
 
                         # call function to create program 
-                        programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
-                        # sys.exit()
+                        
                         # programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
 
                         #S map PM / PD to the program 
@@ -579,7 +579,9 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                             
                             print("Program Created SuccessFully.")
                         else :
-                            terminatingMessage("Program creation failed! Please check logs.")
+                            print("program creation API called")
+                            programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
+                        
 
             elif sheetEnv.strip().lower() == 'resource details':
                 # checking Resource details sheet 
@@ -1207,7 +1209,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                                range(detailsEnvSheet.ncols)]
-                    global numberOfResponses
+                    global numberOfResponses,question_sequence_arr
                     numberOfResponses = 0
                     for qKeys in keysEnv:
                         countRespo = re.search(r"response\(R[0-9]|[1-9][0-9]|100\)$", qKeys)
@@ -1233,6 +1235,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         if not dictDetailsEnv['question_primary_language']:
                             terminatingMessage("question_primary_language cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_weightage']:
+                            print(dictDetailsEnv['question_weightage'])
                             terminatingMessage("question_weightage cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_response_type']:
                             terminatingMessage("question_response_type cannot be empty in questions sheet.")
@@ -1243,8 +1246,13 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                 dictDetailsEnv['criteria_id']) + "  cannot be empty in questions sheet.")
                         if not dictDetailsEnv['criteria_id'].lower() in criteriaExternalIds:
                             terminatingMessage("criteria_id : " + str(dictDetailsEnv['criteria_id']) + " in questions sheet is not matching the criteria upload.")
+                        print(question_sequence_arr)
+                        # sys.exit()
+                        # question_sequence_arr = []
                     if not len(question_sequence_arr) == len(set(question_sequence_arr)):
                             terminatingMessage("\"question_sequence\" must be Unique in \"questions\" sheet")
+                            print(question_sequence_arr)
+                          
                     if not len(quesExtIds) == len(set(quesExtIds)):
                         terminatingMessage("Duplicate question_id detected in questions sheet.")
                     if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
@@ -1371,6 +1379,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                 elif sheetEnv.strip().lower() == 'criteria':
                     print("--->Checking criteria sheet...")
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
+                    questionsequenceArr = []
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                                range(detailsEnvSheet.ncols)]
                     for row_index_env in range(2, detailsEnvSheet.nrows):
@@ -1394,13 +1403,14 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             col_index_env in range(detailsEnvSheet.ncols)}
                         criteria_id = dictDetailsEnv['criteria_id'].encode('utf-8').decode('utf-8') if dictDetailsEnv['criteria_id'] else terminatingMessage("\"criteria_id\" must not be Empty in \"questions\" sheet")
                         question_sequence = dictDetailsEnv['question_sequence'] if dictDetailsEnv['question_sequence'] else terminatingMessage("\"question_sequence\" must not be Empty in \"questions\" sheet")
-                        question_sequence_arr.append(question_sequence)
+                        questionsequenceArr.append(question_sequence)
+                        question_sequence_arr = questionsequenceArr
                         if not criteria_id in criteria_id_arr:
                             terminatingMessage("\"criteria_id\" in \"Questions\" sheet must be declared in \"criteria\" sheet")
                         page = dictDetailsEnv['page'].encode('utf-8').decode('utf-8') if dictDetailsEnv['page'] else terminatingMessage("\"page\" must not be Empty in \"questions\" sheet")
                         question_number = dictDetailsEnv['question_number'] if dictDetailsEnv['question_number'] else terminatingMessage("\"question_number\" must not be Empty in \"questions\" sheet")
                         question_primary_language = dictDetailsEnv['question_primary_language'].encode('utf-8').decode('utf-8') if dictDetailsEnv['question_primary_language'] else terminatingMessage("\"question_primary_language\" must not be Empty in \"questions\" sheet")
-                        response_required = dictDetailsEnv['response_required'].encode('utf-8').decode('utf-8') if dictDetailsEnv['response_required'] else terminatingMessage("\"response_required\" must not be Empty in \"questions\" sheet")
+                        response_required = dictDetailsEnv['response_required'] if str(dictDetailsEnv['response_required']) else terminatingMessage("\"response_required\" must not be Empty in \"questions\" sheet")
                         question_id = dictDetailsEnv['question_id'] if dictDetailsEnv['question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"questions\" sheet")
                         ques_id_arr.append(question_id)
                         parent_question_id = dictDetailsEnv['question_id'].encode('utf-8').decode('utf-8')
@@ -1409,8 +1419,10 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         question_response_type = dictDetailsEnv['question_response_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                             'question_response_type'] else terminatingMessage(
                             "\"question_response_type\" must not be Empty in \"questions\" sheet")
+                        print(question_sequence_arr)
                     if not len(question_sequence_arr) == len(set(question_sequence_arr)):
                             terminatingMessage("\"question_sequence\" must be Unique in \"questions\" sheet")
+                            
                     if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
     elif typeofSolutin == 3:
         for sheetEnvCheck in sheetNames1:
@@ -2962,16 +2974,19 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
 def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFile, solutionId, accessToken):
     global solutionRolesArray, solutionStartDate, solutionEndDate
     urlFetchSolutionApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solutionId
+    print(urlFetchSolutionApi)
     headerFetchSolutionApi = {
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
         'X-Channel-id': config.get(environment, 'X-Channel-id'),
         'internal-access-token': config.get(environment, 'internal-access-token')
     }
+    
     payloadFetchSolutionApi = {}
 
     responseFetchSolutionApi = requests.post(url=urlFetchSolutionApi, headers=headerFetchSolutionApi,
                                              data=payloadFetchSolutionApi)
+    # print(responseFetchSolutionApi.text)
     responseFetchSolutionJson = responseFetchSolutionApi.json()
     messageArr = ["Solution Fetch Link.",
                   "solution name : " + responseFetchSolutionJson["result"]["name"],
