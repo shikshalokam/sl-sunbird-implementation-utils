@@ -114,6 +114,7 @@ ccRootOrgId  = None
 certificatetemplateid = None
 question_sequence_arr = []
 
+
 # function to map course to program
 
 
@@ -1211,6 +1212,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                range(detailsEnvSheet.ncols)]
                     global numberOfResponses,question_sequence_arr
                     numberOfResponses = 0
+                    questionsequenceArr=[]
                     for qKeys in keysEnv:
                         countRespo = re.search(r"response\(R[0-9]|[1-9][0-9]|100\)$", qKeys)
                         if countRespo and not "_hint" in qKeys and "response" in qKeys:
@@ -1231,7 +1233,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         if not dictDetailsEnv['criteria_id'].lower() in criteriaExternalIds:
                             terminatingMessage("Criteria ID : " + dictDetailsEnv['criteria_id'] + " in question sheet not present in criteria sheet.")
                         question_sequence = dictDetailsEnv['question_sequence'] if dictDetailsEnv['question_sequence'] else terminatingMessage("\"question_sequence\" must not be Empty in \"questions\" sheet")
-                        question_sequence_arr.append(question_sequence)
+                        questionsequenceArr.append(question_sequence)
+                        question_sequence_arr = questionsequenceArr
                         if not dictDetailsEnv['question_primary_language']:
                             terminatingMessage("question_primary_language cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_weightage']:
@@ -1425,6 +1428,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             
                     if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
     elif typeofSolutin == 3:
+        questionsequenceArr=[]
         for sheetEnvCheck in sheetNames1:
             if sheetEnvCheck.strip().lower() == 'instructions' or sheetEnvCheck.strip().lower() == 'details' or sheetEnvCheck.strip().lower() == 'questions':
                 pass
@@ -1467,7 +1471,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     question_sequence = dictDetailsEnv['question_sequence']if dictDetailsEnv[
                         'question_sequence'] else terminatingMessage(
                         "\"question_sequence\" must not be Empty in \"details\" sheet")
-                    question_sequence_arr.append(question_sequence)
+                    questionsequenceArr.append(question_sequence)
+                    question_sequence_arr = questionsequenceArr
                     question_idSUR = dictDetailsEnv['question_id'] if dictDetailsEnv[
                         'question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"details\" sheet")
                     pageSUR = dictDetailsEnv['page'] if dictDetailsEnv['page'] else terminatingMessage(
@@ -1620,6 +1625,11 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
             criteriaImpDict = {}
             impsToCriteria = wbObservation.sheet_by_name('Imp mapping')
             keysFromImpSheet = [impsToCriteria.cell(1, col_index).value for col_index in range(impsToCriteria.ncols)]
+            projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
+            projectTemplatefile = csv.DictReader(projectTemplatefile)
+            for Projecttemp in projectTemplatefile:
+                projectTemplateIdforimp = Projecttemp["duplicateTemplateExtId"]
+                
             for row_indexImp in range(2, impsToCriteria.nrows):
                 dictImp = {keysFromImpSheet[col_index]: impsToCriteria.cell(row_indexImp, col_index).value for col_index in range(impsToCriteria.ncols)}
                 criteriaImpDict[dictImp['criteriaId'].strip()] = {}
