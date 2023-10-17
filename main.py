@@ -471,14 +471,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
-                    # checking resource types and calling relevant functions 
-                    # if startDateOfProgram:
-                    #     startDateArr = str(startDateOfProgram).split("-")
-                    #     bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
-                    #     solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
-                    # if endDateOfProgram:
-                    #     endDateArr = str(endDateOfProgram).split("-")
-                    #     bodySolutionUpdate = {"endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+
                     global scopeEntityType
                     scopeEntityType = "state"
 
@@ -496,7 +489,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                                                   entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
                     global orgIds
-                    orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
+                    
 
 
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
@@ -526,6 +519,8 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         if "teacher" in mainRole.strip().lower():
                             rolesPGM = str(rolesPGM).strip() + ",TEACHER"
                         userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
+                        OrgName=userDetails[4]
+                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
                         creatorKeyCloakId = userDetails[0]
                         creatorName = userDetails[2]
                         
@@ -690,11 +685,13 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
     programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
-    terminatingMessage
+    print(programUrl)
+    
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
     responseProgramSearch = requests.post(url=programUrl, headers=headersProgramSearch)
+    print(responseProgramSearch.text)
     messageArr = []
 
     messageArr.append("Program Search API")
@@ -803,6 +800,7 @@ def checkEmailValidation(email):
 
 # Fetch user details 
 def fetchUserDetails(environment, accessToken, dikshaId):
+    global OrgName
     url = config.get(environment, 'host') + config.get(environment, 'userInfoApiUrl')
     messageArr = ["User search API called."]
     headers = {'Content-Type': 'application/json',
@@ -827,6 +825,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
                 if rootOrgId == index['organisationId']:
                     roledetails = index['roles']
                     rootOrgName = index['orgName']
+                    OrgName.append(index['orgName'])
             print(roledetails)
         else:
             terminatingMessage("-->Given username/email is not present in DIKSHA platform<--.")
@@ -860,6 +859,7 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                    }}
 
         responseOrgSearch = requests.request("POST", url, headers=headers, data=json.dumps(orgBody))
+        print(responseOrgSearch)
         if responseOrgSearch.status_code == 200:
             responseOrgSearch = responseOrgSearch.json()
             if responseOrgSearch['result']['response']['content']:
@@ -869,17 +869,15 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
                 messageArr.append("orgIds : " + str(orgIds))
-            elif environment == "staging":
-                messageArr.append("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                print("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                messageArr.append("orgApi : " + str(url))
-                messageArr.append("orgBody : " + str(orgBody))
-                messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                
+            
             else:
-                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
                 messageArr.append("orgApi : " + str(url))
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                createAPILog(parentFolder, messageArr)
+                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
+                
         else:
             messageArr.append("orgApi : " + str(url))
             messageArr.append("headers : " + str(headers))
