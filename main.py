@@ -309,7 +309,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
     pdpmcolo1 = ["user","role","entity","entityOperation","keycloak-userId","acl_school","acl_cluster","programOperation",
                 "platform_role","programs","_arrayFields"]
-    with open(pdpmsheet + 'mapping.csv', 'w') as file:
+    with open(pdpmsheet + 'mapping.csv', 'w',encoding='utf-8') as file:
          writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
          writer.writerows([pdpmcolo1])
 
@@ -344,7 +344,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                 terminatingMessage("user does't have program designer role")
 
             pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_DESIGNER", extIdPGM, "programs"]
-            with open(pdpmsheet + 'mapping.csv', 'a') as file:
+            with open(pdpmsheet + 'mapping.csv', 'a',encoding='utf-8') as file:
                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                 writer.writerows([pdpmcolo1])
                 fileheader = [creatorName,"program designer mapped successfully","Passed"]
@@ -382,7 +382,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
                 pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_MANAGER", extIdPGM, "programs"]
 
-                with open(pdpmsheet + 'mapping.csv', 'a') as file:
+                with open(pdpmsheet + 'mapping.csv', 'a',encoding='utf-8') as file:
                     writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                     writer.writerows([pdpmcolo1])
                 messageArr.append("Response : " + str(pdpmcolo1))
@@ -416,7 +416,7 @@ def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
 
     if responseProgrammappingApi.status_code == 200:
         print('--->program manager and designer mapping is Success')
-        with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+') as projectRes:
+        with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+',encoding='utf-8') as projectRes:
             projectRes.write(responseProgrammappingApi.text)
             messageArr.append("Response : " + str(responseProgrammappingApi.text))
             createAPILog(parentFolder, messageArr)
@@ -471,14 +471,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
-                    # checking resource types and calling relevant functions 
-                    # if startDateOfProgram:
-                    #     startDateArr = str(startDateOfProgram).split("-")
-                    #     bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
-                    #     solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
-                    # if endDateOfProgram:
-                    #     endDateArr = str(endDateOfProgram).split("-")
-                    #     bodySolutionUpdate = {"endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+
                     global scopeEntityType
                     scopeEntityType = "state"
 
@@ -496,7 +489,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                                                   entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
                     global orgIds
-                    orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
+                    
 
 
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
@@ -526,6 +519,8 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         if "teacher" in mainRole.strip().lower():
                             rolesPGM = str(rolesPGM).strip() + ",TEACHER"
                         userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
+                        OrgName=userDetails[4]
+                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
                         creatorKeyCloakId = userDetails[0]
                         creatorName = userDetails[2]
                         
@@ -690,11 +685,13 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
     programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
-    terminatingMessage
+    print(programUrl)
+    
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
     responseProgramSearch = requests.post(url=programUrl, headers=headersProgramSearch)
+    print(responseProgramSearch.text)
     messageArr = []
 
     messageArr.append("Program Search API")
@@ -803,6 +800,7 @@ def checkEmailValidation(email):
 
 # Fetch user details 
 def fetchUserDetails(environment, accessToken, dikshaId):
+    global OrgName
     url = config.get(environment, 'host') + config.get(environment, 'userInfoApiUrl')
     messageArr = ["User search API called."]
     headers = {'Content-Type': 'application/json',
@@ -827,6 +825,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
                 if rootOrgId == index['organisationId']:
                     roledetails = index['roles']
                     rootOrgName = index['orgName']
+                    OrgName.append(index['orgName'])
             print(roledetails)
         else:
             terminatingMessage("-->Given username/email is not present in DIKSHA platform<--.")
@@ -860,6 +859,7 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                    }}
 
         responseOrgSearch = requests.request("POST", url, headers=headers, data=json.dumps(orgBody))
+        print(responseOrgSearch)
         if responseOrgSearch.status_code == 200:
             responseOrgSearch = responseOrgSearch.json()
             if responseOrgSearch['result']['response']['content']:
@@ -869,17 +869,15 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
                 messageArr.append("orgIds : " + str(orgIds))
-            elif environment == "staging":
-                messageArr.append("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                print("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                messageArr.append("orgApi : " + str(url))
-                messageArr.append("orgBody : " + str(orgBody))
-                messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                
+            
             else:
-                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
                 messageArr.append("orgApi : " + str(url))
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                createAPILog(parentFolder, messageArr)
+                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
+                
         else:
             messageArr.append("orgApi : " + str(url))
             messageArr.append("headers : " + str(headers))
@@ -1099,7 +1097,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
 
                             solutionLanguage = dictDetailsEnv['language'].split(",") if dictDetailsEnv['language'] else [""]
                             keyWords = dictDetailsEnv['keywords'].encode('utf-8').decode('utf-8')
-                            creator = dictDetailsEnv['Name_of_the_creator']  if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
+                            creator = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8')  if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
                             allow_multiple_submissions = dictDetailsEnv['allow_multiple_submissions']
                             if allow_multiple_submissions == 1 or allow_multiple_submissions == 'TRUE':
                                 allow_multiple_submissions = True
@@ -1319,7 +1317,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         solutionName = dictDetailsEnv['observation_solution_name'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_name'] else terminatingMessage("\"observation_solution_name\" must not be Empty in \"details\" sheet")
                         solutionDescription = dictDetailsEnv['observation_solution_description'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_description'] else terminatingMessage("\"observation_solution_description\" must not be Empty in \"details\" sheet")
                         dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
-                        creator = dictDetailsEnv['Name_of_the_creator'] if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
+                        creator = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
                         ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                         if not "CONTENT_CREATOR" in ccUserDetails[3]:
                             terminatingMessage("---> "+dikshaLoginId +" is not a CONTENT_CREATOR in Diksha " + environment)
@@ -1625,7 +1623,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
             criteriaLevelsCount = levelCount
             if not os.path.exists(criteriaFilePath):
                 os.mkdir(criteriaFilePath)
-            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a') as criteriaUploadFile:
+            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a',encoding='utf-8') as criteriaUploadFile:
                 writerCriteriaUpload = csv.DictWriter(criteriaUploadFile, fieldnames=list(criteriaUploadFieldnames),
                                                       lineterminator='\n')
                 if not file_exists:
@@ -1652,7 +1650,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
                 os.mkdir(criteriaFilePath)
             criteriaUploadFieldnames = []
             criteriaUploadFieldnames = ['criteriaID', 'criteriaName', 'L1', 'type']
-            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a') as criteriaUploadFile:
+            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a',encoding='utf-8') as criteriaUploadFile:
                 writerCriteriaUpload = csv.DictWriter(criteriaUploadFile, fieldnames=criteriaUploadFieldnames,
                                                       lineterminator='\r')
                 if not file_exists:
@@ -1678,7 +1676,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
 
     if responseCriteriaUploadApi.status_code == 200:
         print('CriteriaUploadApi Success')
-        with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'w+') as criteriaRes:
+        with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as criteriaRes:
             criteriaRes.write(responseCriteriaUploadApi.text)
     else:
 
@@ -1713,7 +1711,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
     frameworkDocInsertObj['createdFor'] = [ccRootOrgId]  # createdForArr
     frameworkDocInsertObj['rootOrg'] = [ccRootOrgId]  # rootOrgArr
     criteriaFrameworkArr = []
-    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r') as criteriaInternalFile:
+    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r',encoding='utf-8') as criteriaInternalFile:
         criteriaInternalReader = csv.DictReader(criteriaInternalFile)
         criteriaWeightage = 100 / (len(list(criteriaInternalReader)))
         criteriaInternalFile.seek(0, 0)
@@ -1822,7 +1820,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
     if not os.path.exists(frameworkFilePath):
         os.mkdir(frameworkFilePath)
 
-    with open(frameworkFilePath + "uploadFile.json", "w") as outfile:
+    with open(frameworkFilePath + "uploadFile.json", "w",encoding='utf-8') as outfile:
         json.dump(frameworkDocInsertObj, outfile)
     headerFrameworkUploadApi = {'Authorization': config.get(environment, 'Authorization'),
                                 'X-authenticated-user-token': accessToken,
@@ -1849,7 +1847,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
 
 def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, accessToken, frameworkExternalId,obsWORubWS):
     global dictCritLookUp
-    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r') as criteriaInternalFile:
+    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r',encoding='utf-8') as criteriaInternalFile:
         criteriaInternalReader = csv.DictReader(criteriaInternalFile)
         for crit in criteriaInternalReader:
             dictCritLookUp[crit['Criteria External Id']] = crit['Criteria Internal Id']
@@ -1867,7 +1865,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
 
             if not os.path.exists(themeFilePath):
                 os.mkdir(themeFilePath)
-            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a') as themeUploadFile:
+            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a',encoding='utf-8') as themeUploadFile:
                 writerthemeUpload = csv.DictWriter(themeUploadFile, fieldnames=list(themeUploadFieldnames),
                                                    lineterminator='\n')
                 if not file_exists:
@@ -1892,7 +1890,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
 
             if not os.path.exists(themeFilePath):
                 os.mkdir(themeFilePath)
-            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a') as themeUploadFile:
+            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a',encoding='utf-8') as themeUploadFile:
                 writerthemeUpload = csv.DictWriter(themeUploadFile, fieldnames=list(themeUploadFieldnames),
                                                    lineterminator='\n')
                 if not file_exists:
@@ -1912,7 +1910,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
     createAPILog(solutionName_for_folder_path, messageArr)
     if responseThemeUploadApi.status_code == 200:
         print('Theme UploadApi Success')
-        with open(solutionName_for_folder_path + '/themeUpload/uploadInternalIdsSheet.csv', 'w+') as criteriaRes:
+        with open(solutionName_for_folder_path + '/themeUpload/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as criteriaRes:
             criteriaRes.write(responseThemeUploadApi.text)
     else:
         messageArr = ["Themes upload failed.", "Response : " + str(responseThemeUploadApi.text)]
@@ -2315,21 +2313,21 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                     questionFileObj['R3-score'] = ques['Score for R3']
                     questionFileObj['R4-score'] = ques['Score for R4']
                     questionFileObj['R5-score'] = ques['Score for R5']
-                    questionFileObj['R6-score'] = ques['Score for R6'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R7-score'] = ques['Score for R7'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R8-score'] = ques['Score for R8'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R9-score'] = ques['Score for R9'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R10-score'] = ques['Score for R10'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R11-score'] = ques['Score for R11'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R12-score'] = ques['Score for R12'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R13-score'] = ques['Score for R13'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R14-score'] = ques['Score for R14'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R15-score'] = ques['Score for R15'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R16-score'] = ques['Score for R16'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R17-score'] = ques['Score for R17'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R18-score'] = ques['Score for R18'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R19-score'] = ques['Score for R19'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R20-score'] = ques['Score for R20'].encode('utf-8').decode('utf-8')
+                    questionFileObj['R6-score'] = ques['Score for R6']
+                    questionFileObj['R7-score'] = ques['Score for R7']
+                    questionFileObj['R8-score'] = ques['Score for R8']
+                    questionFileObj['R9-score'] = ques['Score for R9']
+                    questionFileObj['R10-score'] = ques['Score for R10']
+                    questionFileObj['R11-score'] = ques['Score for R11']
+                    questionFileObj['R12-score'] = ques['Score for R12']
+                    questionFileObj['R13-score'] = ques['Score for R13']
+                    questionFileObj['R14-score'] = ques['Score for R14']
+                    questionFileObj['R15-score'] = ques['Score for R15']
+                    questionFileObj['R16-score'] = ques['Score for R16']
+                    questionFileObj['R17-score'] = ques['Score for R17']
+                    questionFileObj['R18-score'] = ques['Score for R18']
+                    questionFileObj['R19-score'] = ques['Score for R19']
+                    questionFileObj['R20-score'] = ques['Score for R20']
                 if ques['question_response_type'].strip().lower() == 'slider' and ques[
                     'slider_value_with_score'].strip():
                     noOfSliderColumnQuestionVal = ques['slider_value_with_score'].strip().split(',')
@@ -2348,217 +2346,217 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                 'question_response_type'].strip() == 'multiselect':
                 if type(ques['response(R1)']) != str:
                     if (ques['response(R1)'] and ques['response(R1)'].is_integer() == True):
-                        questionFileObj['R1'] = int(ques['response(R1)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R1'] = int(ques['response(R1)'])
                     elif (ques['response(R1)'] and ques['response(R1)'].is_integer() == False):
                         questionFileObj['R1'] = ques['response(R1)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R1'] = ques['response(R1)']
                 if type(ques['response(R1)_hint']) != str:
                     if (ques['response(R1)_hint'] and ques['response(R1)_hint'].is_integer() == True):
-                        questionFileObj['R1-hint'] = int(ques['response(R1)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R1-hint'] = int(ques['response(R1)_hint'])
                     elif (ques['response(R1)_hint'] and ques['response(R1)_hint'].is_integer() == False):
                         questionFileObj['R1-hint'] = ques['response(R1)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R1-hint'] = ques['response(R1)_hint'].encode('utf-8').decode('utf-8')
                 if type(ques['response(R2)']) != str:
                     if (ques['response(R2)'] and ques['response(R2)'].is_integer() == True):
-                        questionFileObj['R2'] = int(ques['response(R2)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R2'] = int(ques['response(R2)'])
                     elif (ques['response(R2)'] and ques['response(R2)'].is_integer() == False):
                         questionFileObj['R2'] = ques['response(R2)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R2'] = ques['response(R2)']
                 if type(ques['response(R2)_hint']) != str:
                     if (ques['response(R2)_hint'] and ques['response(R2)_hint'].is_integer() == True):
-                        questionFileObj['R2-hint'] = int(ques['response(R2)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R2-hint'] = int(ques['response(R2)_hint'])
                     elif (ques['response(R2)_hint'] and ques['response(R2)_hint'].is_integer() == False):
                         questionFileObj['R2-hint'] = ques['response(R2)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R2-hint'] = ques['response(R2)_hint']
                 if type(ques['response(R3)']) != str:
                     if (ques['response(R3)'] and ques['response(R3)'].is_integer() == True):
-                        questionFileObj['R3'] = int(ques['response(R3)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R3'] = int(ques['response(R3)'])
                     elif (ques['response(R3)'] and ques['response(R3)'].is_integer() == False):
                         questionFileObj['R3'] = ques['response(R3)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R3'] = ques['response(R3)']
                 if type(ques['response(R3)_hint']) != str:
                     if (ques['response(R3)_hint'] and ques['response(R3)_hint'].is_integer() == True):
-                        questionFileObj['R3-hint'] = int(ques['response(R3)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R3-hint'] = int(ques['response(R3)_hint'])
                     elif (ques['response(R3)_hint'] and ques['response(R3)_hint'].is_integer() == False):
                         questionFileObj['R3-hint'] = ques['response(R3)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R3-hint'] = ques['response(R3)_hint']
                 if type(ques['response(R4)']) != str:
                     if (ques['response(R4)'] and ques['response(R4)'].is_integer() == True):
-                        questionFileObj['R4'] = int(ques['response(R4)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R4'] = int(ques['response(R4)'])
                     elif (ques['response(R4)'] and ques['response(R4)'].is_integer() == False):
                         questionFileObj['R4'] = ques['response(R4)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R4'] = ques['response(R4)']
                 if type(ques['response(R4)_hint']) != str:
                     if (ques['response(R4)_hint'] and ques['response(R4)_hint'].is_integer() == True):
-                        questionFileObj['R4-hint'] = int(ques['response(R4)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R4-hint'] = int(ques['response(R4)_hint'])
                     elif (ques['response(R4)_hint'] and ques['response(R4)_hint'].is_integer() == False):
                         questionFileObj['R4-hint'] = ques['response(R4)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R4-hint'] = ques['response(R4)_hint']
                 if type(ques['response(R5)']) != str:
                     if (ques['response(R5)'] and ques['response(R5)'].is_integer() == True):
-                        questionFileObj['R5'] = int(ques['response(R5)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R5'] = int(ques['response(R5)'])
                     elif (ques['response(R5)'] and ques['response(R5)'].is_integer() == False):
                         questionFileObj['R5'] = ques['response(R5)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R5'] = ques['response(R5)']
                 if type(ques['response(R5)_hint']) != str:
                     if (ques['response(R5)_hint'] and ques['response(R5)_hint'].is_integer() == True):
-                        questionFileObj['R5-hint'] = int(ques['response(R5)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R5-hint'] = int(ques['response(R5)_hint'])
                     elif (ques['response(R5)_hint'] and ques['response(R5)_hint'].is_integer() == False):
                         questionFileObj['R5-hint'] = ques['response(R5)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R5-hint'] = ques['response(R5)_hint']
                 if type(ques['response(R6)']) != str:
                     if (ques['response(R6)'] and ques['response(R6)'].is_integer() == True):
-                        questionFileObj['R6'] = int(ques['response(R6)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R6'] = int(ques['response(R6)'])
                     elif (ques['response(R6)'] and ques['response(R6)'].is_integer() == False):
                         questionFileObj['R6'] = ques['response(R6)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R6'] = ques['response(R6)']
                 if type(ques['response(R6)_hint']) != str:
                     if (ques['response(R6)_hint'] and ques['response(R6)_hint'].is_integer() == True):
-                        questionFileObj['R6-hint'] = int(ques['response(R6)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R6-hint'] = int(ques['response(R6)_hint'])
                     elif (ques['response(R6)_hint'] and ques['response(R6)_hint'].is_integer() == False):
                         questionFileObj['R6-hint'] = ques['response(R6)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R6-hint'] = ques['response(R6)_hint']
                 if type(ques['response(R7)']) != str:
                     if (ques['response(R7)'] and ques['response(R7)'].is_integer() == True):
-                        questionFileObj['R7'] = int(ques['response(R7)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R7'] = int(ques['response(R7)'])
                     elif (ques['response(R7)'] and ques['response(R7)'].is_integer() == False):
                         questionFileObj['R7'] = ques['response(R7)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R7'] = ques['response(R7)']
                 if type(ques['response(R7)_hint']) != str:
                     if (ques['response(R7)_hint'] and ques['response(R7)_hint'].is_integer() == True):
-                        questionFileObj['R7-hint'] = int(ques['response(R7)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R7-hint'] = int(ques['response(R7)_hint'])
                     elif (ques['response(R7)_hint'] and ques['response(R7)_hint'].is_integer() == False):
                         questionFileObj['R7-hint'] = ques['response(R7)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R7-hint'] = ques['response(R7)_hint']
                 if type(ques['response(R8)']) != str:
                     if (ques['response(R8)'] and ques['response(R8)'].is_integer() == True):
-                        questionFileObj['R8'] = int(ques['response(R8)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R8'] = int(ques['response(R8)'])
                     elif (ques['response(R8)'] and ques['response(R8)'].is_integer() == False):
                         questionFileObj['R8'] = ques['response(R8)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R8'] = ques['response(R8)']
                 if type(ques['response(R8)_hint']) != str:
                     if (ques['response(R8)_hint'] and ques['response(R8)_hint'].is_integer() == True):
-                        questionFileObj['R8-hint'] = int(ques['response(R8)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R8-hint'] = int(ques['response(R8)_hint'])
                     elif (ques['response(R8)_hint'] and ques['response(R8)_hint'].is_integer() == False):
                         questionFileObj['R8-hint'] = ques['response(R8)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R8-hint'] = ques['response(R8)_hint']
                 if type(ques['response(R9)']) != str:
                     if (ques['response(R9)'] and ques['response(R9)'].is_integer() == True):
-                        questionFileObj['R9'] = int(ques['response(R9)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R9'] = int(ques['response(R9)'])
                     elif (ques['response(R9)'] and ques['response(R9)'].is_integer() == False):
                         questionFileObj['R9'] = ques['response(R9)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R9'] = ques['response(R9)']
                 if type(ques['response(R9)_hint']) != str:
                     if (ques['response(R9)_hint'] and ques['response(R9)_hint'].is_integer() == True):
-                        questionFileObj['R9-hint'] = int(ques['response(R9)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R9-hint'] = int(ques['response(R9)_hint'])
                     elif (ques['response(R9)_hint'] and ques['response(R9)_hint'].is_integer() == False):
                         questionFileObj['R9-hint'] = ques['response(R9)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R9-hint'] = ques['response(R9)_hint']
                 if type(ques['response(R10)']) != str:
                     if (ques['response(R10)'] and ques['response(R10)'].is_integer() == True):
-                        questionFileObj['R10'] = int(ques['response(R10)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R10'] = int(ques['response(R10)'])
                     elif (ques['response(R10)'] and ques['response(R10)'].is_integer() == False):
                         questionFileObj['R10'] = ques['response(R10)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R10'] = ques['response(R10)']
                 if type(ques['response(R10)_hint']) != str:
                     if (ques['response(R10)_hint'] and ques['response(R10)_hint'].is_integer() == True):
-                        questionFileObj['R10-hint'] = int(ques['response(R10)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R10-hint'] = int(ques['response(R10)_hint'])
                     elif (ques['response(R10)_hint'] and ques['response(R10)_hint'].is_integer() == False):
                         questionFileObj['R10-hint'] = ques['response(R10)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R10-hint'] = ques['response(R10)_hint']
                 if type(ques['response(R11)']) != str:
                     if (ques['response(R11)'] and ques['response(R11)'].is_integer() == True):
-                        questionFileObj['R11'] = int(ques['response(R11)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R11'] = int(ques['response(R11)'])
                     elif (ques['response(R11)'] and ques['response(R11)'].is_integer() == False):
                         questionFileObj['R11'] = ques['response(R11)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R11'] = ques['response(R11)']
                 if type(ques['response(R11)_hint']) != str:
                     if (ques['response(R11)_hint'] and ques['response(R11)_hint'].is_integer() == True):
-                        questionFileObj['R11-hint'] = int(ques['response(R11)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R11-hint'] = int(ques['response(R11)_hint'])
                     elif (ques['response(R11)_hint'] and ques['response(R11)_hint'].is_integer() == False):
                         questionFileObj['R11-hint'] = ques['response(R11)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R11-hint'] = ques['response(R11)_hint']
                 if type(ques['response(R12)']) != str:
                     if (ques['response(R12)'] and ques['response(R12)'].is_integer() == True):
-                        questionFileObj['R12'] = int(ques['response(R12)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R12'] = int(ques['response(R12)'])
                     elif (ques['response(R12)'] and ques['response(R12)'].is_integer() == False):
                         questionFileObj['R12'] = ques['response(R12)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R12'] = ques['response(R12)']
                 if type(ques['response(R12)_hint']) != str:
                     if (ques['response(R12)_hint'] and ques['response(R12)_hint'].is_integer() == True):
-                        questionFileObj['R12-hint'] = int(ques['response(R12)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R12-hint'] = int(ques['response(R12)_hint'])
                     elif (ques['response(R12)_hint'] and ques['response(R12)_hint'].is_integer() == False):
                         questionFileObj['R12-hint'] = ques['response(R12)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R12-hint'] = ques['response(R12)_hint']
                 if type(ques['response(R13)']) != str:
                     if (ques['response(R13)'] and ques['response(R13)'].is_integer() == True):
-                        questionFileObj['R13'] = int(ques['response(R13)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R13'] = int(ques['response(R13)'])
                     elif (ques['response(R13)'] and ques['response(R13)'].is_integer() == False):
                         questionFileObj['R13'] = ques['response(R13)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R13'] = ques['response(R13)']
                 if type(ques['response(R13)_hint']) != str:
                     if (ques['response(R13)_hint'] and ques['response(R13)_hint'].is_integer() == True):
-                        questionFileObj['R13-hint'] = int(ques['response(R13)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R13-hint'] = int(ques['response(R13)_hint'])
                     elif (ques['response(R13)_hint'] and ques['response(R13)_hint'].is_integer() == False):
                         questionFileObj['R13-hint'] = ques['response(R13)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R13-hint'] = ques['response(R13)_hint']
                 if type(ques['response(R14)']) != str:
                     if (ques['response(R14)'] and ques['response(R14)'].is_integer() == True):
-                        questionFileObj['R14'] = int(ques['response(R14)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R14'] = int(ques['response(R14)'])
                     elif (ques['response(R14)'] and ques['response(R14)'].is_integer() == False):
                         questionFileObj['R14'] = ques['response(R14)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R14'] = ques['response(R14)']
                 if type(ques['response(R14)_hint']) != str:
                     if (ques['response(R14)_hint'] and ques['response(R14)_hint'].is_integer() == True):
-                        questionFileObj['R14-hint'] = int(ques['response(R14)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R14-hint'] = int(ques['response(R14)_hint'])
                     elif (ques['response(R14)_hint'] and ques['response(R14)_hint'].is_integer() == False):
                         questionFileObj['R14-hint'] = ques['response(R14)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R14-hint'] = ques['response(R14)_hint']
                 if type(ques['response(R15)']) != str:
                     if (ques['response(R15)'] and ques['response(R15)'].is_integer() == True):
-                        questionFileObj['R15'] = int(ques['response(R15)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R15'] = int(ques['response(R15)'])
                     elif (ques['response(R15)'] and ques['response(R15)'].is_integer() == False):
                         questionFileObj['R15'] = ques['response(R15)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R15'] = ques['response(R15)']
                 if type(ques['response(R15)_hint']) != str:
                     if (ques['response(R15)_hint'] and ques['response(R15)_hint'].is_integer() == True):
-                        questionFileObj['R15-hint'] = int(ques['response(R15)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R15-hint'] = int(ques['response(R15)_hint'])
                     elif (ques['response(R15)_hint'] and ques['response(R15)_hint'].is_integer() == False):
                         questionFileObj['R15-hint'] = ques['response(R15)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R15-hint'] = ques['response(R15)_hint']
                 if type(ques['response(R16)']) != str:
                     if (ques['response(R16)'] and ques['response(R16)'].is_integer() == True):
-                        questionFileObj['R16'] = int(ques['response(R16)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R16'] = int(ques['response(R16)'])
                     elif (ques['response(R16)'] and ques['response(R16)'].is_integer() == False):
                         questionFileObj['R16'] = ques['response(R16)'].encode('utf-8').decode('utf-8')
                 else:
@@ -2668,8 +2666,8 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                 questionFileObj['R20'] = None
                 questionFileObj['R20-hint'] = None
                 questionFileObj['_arrayFields'] = None
-            if ques['section_header'].encode('utf-8').decode('utf-8'):
-                questionFileObj['sectionHeader'] = ques['section_header']
+            if ques['section_header']:
+                questionFileObj['sectionHeader'] = ques['section_header'].encode('utf-8').decode('utf-8')
             else:
                 questionFileObj['sectionHeader'] = None
             questionFileObj['page'] = ques['page']
@@ -2718,7 +2716,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
         criteriaRubricSheet = wbObservation.sheet_by_name('Criteria_Rubric-Scoring')
         dictSolCritLookUp = dict()
         filePath = os.path.join(solutionName_for_folder_path + "/solutionCriteriaFetch/", "solutionCriteriaDetails.csv")
-        with open(filePath, 'r') as criteriaInternalFile:
+        with open(filePath, 'r',encoding='utf-8') as criteriaInternalFile:
             criteriaInternalReader = csv.DictReader(criteriaInternalFile)
             for crit in criteriaInternalReader:
                 dictSolCritLookUp[crit['criteriaID']] = [crit['criteriaInternalId'], crit['criteriaName']]
@@ -2726,7 +2724,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
         criteriaRubricSheet = wbObservation.sheet_by_name('criteria')
         dictSolCritLookUp = dict()
         filePath = os.path.join(solutionName_for_folder_path + "/solutionCriteriaFetch/", "solutionCriteriaDetails.csv")
-        with open(filePath, 'r') as criteriaInternalFile:
+        with open(filePath, 'r',encoding='utf-8') as criteriaInternalFile:
             criteriaInternalReader = csv.DictReader(criteriaInternalFile)
             for crit in criteriaInternalReader:
                 dictSolCritLookUp[crit['criteriaID']] = [crit['criteriaInternalId'], crit['criteriaName']]
@@ -2803,7 +2801,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
     createAPILog(solutionName_for_folder_path, messageArr)
     if responseCriteriaRubricUploadApi.status_code == 200:
         with open(solutionName_for_folder_path + '/criteriaRubrics/uploadInternalIdsSheet.csv',
-                  'w+') as criteriaRubricRes:
+                  'w+',encoding='utf-8') as criteriaRubricRes:
             criteriaRubricRes.write(responseCriteriaRubricUploadApi.text)
     else:
         messageArr = ["Criteria Rubric upload Failed.", "Response : " + str(responseCriteriaRubricUploadApi.text)]
@@ -2828,7 +2826,7 @@ def fetchSolutionCriteria(solutionName_for_folder_path, observationId, accessTok
     if response.status_code == 200:
         print("Solution criteria fetched.")
         with open(solutionName_for_folder_path + "/solutionCriteriaFetch/solutionCriteriaDetails.csv",
-                  'w+') as solutionCriteriaFetch:
+                  'w+',encoding='utf-8') as solutionCriteriaFetch:
             solutionCriteriaFetch.write(response.text)
     else:
         messageArr = ["Criteria solution fetch API failed.", "Response  : " + str(response.text)]
@@ -2864,7 +2862,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
                 dictThemeRubric = {keys[col_index]: themeRubricSheet.cell(row_index, col_index).value for col_index in
                                    range(themeRubricSheet.ncols)}
                 themeRubricUpload['externalId'] = dictThemeRubric['domain_Id']
-                themeRubricUpload['name'] = dictThemeRubric['domain_name']
+                themeRubricUpload['name'] = dictThemeRubric['domain_name'].encode('utf-8').decode('utf-8')
                 if dictThemeRubric['weightage']:
                     themeRubricUpload['weightage'] = dictThemeRubric['weightage']
                 else:
@@ -2902,7 +2900,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
                                                  files=filesThemeRubric)
     if responseThemeRubricUploadApi.status_code == 200:
         print('ThemeRubricUploadApi Success')
-        with open(solutionName_for_folder_path + '/themeRubrics/uploadInternalIdsSheet.csv', 'w+') as themeRubricRes:
+        with open(solutionName_for_folder_path + '/themeRubrics/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as themeRubricRes:
             themeRubricRes.write(responseThemeRubricUploadApi.text)
     else:
         messageArr = ['theme rubric upload api failed in ' + environment,
@@ -3536,8 +3534,8 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         for quesIndex in range(1, 21):
                             questionFileObj['R' + str(quesIndex)] = None
                             questionFileObj['R' + str(quesIndex) + '-hint'] = None
-                    if ques['section_header'].encode('utf-8').decode('utf-8'):
-                        questionFileObj['sectionHeader'] = ques['section_header']
+                    if ques['section_header']:
+                        questionFileObj['sectionHeader'] = ques['section_header'].encode('utf-8').decode('utf-8')
                     else:
                         questionFileObj['sectionHeader'] = None
 
@@ -3744,7 +3742,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
     projectColnames2 = ["rationale", "primaryAudience", "taskCreationForm", "duration", "concepts", "keywords","successIndicators", "risks", "approaches", "_arrayFields"]
     for columns in projectColnames2:
         projectColnames1.append(columns)
-    with open(projectFilePath + 'projectUpload.csv', 'w') as file:
+    with open(projectFilePath + 'projectUpload.csv', 'w',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows([projectColnames1])
 
@@ -3767,7 +3765,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
         global projectCreator, projectAuthor
 
         projectAuthor = str(dictProjectDetails["Diksha_loginId"]).encode('utf-8').decode('utf-8').strip()
-        recommendedFor = str(dictProjectDetails["recommendedFor"]).strip()
+        recommendedFor = str(dictProjectDetails["recommendedFor"]).encode('utf-8').decode('utf-8').strip()
         objective = str(dictProjectDetails["objective"]).encode('utf-8').decode('utf-8').strip()
         entityType = None
         project_values = [title, externalId, categories_final,recommendedFor, objective, entityType,projectGoal]
@@ -3826,7 +3824,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
     taskColumns1.append("minNoOfSubmissionsRequired")
     taskColumns1.append("sequenceNumber")
 
-    with open(taskFilePath + 'taskUpload.csv', 'w') as file:
+    with open(taskFilePath + 'taskUpload.csv', 'w',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows([taskColumns1])
     sequenceNumber = 0
@@ -3962,7 +3960,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
             task_values.append(taskminNoOfSubmissionsRequired)
             task_values.append(sequenceNumber)
 
-            with open(taskFilePath + 'taskUpload.csv', 'a') as file:
+            with open(taskFilePath + 'taskUpload.csv', 'a',encoding='utf-8') as file:
                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                 writer.writerows([subtaskvalues])
 
@@ -4503,7 +4501,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     messageArr.append("Upload status code : " + str(responseaddcertificateUploadApi.status_code))
     createAPILog(projectName_for_folder_path, messageArr)
     with open(projectName_for_folder_path + '/addCertificate/Addcertificatejson.json',
-              'w+') as tasksRes:
+              'w+',encoding='utf-8') as tasksRes:
         tasksRes.write(json.dumps(payload))
 
     if responseaddcertificateUploadApi.status_code == 200:
@@ -4513,7 +4511,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
 
         with open(projectName_for_folder_path + '/addCertificate/Addcertificate.text',
-                  'w+') as tasksRes:
+                  'w+',encoding='utf-8') as tasksRes:
             tasksRes.write(responseaddcertificateUploadApi.text)
 
     else:
@@ -4719,7 +4717,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
     SolutionFilePath = projectName_for_folder_path + '/solutionDetails/'
     if not os.path.exists(SolutionFilePath):
         os.mkdir(SolutionFilePath)
-    with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'w') as file:
+    with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'w',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows(
             [["solutionExtId", "solutionName", "solutionDescription", "solution_id", "programExternalId", "entityType",
@@ -4790,7 +4788,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 messageArr.append("duplicate TemplateId successfully created: " + str(duplicateTemplateId))
                 createAPILog(projectName_for_folder_path, messageArr)
                 print("MapSolutionToProjectApi Sucsess")
-                with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'a') as file:
+                with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'a',encoding='utf-8') as file:
                     writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                     writer.writerows([[solutionExternalId, project_name, project_description, solutionId,
                                        programExternalId, projectEntityType,
