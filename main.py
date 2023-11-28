@@ -305,7 +305,7 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         # terminate execution
         terminatingMessage("Program creation API failed. Please check logs.")
 
-# this function is used to create the sheet of PDPM for API requerment
+# this function is used to create the sheet of PDPM for API requirement
 def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,programexternalId,parentFolder):
     pdpmsheet = MainFilePath+ "/pdpmmapping/"
     if not os.path.exists(pdpmsheet):
@@ -2823,8 +2823,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
             file_exists_ques = os.path.isfile(solutionName_for_folder_path + '/criteriaRubrics/uploadSheet.csv')
             with open(solutionName_for_folder_path + '/criteriaRubrics/uploadSheet.csv', 'a',
                       encoding='utf-8') as questionUploadFile:
-                writerQuestionUpload = csv.DictWriter(questionUploadFile, fieldnames=criteriaRubricUploadFieldnames,
-                                                      lineterminator='\n')
+                writerQuestionUpload = csv.DictWriter(questionUploadFile, fieldnames=criteriaRubricUploadFieldnames,lineterminator='\n')
                 if not file_exists_ques:
                     writerQuestionUpload.writeheader()
                 dictCriteriaRubric = {keys[col_index]: criteriaRubricSheet.cell(row_index, col_index).value for
@@ -3437,7 +3436,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                     os.mkdir(questionFilePath)
                 with open(parentFolder + '/questionUpload/uploadSheet.csv', 'a',
                           encoding='utf-8') as questionUploadFile:
-                    writerQuestionUpload = csv.DictWriter(questionUploadFile, fieldnames=questionUploadFieldnames)
+                    writerQuestionUpload = csv.DictWriter(questionUploadFile, fieldnames=questionUploadFieldnames,lineterminator='\n')
                     if not file_exists_ques:
                         writerQuestionUpload.writeheader()
                     questionFileObj = {}
