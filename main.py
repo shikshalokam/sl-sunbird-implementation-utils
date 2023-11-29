@@ -306,140 +306,140 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         terminatingMessage("Program creation API failed. Please check logs.")
 
 # this function is used to create the sheet of PDPM for API requirement
-def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,programexternalId,parentFolder):
-    pdpmsheet = MainFilePath+ "/pdpmmapping/"
-    if not os.path.exists(pdpmsheet):
-        os.mkdir(pdpmsheet)
-    print(program_file)
-    print(MainFilePath)
+# def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,programexternalId,parentFolder):
+#     pdpmsheet = MainFilePath+ "/pdpmmapping/"
+#     if not os.path.exists(pdpmsheet):
+#         os.mkdir(pdpmsheet)
+#     print(program_file)
+#     print(MainFilePath)
 
-    wbproject = xlrd.open_workbook(program_file, on_demand=True)
-    projectSheetNames = wbproject.sheet_names()
+#     wbproject = xlrd.open_workbook(program_file, on_demand=True)
+#     projectSheetNames = wbproject.sheet_names()
 
-    mappingsheet = wbproject.sheet_by_name('Program Details')
-    keysProject = [mappingsheet.cell(1, col_index_env).value for col_index_env in
-                   range(mappingsheet.ncols)]
+#     mappingsheet = wbproject.sheet_by_name('Program Details')
+#     keysProject = [mappingsheet.cell(1, col_index_env).value for col_index_env in
+#                    range(mappingsheet.ncols)]
 
-    pdpmcolo1 = ["user","role","entity","entityOperation","keycloak-userId","acl_school","acl_cluster","programOperation",
-                "platform_role","programs","_arrayFields"]
-    with open(pdpmsheet + 'mapping.csv', 'w') as file:
-         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
-         writer.writerows([pdpmcolo1])
+#     pdpmcolo1 = ["user","role","entity","entityOperation","keycloak-userId","acl_school","acl_cluster","programOperation",
+#                 "platform_role","programs","_arrayFields"]
+#     with open(pdpmsheet + 'mapping.csv', 'w') as file:
+#          writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
+#          writer.writerows([pdpmcolo1])
 
-    wbPgm = xlrd.open_workbook(program_file, on_demand=True)
-    global programNameInp
-    sheetNames = wbPgm.sheet_names()
-    for sheetEnv in sheetNames:
-        if sheetEnv == "Instructions":
-            pass
-        elif sheetEnv.strip().lower() == 'program details':
-            print("--->Checking Program details sheet...")
-            detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
-                       range(detailsEnvSheet.ncols)]
-            for row_index_env in range(2, detailsEnvSheet.nrows):
-                dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                                  for
-                                  col_index_env in range(detailsEnvSheet.ncols)}
-                programNameInp = dictDetailsEnv['Title of the Program'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Title of the Program'] else terminatingMessage("\"Title of the Program\" must not be Empty in \"Program details\" sheet")
+#     wbPgm = xlrd.open_workbook(program_file, on_demand=True)
+#     global programNameInp
+#     sheetNames = wbPgm.sheet_names()
+#     for sheetEnv in sheetNames:
+#         if sheetEnv == "Instructions":
+#             pass
+#         elif sheetEnv.strip().lower() == 'program details':
+#             print("--->Checking Program details sheet...")
+#             detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
+#             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+#                        range(detailsEnvSheet.ncols)]
+#             for row_index_env in range(2, detailsEnvSheet.nrows):
+#                 dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+#                                   for
+#                                   col_index_env in range(detailsEnvSheet.ncols)}
+#                 programNameInp = dictDetailsEnv['Title of the Program'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Title of the Program'] else terminatingMessage("\"Title of the Program\" must not be Empty in \"Program details\" sheet")
 
-            extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
+#             extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
 
-            programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
-            userDetails = fetchUserDetails(environment, accessToken, programdesigner)
+#             programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
+#             userDetails = fetchUserDetails(environment, accessToken, programdesigner)
             
-            creatorKeyCloakId = userDetails[0]
-            creatorName = userDetails[1]
-            if "PROGRAM_DESIGNER" in userDetails[3]:
-                creatorKeyCloakId = userDetails[0]
-                creatorName = userDetails[1]
-            else :
-                terminatingMessage("user does't have program designer role")
+#             creatorKeyCloakId = userDetails[0]
+#             creatorName = userDetails[1]
+#             if "PROGRAM_DESIGNER" in userDetails[3]:
+#                 creatorKeyCloakId = userDetails[0]
+#                 creatorName = userDetails[1]
+#             else :
+#                 terminatingMessage("user does't have program designer role")
 
-            pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_DESIGNER", extIdPGM, "programs"]
-            with open(pdpmsheet + 'mapping.csv', 'a') as file:
-                writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
-                writer.writerows([pdpmcolo1])
-                fileheader = [creatorName,"program designer mapped successfully","Passed"]
-                apicheckslog(parentFolder,fileheader)
-
-
-        elif sheetEnv.strip().lower() == 'program manager details':
-            print("--->Program Manager Details...")
-            detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
-                       range(detailsEnvSheet.ncols)]
-            for row_index_env in range(2, detailsEnvSheet.nrows):
-                dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                                  for
-                                  col_index_env in range(detailsEnvSheet.ncols)}
-
-                if str(dictDetailsEnv['Is a SSO user?']).strip() == "YES":
-                    programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'] if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
-                else:
-                    try :
-                        programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Login ID on DIKSHA'] else terminatingMessage("\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
-                        userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
-                    except :
-                        programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
-                        userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
-
-                userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
-                creatorKeyCloakId = userDetails[0]
-                creatorName = userDetails[1]
-                if "PROGRAM_MANAGER" in userDetails[3]:
-                    creatorKeyCloakId = userDetails[0]
-                    creatorName = userDetails[1]
-                else:
-                    terminatingMessage("user does't have program manager role")
-
-                pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_MANAGER", extIdPGM, "programs"]
-
-                with open(pdpmsheet + 'mapping.csv', 'a') as file:
-                    writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
-                    writer.writerows([pdpmcolo1])
-                messageArr.append("Response : " + str(pdpmcolo1))
-                createAPILog(parentFolder, messageArr)
-
-                fileheader = [creatorName,"program manager mapped succesfully","Passed"]
-                apicheckslog(parentFolder,fileheader)
+#             pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_DESIGNER", extIdPGM, "programs"]
+#             with open(pdpmsheet + 'mapping.csv', 'a') as file:
+#                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
+#                 writer.writerows([pdpmcolo1])
+#                 fileheader = [creatorName,"program designer mapped successfully","Passed"]
+#                 apicheckslog(parentFolder,fileheader)
 
 
-# this function is used for call the api and map the pdpm roles which we created
-def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
-    urlpdpmapi = config.get(environment, 'INTERNAL_KONG_IP_SURVEY') + config.get(environment, 'Pdpmurl')
-    headerpdpmApi = {
-        'Authorization': config.get(environment, 'Authorization'),
-        'X-authenticated-user-token': accessToken,
-        'X-Channel-id': config.get(environment, 'X-Channel-id'),
-        'internal-access-token': config.get(environment, 'internal-access-token')
-    }
-    payload = {}
-    filesProject = {
-        'userRoles': open(MainFilePath + '/pdpmmapping/mapping.csv', 'rb')
-    }
+#         elif sheetEnv.strip().lower() == 'program manager details':
+#             print("--->Program Manager Details...")
+#             detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
+#             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+#                        range(detailsEnvSheet.ncols)]
+#             for row_index_env in range(2, detailsEnvSheet.nrows):
+#                 dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+#                                   for
+#                                   col_index_env in range(detailsEnvSheet.ncols)}
 
-    responseProgrammappingApi = requests.post(url=urlpdpmapi, headers=headerpdpmApi,
-                                             data=payload,
-                                             files=filesProject)
-    messageArr = ["program mapping sheet.",
-                  "File path : " + MainFilePath + '/pdpmmapping/mapping.csv']
-    messageArr.append("Upload status code : " + str(responseProgrammappingApi.status_code))
-    createAPILog(parentFolder, messageArr)
+#                 if str(dictDetailsEnv['Is a SSO user?']).strip() == "YES":
+#                     programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'] if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
+#                 else:
+#                     try :
+#                         programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Login ID on DIKSHA'] else terminatingMessage("\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
+#                         userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+#                     except :
+#                         programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
+#                         userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
 
-    if responseProgrammappingApi.status_code == 200:
-        print('--->program manager and designer mapping is Success')
-        with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+') as projectRes:
-            projectRes.write(responseProgrammappingApi.text)
-            # print(responseProgrammappingApi)
-            messageArr.append("Response : " + str(responseProgrammappingApi.text))
-            createAPILog(parentFolder, messageArr)
-    else:
-        messageArr.append("Response : " + str(responseProgrammappingApi.text))
-        createAPILog(parentFolder, messageArr)
-        fileheader = ["PDPM mapping","PDPM mapping is failed","Failed","check PDPM sheet"]
-        apicheckslog(parentFolder,fileheader)
-        sys.exit()
+#                 userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+#                 creatorKeyCloakId = userDetails[0]
+#                 creatorName = userDetails[1]
+#                 if "PROGRAM_MANAGER" in userDetails[3]:
+#                     creatorKeyCloakId = userDetails[0]
+#                     creatorName = userDetails[1]
+#                 else:
+#                     terminatingMessage("user does't have program manager role")
+
+#                 pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_MANAGER", extIdPGM, "programs"]
+
+#                 with open(pdpmsheet + 'mapping.csv', 'a') as file:
+#                     writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
+#                     writer.writerows([pdpmcolo1])
+#                 messageArr.append("Response : " + str(pdpmcolo1))
+#                 createAPILog(parentFolder, messageArr)
+
+#                 fileheader = [creatorName,"program manager mapped succesfully","Passed"]
+#                 apicheckslog(parentFolder,fileheader)
+
+
+# # this function is used for call the api and map the pdpm roles which we created
+# def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
+#     urlpdpmapi = config.get(environment, 'INTERNAL_KONG_IP_SURVEY') + config.get(environment, 'Pdpmurl')
+#     headerpdpmApi = {
+#         'Authorization': config.get(environment, 'Authorization'),
+#         'X-authenticated-user-token': accessToken,
+#         'X-Channel-id': config.get(environment, 'X-Channel-id'),
+#         'internal-access-token': config.get(environment, 'internal-access-token')
+#     }
+#     payload = {}
+#     filesProject = {
+#         'userRoles': open(MainFilePath + '/pdpmmapping/mapping.csv', 'rb')
+#     }
+
+#     responseProgrammappingApi = requests.post(url=urlpdpmapi, headers=headerpdpmApi,
+#                                              data=payload,
+#                                              files=filesProject)
+#     messageArr = ["program mapping sheet.",
+#                   "File path : " + MainFilePath + '/pdpmmapping/mapping.csv']
+#     messageArr.append("Upload status code : " + str(responseProgrammappingApi.status_code))
+#     createAPILog(parentFolder, messageArr)
+
+#     if responseProgrammappingApi.status_code == 200:
+#         print('--->program manager and designer mapping is Success')
+#         with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+') as projectRes:
+#             projectRes.write(responseProgrammappingApi.text)
+#             # print(responseProgrammappingApi)
+#             messageArr.append("Response : " + str(responseProgrammappingApi.text))
+#             createAPILog(parentFolder, messageArr)
+#     else:
+#         messageArr.append("Response : " + str(responseProgrammappingApi.text))
+#         createAPILog(parentFolder, messageArr)
+#         fileheader = ["PDPM mapping","PDPM mapping is failed","Failed","check PDPM sheet"]
+#         apicheckslog(parentFolder,fileheader)
+#         sys.exit()
 
 # This function checks for the sequince
 def check_sequence(arr):
@@ -513,12 +513,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     # entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                     #                               entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
                     global orgIds
-                    if environment == "staging":
-                        orgIds = "01269934121990553633"
-                    elif environment == "dev":
-                        orgIds = "0137541424673095687"
-                    else:
-                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
+                    # orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
                     # print(orgIds)
                     # sys.exit()
 
@@ -548,15 +543,12 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         
                         if "teacher" in mainRole.strip().lower():
                             rolesPGM = str(rolesPGM).strip() + ",TEACHER"
-                        if environment == "staging":
-                            userDetails = ["5d7255bb-1216-460e-9228-59b60230b1c1","stagingpd_wjtv","Stagingpd",["PROGRAM_DESIGNER"],"",""]
-                        elif environment == "dev":
-                            userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",["PROGRAM_DESIGNER"],"",""]
-                        else:
-                            # fetch user details 
-                            userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer']).encode('utf-8').decode('utf-8')
+                        userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
+                        OrgName=userDetails[4]
+                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
                         creatorKeyCloakId = userDetails[0]
                         creatorName = userDetails[2]
+                        
                         
                         messageArr = []
 
@@ -836,6 +828,7 @@ def checkEmailValidation(email):
 
 # Fetch user details 
 def fetchUserDetails(environment, accessToken, dikshaId):
+    global OrgName
     url = config.get(environment, 'host') + config.get(environment, 'userInfoApiUrl')
     messageArr = ["User search API called."]
     headers = {'Content-Type': 'application/json',
@@ -859,6 +852,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
                 if rootOrgId == index['organisationId']:
                     roledetails = index['roles']
                     rootOrgName = index['orgName']
+                    OrgName.append(index['orgName'])
             print(roledetails)
         else:
             terminatingMessage("-->Given username/email is not present in DIKSHA platform<--.")
@@ -901,17 +895,12 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
                 messageArr.append("orgIds : " + str(orgIds))
-            elif environment == "staging":
-                messageArr.append("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                print("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                messageArr.append("orgApi : " + str(url))
-                messageArr.append("orgBody : " + str(orgBody))
-                messageArr.append("orgAPI response: " + str(responseOrgSearch))
+            
             else:
-                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
                 messageArr.append("orgApi : " + str(url))
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
         else:
             messageArr.append("orgApi : " + str(url))
             messageArr.append("headers : " + str(headers))
@@ -1124,12 +1113,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         if set(detailsCols) == set(dictDetailsEnv.keys()):
                             solutionName = dictDetailsEnv['observation_solution_name'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_name'] else terminatingMessage("\"observation_solution_name\" must not be Empty in \"details\" sheet")
                             dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
-                            if environment == "staging":
-                                ccUserDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",["CONTENT_CREATOR"],"",""]
-                            elif environment == "dev":
-                                ccUserDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",["CONTENT_CREATOR"],"",""]
-                            else:
-                                ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+                            ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                             if not "CONTENT_CREATOR" in ccUserDetails[3]:
                                 terminatingMessage("---> "+dikshaLoginId +" is not a CONTENT_CREATOR in Diksha " + environment)
                             ccRootOrgName = ccUserDetails[4]
@@ -1370,12 +1354,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         solutionDescription = dictDetailsEnv['observation_solution_description'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_description'] else terminatingMessage("\"observation_solution_description\" must not be Empty in \"details\" sheet")
                         dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
                         creator = dictDetailsEnv['Name_of_the_creator'] if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
-                        if environment == "staging":
-                            ccUserDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",["CONTENT_CREATOR"],"",""]
-                        elif environment == "dev":
-                            ccUserDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",["CONTENT_CREATOR"],"",""]
-                        else:
-                            ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+                        ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                         if not "CONTENT_CREATOR" in ccUserDetails[3]:
                             terminatingMessage("---> "+dikshaLoginId +" is not a CONTENT_CREATOR in Diksha " + environment)
                         ccRootOrgName = ccUserDetails[4]
@@ -3301,12 +3280,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                     surveySolutionCreationReqBody['creator'] = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8')
 
 
-                if environment == "staging":
-                    userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish"]
-                elif environment == "dev":
-                    userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer"]
-                else:    
-                    userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
+                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
                 surveySolutionCreationReqBody['author'] = userDetails[0]
 
                 # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax 
@@ -4895,12 +4869,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                     "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
 
-                if environment == "staging":
-                    userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
-                elif environment == "dev":
-                    userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",[],"",""]
-                else:
-                    userDetails = fetchUserDetails(environment, accessToken, projectAuthor)
+                userDetails = fetchUserDetails(environment, accessToken, projectAuthor)
                 matchedShikshalokamLoginId = userDetails[0]
                 projectCreator = userDetails[2]
                 
@@ -5112,12 +5081,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                 impLedObsFlag = False
             criteriaUpload(parentFolder, wbObservation, millisecond, accessToken, "framework", impLedObsFlag)
             
-            if environment == "staging":
-                userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
-            elif environment == "dev":
-                userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",[],"",""]
-            else:
-                userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+            userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
             matchedShikshalokamLoginId = userDetails[0]
             
             frameworkExternalId = frameWorkUpload(parentFolder, wbObservation, millisecond, accessToken)
@@ -5223,12 +5187,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
         elif typeofSolution == 2:
             criteriaUpload(parentFolder, wbObservation, millisecond, accessToken, "criteria", False)
             
-            if environment == "staging":
-                userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
-            elif environment == "dev":
-                userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",[],"",""]
-            else:
-                userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+            userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
             matchedShikshalokamLoginId = userDetails[0]
             
             frameworkExternalId = frameWorkUpload(parentFolder, wbObservation, millisecond, accessToken)
