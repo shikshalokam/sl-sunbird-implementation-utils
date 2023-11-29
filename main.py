@@ -537,9 +537,14 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
 
                         scopeEntityType = EntityType
 
-                        mainRole = dictDetailsEnv['Targeted role at program level'] if dictDetailsEnv['Targeted role at program level'] else terminatingMessage("\"Targeted role at program level\" must not be Empty in \"Program details\" sheet")
+                        mainRole = dictDetailsEnv['Targeted role at program level'] 
                         global rolesPGM
-                        rolesPGM = dictDetailsEnv['Targeted subrole at program level'] if dictDetailsEnv['Targeted subrole at program level'] else terminatingMessage("\"Targeted subrole at program level\" must not be Empty in \"Program details\" sheet")
+                        rolesPGM = dictDetailsEnv['Targeted subrole at program level']
+                        print(rolesPGM,mainRole)
+                        # sys.exit()
+                        if mainRole == "HT & Officials":
+                            if not rolesPGM:
+                                terminatingMessage("If Targeted role at program level selected as HT & Officials ,then Targeted subrole at program level should be filled ")
                         
                         if "teacher" in mainRole.strip().lower():
                             rolesPGM = str(rolesPGM).strip() + ",TEACHER"
@@ -1610,10 +1615,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
             criteriaImpDict = {}
             impsToCriteria = wbObservation.sheet_by_name('Imp mapping')
             keysFromImpSheet = [impsToCriteria.cell(1, col_index).value for col_index in range(impsToCriteria.ncols)]
-            projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
-            projectTemplatefile = csv.DictReader(projectTemplatefile)
-            for Projecttemp in projectTemplatefile:
-                projectTemplateIdforimp = Projecttemp["duplicateTemplateExtId"]
+            
                 
             for row_indexImp in range(2, impsToCriteria.nrows):
                 dictImp = {keysFromImpSheet[col_index]: impsToCriteria.cell(row_indexImp, col_index).value for col_index in range(impsToCriteria.ncols)}
