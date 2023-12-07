@@ -114,7 +114,6 @@ ccRootOrgId  = None
 certificatetemplateid = None
 question_sequence_arr = []
 
-
 # function to map course to program
 
 
@@ -278,7 +277,6 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
             },
             "requestForPIIConsent":True
             })
-
     messageArr.append("Body : " + str(payload))
     headers = {'X-authenticated-user-token': accessToken,
                'internal-access-token': config.get(environment, 'internal-access-token'),
@@ -287,7 +285,6 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
     
     # program creation 
     responsePgmCreate = requests.request("POST", programCreationurl, headers=headers, data=(payload))
-    print(responsePgmCreate.text)
     messageArr.append("Program Creation Status Code : " + str(responsePgmCreate.status_code))
     messageArr.append("Program Creation Response : " + str(responsePgmCreate.text))
     messageArr.append("Program body : " + str(payload))
@@ -309,8 +306,6 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
     pdpmsheet = MainFilePath+ "/pdpmmapping/"
     if not os.path.exists(pdpmsheet):
         os.mkdir(pdpmsheet)
-    print(program_file)
-    print(MainFilePath)
 
     wbproject = xlrd.open_workbook(program_file, on_demand=True)
     projectSheetNames = wbproject.sheet_names()
@@ -321,7 +316,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
     pdpmcolo1 = ["user","role","entity","entityOperation","keycloak-userId","acl_school","acl_cluster","programOperation",
                 "platform_role","programs","_arrayFields"]
-    with open(pdpmsheet + 'mapping.csv', 'w') as file:
+    with open(pdpmsheet + 'mapping.csv', 'w',encoding='utf-8') as file:
          writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
          writer.writerows([pdpmcolo1])
 
@@ -356,7 +351,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                 terminatingMessage("user does't have program designer role")
 
             pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_DESIGNER", extIdPGM, "programs"]
-            with open(pdpmsheet + 'mapping.csv', 'a') as file:
+            with open(pdpmsheet + 'mapping.csv', 'a',encoding='utf-8') as file:
                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                 writer.writerows([pdpmcolo1])
                 fileheader = [creatorName,"program designer mapped successfully","Passed"]
@@ -394,7 +389,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
                 pdpmcolo1 = [creatorName, " ", " ", " ", creatorKeyCloakId, " ", " ","ADD","PROGRAM_MANAGER", extIdPGM, "programs"]
 
-                with open(pdpmsheet + 'mapping.csv', 'a') as file:
+                with open(pdpmsheet + 'mapping.csv', 'a',encoding='utf-8') as file:
                     writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                     writer.writerows([pdpmcolo1])
                 messageArr.append("Response : " + str(pdpmcolo1))
@@ -428,7 +423,7 @@ def Programmappingapicall(MainFilePath,accessToken, program_file,parentFolder):
 
     if responseProgrammappingApi.status_code == 200:
         print('--->program manager and designer mapping is Success')
-        with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+') as projectRes:
+        with open(MainFilePath + '/pdpmmapping/mappinginternal.csv', 'w+',encoding='utf-8') as projectRes:
             projectRes.write(responseProgrammappingApi.text)
             messageArr.append("Response : " + str(responseProgrammappingApi.text))
             createAPILog(parentFolder, messageArr)
@@ -483,7 +478,6 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
-
                     # taking the start date of program from program template and converting YYYY-MM-DD 00:00:00 format
                     
                     startDateArr = str(startDateOfProgram).split("-")
@@ -493,7 +487,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
 
                     endDateArr = str(endDateOfProgram).split("-")
                     endDateOfProgram = endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"
-                        
+
                     global scopeEntityType
                     scopeEntityType = "state"
 
@@ -511,14 +505,8 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     entitiesPGMID = fetchEntityId(parentFolder, accessToken,
                                                   entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
                     global orgIds
-                    if environment == "staging":
-                        orgIds = "01269934121990553633"
-                    elif environment == "dev":
-                        orgIds = "0137541424673095687"
-                    else:
-                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
-                    # print(orgIds)
-                    # sys.exit()
+                    
+
 
                     if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
                         extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
@@ -546,13 +534,9 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         
                         if "teacher" in mainRole.strip().lower():
                             rolesPGM = str(rolesPGM).strip() + ",TEACHER"
-                        if environment == "staging":
-                            userDetails = ["5d7255bb-1216-460e-9228-59b60230b1c1","stagingpd_wjtv","Stagingpd",["PROGRAM_DESIGNER"],"",""]
-                        elif environment == "dev":
-                            userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",["PROGRAM_DESIGNER"],"",""]
-                        else:
-                            # fetch user details 
-                            userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer']).encode('utf-8').decode('utf-8')
+                        userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
+                        OrgName=userDetails[4]
+                        orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
                         creatorKeyCloakId = userDetails[0]
                         creatorName = userDetails[2]
                         
@@ -561,34 +545,30 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         scopeEntityType = EntityType
                         # fetch entity details 
                         entitiesPGMID = fetchEntityId(parentFolder, accessToken,entitiesPGM.lstrip().rstrip().split(","), scopeEntityType)
-                        print(entitiesPGMID)
+                        
                         # sys.exit()
                         # fetch sub-role details 
                         rolesPGMID = fetchScopeRole(parentFolder, accessToken, rolesPGM.lstrip().rstrip().split(","))
-                        print(rolesPGM)
+                        
                         # sys.exit()
 
                         # call function to create program 
-                        
-                        # programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                        programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
+                        # sys.exit()
+                        programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
 
-                        #S map PM / PD to the program 
-                        # Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
+                        # map PM / PD to the program 
+                        Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
 
                         # check if program is created or not 
                         if getProgramInfo(accessToken, parentFolder, extIdPGM):
-                            
                             print("Program Created SuccessFully.")
                         else :
-                            print("program creation API called")
-                            programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
-                        
+                            terminatingMessage("Program creation failed! Please check logs.")
 
             elif sheetEnv.strip().lower() == 'resource details':
                 # checking Resource details sheet 
                 print("--->Checking Resource Details sheet...")
-                programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
-                Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
                 detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
                 keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                            range(detailsEnvSheet.ncols)]
@@ -690,8 +670,9 @@ def generateAccessToken(solutionName_for_folder_path):
     # production search user api - start
     headerKeyClockUser = {'Content-Type': config.get(environment, 'keyclockAPIContent-Type')}
     
-    responseKeyClockUser = requests.post(url=config.get(environment, 'host') + config.get(environment, 'keyclockAPIUrl'), headers=headerKeyClockUser,
-                                         data=config.get(environment, 'keyclockAPIBody'))
+    # responseKeyClockUser = requests.post(url=config.get(environment, 'host') + config.get(environment, 'keyclockAPIUrl'), headers=headerKeyClockUser,
+    #                                      data=str(config.get(environment, 'keyclockAPIBody')))
+    responseKeyClockUser = requests.request("POST", config.get(environment, 'host') + config.get(environment, 'keyclockAPIUrl'), headers=headerKeyClockUser, data= str (config.get(environment, 'keyclockAPIBody')))
     messageArr = []
     messageArr.append("URL : " + str(config.get(environment, 'keyclockAPIUrl')))
     messageArr.append("Body : " + str(config.get(environment, 'keyclockAPIBody')))
@@ -720,11 +701,13 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
     programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
-    terminatingMessage
+    print(programUrl)
+    
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
     responseProgramSearch = requests.post(url=programUrl, headers=headersProgramSearch)
+    print(responseProgramSearch.text)
     messageArr = []
 
     messageArr.append("Program Search API")
@@ -785,7 +768,6 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
                     createAPILog(solutionName_for_folder_path, messageArr)
     else:
         print("Program search API failed...")
-        print(responseProgramSearch)
         messageArr.append("Program search API failed...")
         createAPILog(solutionName_for_folder_path, messageArr)
         terminatingMessage("Response Code : " + str(responseProgramSearch.status_code))
@@ -819,10 +801,10 @@ def apicheckslog(solutionName_for_folder_path, messageArr):
     fileheader = ["Resource","Process","Status","Remark"]
 
     if not path.exists(file_exists):
-        with open(file_exists, 'w', newline='') as file:
+        with open(file_exists, 'w', newline='',encoding='utf-8') as file:
             writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
             writer.writerows([fileheader])
-    with open(file_exists, 'a', newline='') as file:
+    with open(file_exists, 'a', newline='',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows([messageArr])
 
@@ -834,6 +816,7 @@ def checkEmailValidation(email):
 
 # Fetch user details 
 def fetchUserDetails(environment, accessToken, dikshaId):
+    global OrgName
     url = config.get(environment, 'host') + config.get(environment, 'userInfoApiUrl')
     messageArr = ["User search API called."]
     headers = {'Content-Type': 'application/json',
@@ -846,6 +829,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
         body = "{\n  \"request\": {\n    \"filters\": {\n    \t\"userName\": \"" + dikshaId.lstrip().rstrip() + "\"\n    },\n      \"fields\" :[],\n    \"limit\": 1000,\n    \"sort_by\": {\"createdDate\": \"desc\"}\n  }\n}"
 
     responseUserSearch = requests.request("POST", url, headers=headers, data=body)
+    print(dikshaId)
     if responseUserSearch.status_code == 200:
         responseUserSearch = responseUserSearch.json()
         if responseUserSearch['result']['response']['content']:
@@ -857,6 +841,7 @@ def fetchUserDetails(environment, accessToken, dikshaId):
                 if rootOrgId == index['organisationId']:
                     roledetails = index['roles']
                     rootOrgName = index['orgName']
+                    OrgName.append(index['orgName'])
             print(roledetails)
         else:
             terminatingMessage("-->Given username/email is not present in DIKSHA platform<--.")
@@ -890,6 +875,7 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                    }}
 
         responseOrgSearch = requests.request("POST", url, headers=headers, data=json.dumps(orgBody))
+        print(responseOrgSearch)
         if responseOrgSearch.status_code == 200:
             responseOrgSearch = responseOrgSearch.json()
             if responseOrgSearch['result']['response']['content']:
@@ -899,22 +885,19 @@ def fetchOrgId(environment, accessToken, parentFolder, OrgName):
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
                 messageArr.append("orgIds : " + str(orgIds))
-            elif environment == "staging":
-                messageArr.append("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                print("Given Organisation/ State tenant is not present in DIKSHA platform.")
-                messageArr.append("orgApi : " + str(url))
-                messageArr.append("orgBody : " + str(orgBody))
-                messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                
+            
             else:
-                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
                 messageArr.append("orgApi : " + str(url))
                 messageArr.append("orgBody : " + str(orgBody))
                 messageArr.append("orgAPI response: " + str(responseOrgSearch))
+                createAPILog(parentFolder, messageArr)
+                terminatingMessage("Given Organisation/ State tenant is not present in DIKSHA platform.")
+                
         else:
             messageArr.append("orgApi : " + str(url))
             messageArr.append("headers : " + str(headers))
             messageArr.append("orgBody : " + str(orgBody))
-            # print(str(orgBody))
             createAPILog(parentFolder, messageArr)
             print(responseOrgSearch.text)
             terminatingMessage("Organisation/ State tenant fetch API failed. Check logs.")
@@ -944,6 +927,7 @@ def fetchEntityId(solutionName_for_folder_path, accessToken, entitiesNameList, s
         }
     }
     responseFetchEntityListApi = requests.post(url=urlFetchEntityListApi, headers=headerFetchEntityListApi,data=json.dumps(payload))
+    
     messageArr = ["Entities List Fetch API executed.", "URL  : " + str(urlFetchEntityListApi),
                   "Status : " + str(responseFetchEntityListApi.status_code)]
     createAPILog(solutionName_for_folder_path, messageArr)
@@ -1049,7 +1033,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
     survey_sheet_names = ['Instructions', 'details', 'questions']
     project_sheet_names = ['Instructions', 'Project upload', 'Tasks upload','Certificate details']
 
-    # 1-with rubrics , 2-with out rubrics , 3-survey , 4-Project, 5-With rubric and IMP
+    # 1-with rubrics , 2 - with out rubrics , 3 - survey , 4 - Project 5 - With rubric and IMP
     typeofSolutin = 0
 
     global environment, observationId, solutionName, pointBasedValue, entityType, allow_multiple_submissions, programName, userEntity, roles, isProgramnamePresent, solutionLanguage, keyWords, entityTypeId, solutionDescription, creator, dikshaLoginId
@@ -1093,15 +1077,15 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         isProgramnamePresent = False
                     else:
                         isProgramnamePresent = True
-                    print(programName)
-                    print(scopeEntityType)
+                   
                     userEntity = dictProgramDetails['Targeted state at program level'].encode('utf-8').decode('utf-8').lstrip().rstrip().split(",") if \
                         dictProgramDetails[
                             'Targeted state at program level'] else terminatingMessage(
                         "\"scope_entity\" must not be Empty in \"details\" sheet")
-                    print(userEntity)
+                    
 
         for sheetEnv in sheetNames1:
+            questionsequenceArr =[]
             if sheetEnv == "Instructions":
                 pass
             else:
@@ -1118,12 +1102,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         if set(detailsCols) == set(dictDetailsEnv.keys()):
                             solutionName = dictDetailsEnv['observation_solution_name'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_name'] else terminatingMessage("\"observation_solution_name\" must not be Empty in \"details\" sheet")
                             dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
-                            if environment == "staging":
-                                ccUserDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",["CONTENT_CREATOR"],"",""]
-                            elif environment == "dev":
-                                ccUserDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",["CONTENT_CREATOR"],"",""]
-                            else:
-                                ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+                            ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                             if not "CONTENT_CREATOR" in ccUserDetails[3]:
                                 terminatingMessage("---> "+dikshaLoginId +" is not a CONTENT_CREATOR in Diksha " + environment)
                             ccRootOrgName = ccUserDetails[4]
@@ -1134,7 +1113,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
 
                             solutionLanguage = dictDetailsEnv['language'].split(",") if dictDetailsEnv['language'] else [""]
                             keyWords = dictDetailsEnv['keywords'].encode('utf-8').decode('utf-8')
-                            creator = dictDetailsEnv['Name_of_the_creator']  if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
+                            creator = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8')  if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
                             allow_multiple_submissions = dictDetailsEnv['allow_multiple_submissions']
                             if allow_multiple_submissions == 1 or allow_multiple_submissions == 'TRUE':
                                 allow_multiple_submissions = True
@@ -1149,7 +1128,6 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             else:
                                 isProgramnamePresent = True
                                 getProgramInfo(accessToken, parentFolder, programName)
-                               
                         else:
                             terminatingMessage("--->Columns Mismatch in Details Sheet.")
                 if sheetEnv.strip().lower() == 'framework':
@@ -1210,9 +1188,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                                range(detailsEnvSheet.ncols)]
-                    global numberOfResponses,question_sequence_arr
+                    global numberOfResponses
                     numberOfResponses = 0
-                    questionsequenceArr=[]
                     for qKeys in keysEnv:
                         countRespo = re.search(r"response\(R[0-9]|[1-9][0-9]|100\)$", qKeys)
                         if countRespo and not "_hint" in qKeys and "response" in qKeys:
@@ -1233,13 +1210,12 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         if not dictDetailsEnv['criteria_id'].lower() in criteriaExternalIds:
                             terminatingMessage("Criteria ID : " + dictDetailsEnv['criteria_id'] + " in question sheet not present in criteria sheet.")
                         question_sequence = dictDetailsEnv['question_sequence'] if dictDetailsEnv['question_sequence'] else terminatingMessage("\"question_sequence\" must not be Empty in \"questions\" sheet")
+
                         questionsequenceArr.append(question_sequence)
                         question_sequence_arr = questionsequenceArr
+
                         if not dictDetailsEnv['question_primary_language']:
                             terminatingMessage("question_primary_language cannot be empty in questions sheet.")
-                        if not dictDetailsEnv['question_weightage']:
-                            print(dictDetailsEnv['question_weightage'])
-                            terminatingMessage("question_weightage cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_response_type']:
                             terminatingMessage("question_response_type cannot be empty in questions sheet.")
                         if not dictDetailsEnv['question_id']:
@@ -1249,13 +1225,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                 dictDetailsEnv['criteria_id']) + "  cannot be empty in questions sheet.")
                         if not dictDetailsEnv['criteria_id'].lower() in criteriaExternalIds:
                             terminatingMessage("criteria_id : " + str(dictDetailsEnv['criteria_id']) + " in questions sheet is not matching the criteria upload.")
-                        print(question_sequence_arr)
-                        # sys.exit()
-                        # question_sequence_arr = []
                     if not len(question_sequence_arr) == len(set(question_sequence_arr)):
                             terminatingMessage("\"question_sequence\" must be Unique in \"questions\" sheet")
-                            print(question_sequence_arr)
-                          
                     if not len(quesExtIds) == len(set(quesExtIds)):
                         terminatingMessage("Duplicate question_id detected in questions sheet.")
                     if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
@@ -1298,12 +1269,10 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             for cl in criteriaLevels:
                                 if not dictDetailsEnv["L" + str(cl)]:
                                     terminatingMessage("L" + str(cl) + " must not be empty in criteria_rubric.")
-                            if not dictDetailsEnv['criteriaId']:
+                            if dictDetailsEnv['criteriaId']:
                                 terminatingMessage("criteriaId must be empty in criteria_rubric sheet.")
                             if not dictDetailsEnv['weightage']:
                                 terminatingMessage("weightage cannot be empty in criteria_rubric sheet.")
-                            
-
                         if not len(cR_extIds) == len(set(cR_extIds)):
                             terminatingMessage("Duplicate externalId detected in criteria_rubric sheet.")
                     if sheetEnv.strip().lower() == 'Domain(theme)_rubric_scoring':
@@ -1322,6 +1291,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             if not dictDetailsEnv['weightage']:
                                 terminatingMessage("weightage cannot be empty in theme_rubric sheet.")
     elif typeofSolutin == 2:
+        questionsequenceArr =[]
         # Point based value set as null by default for observation without rubrics
         pointBasedValue = "null"
         criteria_id_arr = []
@@ -1363,13 +1333,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         solutionName = dictDetailsEnv['observation_solution_name'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_name'] else terminatingMessage("\"observation_solution_name\" must not be Empty in \"details\" sheet")
                         solutionDescription = dictDetailsEnv['observation_solution_description'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_description'] else terminatingMessage("\"observation_solution_description\" must not be Empty in \"details\" sheet")
                         dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
-                        creator = dictDetailsEnv['Name_of_the_creator'] if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
-                        if environment == "staging":
-                            ccUserDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",["CONTENT_CREATOR"],"",""]
-                        elif environment == "dev":
-                            ccUserDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",["CONTENT_CREATOR"],"",""]
-                        else:
-                            ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+                        creator = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
+                        ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                         if not "CONTENT_CREATOR" in ccUserDetails[3]:
                             terminatingMessage("---> "+dikshaLoginId +" is not a CONTENT_CREATOR in Diksha " + environment)
                         ccRootOrgName = ccUserDetails[4]
@@ -1378,11 +1343,9 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         entityType = dictDetailsEnv['entity_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv['entity_type'] else terminatingMessage("\"entity_type\" must not be Empty in \"details\" sheet")
                         solutionLanguage = dictDetailsEnv['language'].encode('utf-8').decode('utf-8').split(",") if dictDetailsEnv['language'] else [""]
                         getProgramInfo(accessToken, parentFolder, programNameInp)
-                        
                 elif sheetEnv.strip().lower() == 'criteria':
                     print("--->Checking criteria sheet...")
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
-                    questionsequenceArr = []
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                                range(detailsEnvSheet.ncols)]
                     for row_index_env in range(2, detailsEnvSheet.nrows):
@@ -1395,7 +1358,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     if not len(criteria_id_arr) == len(set(criteria_id_arr)):
                         terminatingMessage("\"criteria_id\" must be Unique in \"criteria\" sheet")
                 elif sheetEnv.strip().lower() == 'questions':
-                    print("--->Checking questions sheet...")
+                    print("--->Checking question sheet...")
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
                     ques_id_arr = list()
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
@@ -1406,29 +1369,30 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             col_index_env in range(detailsEnvSheet.ncols)}
                         criteria_id = dictDetailsEnv['criteria_id'].encode('utf-8').decode('utf-8') if dictDetailsEnv['criteria_id'] else terminatingMessage("\"criteria_id\" must not be Empty in \"questions\" sheet")
                         question_sequence = dictDetailsEnv['question_sequence'] if dictDetailsEnv['question_sequence'] else terminatingMessage("\"question_sequence\" must not be Empty in \"questions\" sheet")
+
                         questionsequenceArr.append(question_sequence)
                         question_sequence_arr = questionsequenceArr
+
                         if not criteria_id in criteria_id_arr:
                             terminatingMessage("\"criteria_id\" in \"Questions\" sheet must be declared in \"criteria\" sheet")
                         page = dictDetailsEnv['page'].encode('utf-8').decode('utf-8') if dictDetailsEnv['page'] else terminatingMessage("\"page\" must not be Empty in \"questions\" sheet")
                         question_number = dictDetailsEnv['question_number'] if dictDetailsEnv['question_number'] else terminatingMessage("\"question_number\" must not be Empty in \"questions\" sheet")
                         question_primary_language = dictDetailsEnv['question_primary_language'].encode('utf-8').decode('utf-8') if dictDetailsEnv['question_primary_language'] else terminatingMessage("\"question_primary_language\" must not be Empty in \"questions\" sheet")
+                        
                         response_required = dictDetailsEnv['response_required'] if str(dictDetailsEnv['response_required']) else terminatingMessage("\"response_required\" must not be Empty in \"questions\" sheet")
+
                         question_id = dictDetailsEnv['question_id'] if dictDetailsEnv['question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"questions\" sheet")
                         ques_id_arr.append(question_id)
-                        parent_question_id = dictDetailsEnv['question_id'].encode('utf-8').decode('utf-8')
+                        parent_question_id = dictDetailsEnv['question_id']
                         if parent_question_id and not parent_question_id in ques_id_arr:
                             terminatingMessage("parent_question_id referenced before assigning in questions sheet.")
                         question_response_type = dictDetailsEnv['question_response_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                             'question_response_type'] else terminatingMessage(
                             "\"question_response_type\" must not be Empty in \"questions\" sheet")
-                        print(question_sequence_arr)
                     if not len(question_sequence_arr) == len(set(question_sequence_arr)):
                             terminatingMessage("\"question_sequence\" must be Unique in \"questions\" sheet")
-                            
                     if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
     elif typeofSolutin == 3:
-        questionsequenceArr=[]
         for sheetEnvCheck in sheetNames1:
             if sheetEnvCheck.strip().lower() == 'instructions' or sheetEnvCheck.strip().lower() == 'details' or sheetEnvCheck.strip().lower() == 'questions':
                 pass
@@ -1468,19 +1432,17 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     dictDetailsEnv = {
                         keysColCheckQues[col_index_env]: questionsColCheck.cell(row_index_env, col_index_env).value for
                         col_index_env in range(questionsColCheck.ncols)}
-                    question_sequence = dictDetailsEnv['question_sequence']if dictDetailsEnv[
+                    question_sequenceSUR = dictDetailsEnv['question_sequence'] if dictDetailsEnv[
                         'question_sequence'] else terminatingMessage(
                         "\"question_sequence\" must not be Empty in \"details\" sheet")
-                    questionsequenceArr.append(question_sequence)
-                    question_sequence_arr = questionsequenceArr
-                    question_idSUR = dictDetailsEnv['question_id'] if dictDetailsEnv[
+                    question_idSUR = dictDetailsEnv['question_id'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                         'question_id'] else terminatingMessage("\"question_id\" must not be Empty in \"details\" sheet")
                     pageSUR = dictDetailsEnv['page'] if dictDetailsEnv['page'] else terminatingMessage(
                         "\"page\" must not be Empty in \"details\" sheet")
                     question_numberSUR = dictDetailsEnv['question_number'] if dictDetailsEnv[
                         'question_number'] else terminatingMessage(
                         "\"question_number\" must not be Empty in \"details\" sheet")
-                    question_language1SUR = dictDetailsEnv['question_language1']  if not dictDetailsEnv['question_language1'] == None else terminatingMessage(
+                    question_language1SUR = dictDetailsEnv['question_language1'].encode('utf-8').decode('utf-8') if not dictDetailsEnv['question_language1'] == None else terminatingMessage(
                         "\"question_language1\" must not be Empty in \"details\" sheet")
                     question_response_typeSUR = dictDetailsEnv['question_response_type'] if dictDetailsEnv[
                         'question_response_type'] else terminatingMessage(
@@ -1488,31 +1450,45 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     response_requiredSUR = dictDetailsEnv['response_required'] if dictDetailsEnv[
                         'response_required'] else terminatingMessage(
                         "\"response_required\" must not be Empty in \"details\" sheet")
-                if not check_sequence(question_sequence_arr): terminatingMessage("\"question_sequence\" must be in sequence in \"questions\" sheet")
     elif typeofSolutin == 4:
         criteria_id_arr = list()
         projectDetailsCols = ["title", "projectId", "is a SSO user?", "Diksha_loginId", "categories",
-                              "objective","duration","recommendedFor","keywords",
-                              "learningResources1-name", "learningResources1-link", "learningResources2-name",
-                              "learningResources2-link", "learningResources3-name", "learningResources3-link",
-                              "has certificate","Project Level Evidence","Minimum No. of Evidence"]
+                              "objective","duration","recommendedFor","keywords"]
+        detailsColCheck = wbObservation1.sheet_by_name('Project upload')
+        keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                     range(detailsColCheck.ncols)]
+        lentasks = (len(keysColCheckDetai) - 12) // 2
+        for i in range(lentasks):
+            projectDetailsCols.append(f"learningResources{i+1}-name")
+            projectDetailsCols.append(f"learningResources{i+1}-link")
+        projectDetailsCols.append("has certificate")
+        projectDetailsCols.append("Project Level Evidence")
+        projectDetailsCols.append("Minimum No. of Evidence")
+        # sys.exit()
+        
         taskUploadCols = ["TaskId", "TaskTitle", "Subtask",
-                          "Mandatory task(Yes or No)","observation Name","Number of submissions for observation","learningResources1-name","learningResources1-link",
-                          "learningResources2-name", "learningResources2-link","Task Level Evidence","Minimum No. of Evidence"]
+                          "Mandatory task(Yes or No)","observation Name","Number of submissions for observation"]
+        detailsColCheck = wbObservation1.sheet_by_name('Tasks upload')
+        keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                                     range(detailsColCheck.ncols)]
+        lentasks = (len(keysColCheckDetai) - 8) // 2
+        for i in range(lentasks):
+            taskUploadCols.append(f"learningResources{i+1}-name")
+            taskUploadCols.append(f"learningResources{i+1}-link")
+        taskUploadCols.append("Task Level Evidence")
+        taskUploadCols.append("Minimum No. of Evidence")
+
         certificateCols = ["Certificate issuer","Type of certificate","Logo - 1","Logo - 2","Authorised Signature Image - 1","Authorised Signature Name - 1",
                            "Authorised Designation - 1","Authorised Signature Image - 2","Authorised Signature Name - 2","Authorised Designation - 2"]
         for sheetColCheck in sheetNames1:
             if sheetColCheck.strip().lower() == 'Project upload'.lower():
                 print("--->Checking Project Upload sheet...")
-                print("somthing")
                 detailsColCheck = wbObservation1.sheet_by_name(sheetColCheck)
                 keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                      range(detailsColCheck.ncols)]
                 if len(keysColCheckDetai) != len(projectDetailsCols) or set(keysColCheckDetai) == set(
                         projectDetailsCols):
-                    # print(keysColCheckDetai)
-                    # print(projectDetailsCols)
-                    # print(keysColCheckDetai)
+                   
                     terminatingMessage('Columns is missing in Project Upload sheet')
                 detailsEnvSheet = wbObservation1.sheet_by_name(sheetColCheck)
                 keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
@@ -1557,8 +1533,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                 detailsColCheck = wbObservation1.sheet_by_name(sheetColCheck)
                 keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                      range(detailsColCheck.ncols)]
-                # print(keysColCheckDetai)
-                # print(taskUploadCols)
+               
                 if len(keysColCheckDetai) != len(taskUploadCols) or set(keysColCheckDetai) == set(taskUploadCols):
                     terminatingMessage('Columns is missing in details sheet')
                 detailsEnvSheet = wbObservation1.sheet_by_name(sheetColCheck)
@@ -1592,21 +1567,20 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                                       for
                                       col_index_env in range(detailsEnvSheet.ncols)}
-
-                    certificateissuer = dictDetailsEnv['Certificate issuer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Certificate issuer'] else terminatingMessage(
-                    "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
-                    print(certificateissuer)
-                    print(dictDetailsEnv['Type of certificate'])
-                    print("something")
-                    Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature","One Logo - Two Signature","Two Logo - One Signature","Two Logo - Two Signature"]  else terminatingMessage(
+                    if projectcertificate == "Yes":
+                        certificateissuer = dictDetailsEnv['Certificate issuer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Certificate issuer'] else terminatingMessage(
+                        "\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
+                    
+                    
+                        Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature","One Logo - Two Signature","Two Logo - One Signature","Two Logo - Two Signature"]  else terminatingMessage(
                         "\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
-                    Logo1 = dictDetailsEnv['Logo - 1'] if dictDetailsEnv[
+                        Logo1 = dictDetailsEnv['Logo - 1'] if dictDetailsEnv[
                         'Logo - 1'] else terminatingMessage(
                         "\"Logo - 1\" must not be Empty in \"Certificate details\" sheet")
 
-                    Authorisedsignlogo1 = dictDetailsEnv['Authorised Signature Image - 1'] if dictDetailsEnv['Authorised Signature Image - 1'] else terminatingMessage("\"Authorised Signature Image - 1\" must not be Empty in \"Certificate details\" sheet")
-                    Authorisedsignname1 = dictDetailsEnv['Authorised Signature Name - 1'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Authorised Signature Name - 1'] else terminatingMessage("\"Authorised Signature Name - 1\" must not be Empty in \"Certificate details\" sheet")
-                    Authoriseddesifnation1 = dictDetailsEnv['Authorised Designation - 1'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Authorised Designation - 1'] else terminatingMessage("\"Authorised Designation - 1\" must not be Empty in \"Certificate details\" sheet")
+                        Authorisedsignlogo1 = dictDetailsEnv['Authorised Signature Image - 1'] if dictDetailsEnv['Authorised Signature Image - 1'] else terminatingMessage("\"Authorised Signature Image - 1\" must not be Empty in \"Certificate details\" sheet")
+                        Authorisedsignname1 = dictDetailsEnv['Authorised Signature Name - 1'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Authorised Signature Name - 1'] else terminatingMessage("\"Authorised Signature Name - 1\" must not be Empty in \"Certificate details\" sheet")
+                        Authoriseddesifnation1 = dictDetailsEnv['Authorised Designation - 1'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Authorised Designation - 1'] else terminatingMessage("\"Authorised Designation - 1\" must not be Empty in \"Certificate details\" sheet")
 
     return typeofSolutin
 
@@ -1625,11 +1599,6 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
             criteriaImpDict = {}
             impsToCriteria = wbObservation.sheet_by_name('Imp mapping')
             keysFromImpSheet = [impsToCriteria.cell(1, col_index).value for col_index in range(impsToCriteria.ncols)]
-            projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
-            projectTemplatefile = csv.DictReader(projectTemplatefile)
-            for Projecttemp in projectTemplatefile:
-                projectTemplateIdforimp = Projecttemp["duplicateTemplateExtId"]
-                
             for row_indexImp in range(2, impsToCriteria.nrows):
                 dictImp = {keysFromImpSheet[col_index]: impsToCriteria.cell(row_indexImp, col_index).value for col_index in range(impsToCriteria.ncols)}
                 criteriaImpDict[dictImp['criteriaId'].strip()] = {}
@@ -1688,7 +1657,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
             criteriaLevelsCount = levelCount
             if not os.path.exists(criteriaFilePath):
                 os.mkdir(criteriaFilePath)
-            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a') as criteriaUploadFile:
+            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a',encoding='utf-8') as criteriaUploadFile:
                 writerCriteriaUpload = csv.DictWriter(criteriaUploadFile, fieldnames=list(criteriaUploadFieldnames),
                                                       lineterminator='\n')
                 if not file_exists:
@@ -1715,7 +1684,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
                 os.mkdir(criteriaFilePath)
             criteriaUploadFieldnames = []
             criteriaUploadFieldnames = ['criteriaID', 'criteriaName', 'L1', 'type']
-            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a') as criteriaUploadFile:
+            with open(solutionName_for_folder_path + '/criteriaUpload/uploadSheet.csv', 'a',encoding='utf-8') as criteriaUploadFile:
                 writerCriteriaUpload = csv.DictWriter(criteriaUploadFile, fieldnames=criteriaUploadFieldnames,
                                                       lineterminator='\r')
                 if not file_exists:
@@ -1741,7 +1710,7 @@ def criteriaUpload(solutionName_for_folder_path, wbObservation, millisAddObs, ac
 
     if responseCriteriaUploadApi.status_code == 200:
         print('CriteriaUploadApi Success')
-        with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'w+') as criteriaRes:
+        with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as criteriaRes:
             criteriaRes.write(responseCriteriaUploadApi.text)
     else:
 
@@ -1776,7 +1745,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
     frameworkDocInsertObj['createdFor'] = [ccRootOrgId]  # createdForArr
     frameworkDocInsertObj['rootOrg'] = [ccRootOrgId]  # rootOrgArr
     criteriaFrameworkArr = []
-    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r') as criteriaInternalFile:
+    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r',encoding='utf-8') as criteriaInternalFile:
         criteriaInternalReader = csv.DictReader(criteriaInternalFile)
         criteriaWeightage = 100 / (len(list(criteriaInternalReader)))
         criteriaInternalFile.seek(0, 0)
@@ -1885,7 +1854,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
     if not os.path.exists(frameworkFilePath):
         os.mkdir(frameworkFilePath)
 
-    with open(frameworkFilePath + "uploadFile.json", "w") as outfile:
+    with open(frameworkFilePath + "uploadFile.json", "w",encoding='utf-8') as outfile:
         json.dump(frameworkDocInsertObj, outfile)
     headerFrameworkUploadApi = {'Authorization': config.get(environment, 'Authorization'),
                                 'X-authenticated-user-token': accessToken,
@@ -1912,7 +1881,7 @@ def frameWorkUpload(solutionName_for_folder_path, wbObservation, millisAddObs, a
 
 def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, accessToken, frameworkExternalId,obsWORubWS):
     global dictCritLookUp
-    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r') as criteriaInternalFile:
+    with open(solutionName_for_folder_path + '/criteriaUpload/uploadInternalIdsSheet.csv', 'r',encoding='utf-8') as criteriaInternalFile:
         criteriaInternalReader = csv.DictReader(criteriaInternalFile)
         for crit in criteriaInternalReader:
             dictCritLookUp[crit['Criteria External Id']] = crit['Criteria Internal Id']
@@ -1930,7 +1899,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
 
             if not os.path.exists(themeFilePath):
                 os.mkdir(themeFilePath)
-            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a') as themeUploadFile:
+            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a',encoding='utf-8') as themeUploadFile:
                 writerthemeUpload = csv.DictWriter(themeUploadFile, fieldnames=list(themeUploadFieldnames),
                                                    lineterminator='\n')
                 if not file_exists:
@@ -1955,7 +1924,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
 
             if not os.path.exists(themeFilePath):
                 os.mkdir(themeFilePath)
-            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a') as themeUploadFile:
+            with open(solutionName_for_folder_path + '/themeUpload/uploadSheet.csv', 'a',encoding='utf-8') as themeUploadFile:
                 writerthemeUpload = csv.DictWriter(themeUploadFile, fieldnames=list(themeUploadFieldnames),
                                                    lineterminator='\n')
                 if not file_exists:
@@ -1975,7 +1944,7 @@ def themesUpload(solutionName_for_folder_path, wbObservation, millisAddObs, acce
     createAPILog(solutionName_for_folder_path, messageArr)
     if responseThemeUploadApi.status_code == 200:
         print('Theme UploadApi Success')
-        with open(solutionName_for_folder_path + '/themeUpload/uploadInternalIdsSheet.csv', 'w+') as criteriaRes:
+        with open(solutionName_for_folder_path + '/themeUpload/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as criteriaRes:
             criteriaRes.write(responseThemeUploadApi.text)
     else:
         messageArr = ["Themes upload failed.", "Response : " + str(responseThemeUploadApi.text)]
@@ -2032,7 +2001,6 @@ def solutionUpdate(solutionName_for_folder_path, accessToken, solutionId, bodySo
     else:
         print("Solution Update Failed.")
         return False
-
 
 # question sheet prepration and upload 
 def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExternalId, millisAddObs, accessToken,
@@ -2379,21 +2347,21 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                     questionFileObj['R3-score'] = ques['Score for R3']
                     questionFileObj['R4-score'] = ques['Score for R4']
                     questionFileObj['R5-score'] = ques['Score for R5']
-                    questionFileObj['R6-score'] = ques['Score for R6'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R7-score'] = ques['Score for R7'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R8-score'] = ques['Score for R8'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R9-score'] = ques['Score for R9'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R10-score'] = ques['Score for R10'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R11-score'] = ques['Score for R11'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R12-score'] = ques['Score for R12'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R13-score'] = ques['Score for R13'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R14-score'] = ques['Score for R14'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R15-score'] = ques['Score for R15'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R16-score'] = ques['Score for R16'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R17-score'] = ques['Score for R17'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R18-score'] = ques['Score for R18'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R19-score'] = ques['Score for R19'].encode('utf-8').decode('utf-8')
-                    questionFileObj['R20-score'] = ques['Score for R20'].encode('utf-8').decode('utf-8')
+                    questionFileObj['R6-score'] = ques['Score for R6']
+                    questionFileObj['R7-score'] = ques['Score for R7']
+                    questionFileObj['R8-score'] = ques['Score for R8']
+                    questionFileObj['R9-score'] = ques['Score for R9']
+                    questionFileObj['R10-score'] = ques['Score for R10']
+                    questionFileObj['R11-score'] = ques['Score for R11']
+                    questionFileObj['R12-score'] = ques['Score for R12']
+                    questionFileObj['R13-score'] = ques['Score for R13']
+                    questionFileObj['R14-score'] = ques['Score for R14']
+                    questionFileObj['R15-score'] = ques['Score for R15']
+                    questionFileObj['R16-score'] = ques['Score for R16']
+                    questionFileObj['R17-score'] = ques['Score for R17']
+                    questionFileObj['R18-score'] = ques['Score for R18']
+                    questionFileObj['R19-score'] = ques['Score for R19']
+                    questionFileObj['R20-score'] = ques['Score for R20']
                 if ques['question_response_type'].strip().lower() == 'slider' and ques[
                     'slider_value_with_score'].strip():
                     noOfSliderColumnQuestionVal = ques['slider_value_with_score'].strip().split(',')
@@ -2404,7 +2372,7 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                             sliValArr = sliVal.split(':')
                             questionFileObj['slider-value-' + str(sliValArr[0])] = sliValArr[0]
                             questionFileObj['slider-value-' + str(sliValArr[0]) + '-score'] = sliValArr[1]
-                if str(ques['question_weightage']):  
+                if str(ques['question_weightage']):
                     questionFileObj['weightage'] = ques['question_weightage']
                 else:
                     questionFileObj['weightage'] = 0
@@ -2412,21 +2380,21 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                 'question_response_type'].strip() == 'multiselect':
                 if type(ques['response(R1)']) != str:
                     if (ques['response(R1)'] and ques['response(R1)'].is_integer() == True):
-                        questionFileObj['R1'] = int(ques['response(R1)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R1'] = int(ques['response(R1)'])
                     elif (ques['response(R1)'] and ques['response(R1)'].is_integer() == False):
                         questionFileObj['R1'] = ques['response(R1)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R1'] = ques['response(R1)']
                 if type(ques['response(R1)_hint']) != str:
                     if (ques['response(R1)_hint'] and ques['response(R1)_hint'].is_integer() == True):
-                        questionFileObj['R1-hint'] = int(ques['response(R1)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R1-hint'] = int(ques['response(R1)_hint'])
                     elif (ques['response(R1)_hint'] and ques['response(R1)_hint'].is_integer() == False):
                         questionFileObj['R1-hint'] = ques['response(R1)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R1-hint'] = ques['response(R1)_hint'].encode('utf-8').decode('utf-8')
                 if type(ques['response(R2)']) != str:
                     if (ques['response(R2)'] and ques['response(R2)'].is_integer() == True):
-                        questionFileObj['R2'] = int(ques['response(R2)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R2'] = int(ques['response(R2)'])
                     elif (ques['response(R2)'] and ques['response(R2)'].is_integer() == False):
                         questionFileObj['R2'] = ques['response(R2)'].encode('utf-8').decode('utf-8')
                 else:
@@ -2435,194 +2403,194 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                     if (ques['response(R2)_hint'] and ques['response(R2)_hint'].is_integer() == True):
                         questionFileObj['R2-hint'] = int(ques['response(R2)_hint'])
                     elif (ques['response(R2)_hint'] and ques['response(R2)_hint'].is_integer() == False):
-                        questionFileObj['R2-hint'] = ques['response(R2)_hint']
+                        questionFileObj['R2-hint'] = ques['response(R2)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R2-hint'] = ques['response(R2)_hint']
                 if type(ques['response(R3)']) != str:
                     if (ques['response(R3)'] and ques['response(R3)'].is_integer() == True):
                         questionFileObj['R3'] = int(ques['response(R3)'])
                     elif (ques['response(R3)'] and ques['response(R3)'].is_integer() == False):
-                        questionFileObj['R3'] = ques['response(R3)']
+                        questionFileObj['R3'] = ques['response(R3)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R3'] = ques['response(R3)']
                 if type(ques['response(R3)_hint']) != str:
                     if (ques['response(R3)_hint'] and ques['response(R3)_hint'].is_integer() == True):
                         questionFileObj['R3-hint'] = int(ques['response(R3)_hint'])
                     elif (ques['response(R3)_hint'] and ques['response(R3)_hint'].is_integer() == False):
-                        questionFileObj['R3-hint'] = ques['response(R3)_hint']
+                        questionFileObj['R3-hint'] = ques['response(R3)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R3-hint'] = ques['response(R3)_hint']
                 if type(ques['response(R4)']) != str:
                     if (ques['response(R4)'] and ques['response(R4)'].is_integer() == True):
                         questionFileObj['R4'] = int(ques['response(R4)'])
                     elif (ques['response(R4)'] and ques['response(R4)'].is_integer() == False):
-                        questionFileObj['R4'] = ques['response(R4)']
+                        questionFileObj['R4'] = ques['response(R4)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R4'] = ques['response(R4)']
                 if type(ques['response(R4)_hint']) != str:
                     if (ques['response(R4)_hint'] and ques['response(R4)_hint'].is_integer() == True):
                         questionFileObj['R4-hint'] = int(ques['response(R4)_hint'])
                     elif (ques['response(R4)_hint'] and ques['response(R4)_hint'].is_integer() == False):
-                        questionFileObj['R4-hint'] = ques['response(R4)_hint']
+                        questionFileObj['R4-hint'] = ques['response(R4)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R4-hint'] = ques['response(R4)_hint']
                 if type(ques['response(R5)']) != str:
                     if (ques['response(R5)'] and ques['response(R5)'].is_integer() == True):
                         questionFileObj['R5'] = int(ques['response(R5)'])
                     elif (ques['response(R5)'] and ques['response(R5)'].is_integer() == False):
-                        questionFileObj['R5'] = ques['response(R5)']
+                        questionFileObj['R5'] = ques['response(R5)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R5'] = ques['response(R5)']
                 if type(ques['response(R5)_hint']) != str:
                     if (ques['response(R5)_hint'] and ques['response(R5)_hint'].is_integer() == True):
                         questionFileObj['R5-hint'] = int(ques['response(R5)_hint'])
                     elif (ques['response(R5)_hint'] and ques['response(R5)_hint'].is_integer() == False):
-                        questionFileObj['R5-hint'] = ques['response(R5)_hint']
+                        questionFileObj['R5-hint'] = ques['response(R5)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R5-hint'] = ques['response(R5)_hint']
                 if type(ques['response(R6)']) != str:
                     if (ques['response(R6)'] and ques['response(R6)'].is_integer() == True):
                         questionFileObj['R6'] = int(ques['response(R6)'])
                     elif (ques['response(R6)'] and ques['response(R6)'].is_integer() == False):
-                        questionFileObj['R6'] = ques['response(R6)']
+                        questionFileObj['R6'] = ques['response(R6)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R6'] = ques['response(R6)']
                 if type(ques['response(R6)_hint']) != str:
                     if (ques['response(R6)_hint'] and ques['response(R6)_hint'].is_integer() == True):
                         questionFileObj['R6-hint'] = int(ques['response(R6)_hint'])
                     elif (ques['response(R6)_hint'] and ques['response(R6)_hint'].is_integer() == False):
-                        questionFileObj['R6-hint'] = ques['response(R6)_hint']
+                        questionFileObj['R6-hint'] = ques['response(R6)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R6-hint'] = ques['response(R6)_hint']
                 if type(ques['response(R7)']) != str:
                     if (ques['response(R7)'] and ques['response(R7)'].is_integer() == True):
                         questionFileObj['R7'] = int(ques['response(R7)'])
                     elif (ques['response(R7)'] and ques['response(R7)'].is_integer() == False):
-                        questionFileObj['R7'] = ques['response(R7)']
+                        questionFileObj['R7'] = ques['response(R7)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R7'] = ques['response(R7)']
                 if type(ques['response(R7)_hint']) != str:
                     if (ques['response(R7)_hint'] and ques['response(R7)_hint'].is_integer() == True):
-                        questionFileObj['R7-hint'] = int(ques['response(R7)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R7-hint'] = int(ques['response(R7)_hint'])
                     elif (ques['response(R7)_hint'] and ques['response(R7)_hint'].is_integer() == False):
                         questionFileObj['R7-hint'] = ques['response(R7)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R7-hint'] = ques['response(R7)_hint']
                 if type(ques['response(R8)']) != str:
                     if (ques['response(R8)'] and ques['response(R8)'].is_integer() == True):
-                        questionFileObj['R8'] = int(ques['response(R8)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R8'] = int(ques['response(R8)'])
                     elif (ques['response(R8)'] and ques['response(R8)'].is_integer() == False):
                         questionFileObj['R8'] = ques['response(R8)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R8'] = ques['response(R8)']
                 if type(ques['response(R8)_hint']) != str:
                     if (ques['response(R8)_hint'] and ques['response(R8)_hint'].is_integer() == True):
-                        questionFileObj['R8-hint'] = int(ques['response(R8)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R8-hint'] = int(ques['response(R8)_hint'])
                     elif (ques['response(R8)_hint'] and ques['response(R8)_hint'].is_integer() == False):
                         questionFileObj['R8-hint'] = ques['response(R8)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R8-hint'] = ques['response(R8)_hint']
                 if type(ques['response(R9)']) != str:
                     if (ques['response(R9)'] and ques['response(R9)'].is_integer() == True):
-                        questionFileObj['R9'] = int(ques['response(R9)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R9'] = int(ques['response(R9)'])
                     elif (ques['response(R9)'] and ques['response(R9)'].is_integer() == False):
                         questionFileObj['R9'] = ques['response(R9)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R9'] = ques['response(R9)']
                 if type(ques['response(R9)_hint']) != str:
                     if (ques['response(R9)_hint'] and ques['response(R9)_hint'].is_integer() == True):
-                        questionFileObj['R9-hint'] = int(ques['response(R9)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R9-hint'] = int(ques['response(R9)_hint'])
                     elif (ques['response(R9)_hint'] and ques['response(R9)_hint'].is_integer() == False):
                         questionFileObj['R9-hint'] = ques['response(R9)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R9-hint'] = ques['response(R9)_hint']
                 if type(ques['response(R10)']) != str:
                     if (ques['response(R10)'] and ques['response(R10)'].is_integer() == True):
-                        questionFileObj['R10'] = int(ques['response(R10)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R10'] = int(ques['response(R10)'])
                     elif (ques['response(R10)'] and ques['response(R10)'].is_integer() == False):
                         questionFileObj['R10'] = ques['response(R10)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R10'] = ques['response(R10)']
                 if type(ques['response(R10)_hint']) != str:
                     if (ques['response(R10)_hint'] and ques['response(R10)_hint'].is_integer() == True):
-                        questionFileObj['R10-hint'] = int(ques['response(R10)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R10-hint'] = int(ques['response(R10)_hint'])
                     elif (ques['response(R10)_hint'] and ques['response(R10)_hint'].is_integer() == False):
                         questionFileObj['R10-hint'] = ques['response(R10)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R10-hint'] = ques['response(R10)_hint']
                 if type(ques['response(R11)']) != str:
                     if (ques['response(R11)'] and ques['response(R11)'].is_integer() == True):
-                        questionFileObj['R11'] = int(ques['response(R11)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R11'] = int(ques['response(R11)'])
                     elif (ques['response(R11)'] and ques['response(R11)'].is_integer() == False):
                         questionFileObj['R11'] = ques['response(R11)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R11'] = ques['response(R11)']
                 if type(ques['response(R11)_hint']) != str:
                     if (ques['response(R11)_hint'] and ques['response(R11)_hint'].is_integer() == True):
-                        questionFileObj['R11-hint'] = int(ques['response(R11)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R11-hint'] = int(ques['response(R11)_hint'])
                     elif (ques['response(R11)_hint'] and ques['response(R11)_hint'].is_integer() == False):
                         questionFileObj['R11-hint'] = ques['response(R11)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R11-hint'] = ques['response(R11)_hint']
                 if type(ques['response(R12)']) != str:
                     if (ques['response(R12)'] and ques['response(R12)'].is_integer() == True):
-                        questionFileObj['R12'] = int(ques['response(R12)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R12'] = int(ques['response(R12)'])
                     elif (ques['response(R12)'] and ques['response(R12)'].is_integer() == False):
                         questionFileObj['R12'] = ques['response(R12)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R12'] = ques['response(R12)']
                 if type(ques['response(R12)_hint']) != str:
                     if (ques['response(R12)_hint'] and ques['response(R12)_hint'].is_integer() == True):
-                        questionFileObj['R12-hint'] = int(ques['response(R12)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R12-hint'] = int(ques['response(R12)_hint'])
                     elif (ques['response(R12)_hint'] and ques['response(R12)_hint'].is_integer() == False):
                         questionFileObj['R12-hint'] = ques['response(R12)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R12-hint'] = ques['response(R12)_hint']
                 if type(ques['response(R13)']) != str:
                     if (ques['response(R13)'] and ques['response(R13)'].is_integer() == True):
-                        questionFileObj['R13'] = int(ques['response(R13)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R13'] = int(ques['response(R13)'])
                     elif (ques['response(R13)'] and ques['response(R13)'].is_integer() == False):
                         questionFileObj['R13'] = ques['response(R13)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R13'] = ques['response(R13)']
                 if type(ques['response(R13)_hint']) != str:
                     if (ques['response(R13)_hint'] and ques['response(R13)_hint'].is_integer() == True):
-                        questionFileObj['R13-hint'] = int(ques['response(R13)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R13-hint'] = int(ques['response(R13)_hint'])
                     elif (ques['response(R13)_hint'] and ques['response(R13)_hint'].is_integer() == False):
                         questionFileObj['R13-hint'] = ques['response(R13)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R13-hint'] = ques['response(R13)_hint']
                 if type(ques['response(R14)']) != str:
                     if (ques['response(R14)'] and ques['response(R14)'].is_integer() == True):
-                        questionFileObj['R14'] = int(ques['response(R14)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R14'] = int(ques['response(R14)'])
                     elif (ques['response(R14)'] and ques['response(R14)'].is_integer() == False):
                         questionFileObj['R14'] = ques['response(R14)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R14'] = ques['response(R14)']
                 if type(ques['response(R14)_hint']) != str:
                     if (ques['response(R14)_hint'] and ques['response(R14)_hint'].is_integer() == True):
-                        questionFileObj['R14-hint'] = int(ques['response(R14)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R14-hint'] = int(ques['response(R14)_hint'])
                     elif (ques['response(R14)_hint'] and ques['response(R14)_hint'].is_integer() == False):
                         questionFileObj['R14-hint'] = ques['response(R14)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R14-hint'] = ques['response(R14)_hint']
                 if type(ques['response(R15)']) != str:
                     if (ques['response(R15)'] and ques['response(R15)'].is_integer() == True):
-                        questionFileObj['R15'] = int(ques['response(R15)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R15'] = int(ques['response(R15)'])
                     elif (ques['response(R15)'] and ques['response(R15)'].is_integer() == False):
                         questionFileObj['R15'] = ques['response(R15)'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R15'] = ques['response(R15)']
                 if type(ques['response(R15)_hint']) != str:
                     if (ques['response(R15)_hint'] and ques['response(R15)_hint'].is_integer() == True):
-                        questionFileObj['R15-hint'] = int(ques['response(R15)_hint']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R15-hint'] = int(ques['response(R15)_hint'])
                     elif (ques['response(R15)_hint'] and ques['response(R15)_hint'].is_integer() == False):
                         questionFileObj['R15-hint'] = ques['response(R15)_hint'].encode('utf-8').decode('utf-8')
                 else:
                     questionFileObj['R15-hint'] = ques['response(R15)_hint']
                 if type(ques['response(R16)']) != str:
                     if (ques['response(R16)'] and ques['response(R16)'].is_integer() == True):
-                        questionFileObj['R16'] = int(ques['response(R16)']).encode('utf-8').decode('utf-8')
+                        questionFileObj['R16'] = int(ques['response(R16)'])
                     elif (ques['response(R16)'] and ques['response(R16)'].is_integer() == False):
                         questionFileObj['R16'] = ques['response(R16)'].encode('utf-8').decode('utf-8')
                 else:
@@ -2732,8 +2700,8 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
                 questionFileObj['R20'] = None
                 questionFileObj['R20-hint'] = None
                 questionFileObj['_arrayFields'] = None
-            if ques['section_header'].encode('utf-8').decode('utf-8'):
-                questionFileObj['sectionHeader'] = ques['section_header']
+            if ques['section_header']:
+                questionFileObj['sectionHeader'] = ques['section_header'].encode('utf-8').decode('utf-8')
             else:
                 questionFileObj['sectionHeader'] = None
             questionFileObj['page'] = ques['page']
@@ -2755,23 +2723,19 @@ def questionUpload(filePathAddObs, solutionName_for_folder_path, frameworkExtern
     urlQuestionsUploadApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'questionUploadApiUrl')
     headerQuestionUploadApi = {'Authorization': config.get(environment, 'Authorization'),
                                'X-authenticated-user-token': accessToken,
-                               'X-Channel-id': config.get(environment, 'X-Channel-id'),
-                               'internal-access-token': config.get(environment, 'internal-access-token')
-                               }
-
+                               'X-Channel-id': config.get(environment, 'X-Channel-id')}
     filesQuestion = {
         'questions': open(solutionName_for_folder_path + '/questionUpload/uploadSheet.csv', 'rb')
     }
     responseQuestionUploadApi = requests.post(url=urlQuestionsUploadApi, headers=headerQuestionUploadApi,
                                               files=filesQuestion)
-    print(responseQuestionUploadApi)
     messageArr = ["Question Upload sheet prepared.",
                   "File loc : " + solutionName_for_folder_path + '/questionUpload/uploadSheet.csv',
                   "Question upload API called.", "Status code : " + str(responseQuestionUploadApi.status_code)]
     createAPILog(solutionName_for_folder_path, messageArr)
     if responseQuestionUploadApi.status_code == 200:
         print('QuestionUploadApi Success')
-        with open(solutionName_for_folder_path + '/questionUpload/uploadInternalIdsSheet.csv', 'w+',
+        with open(solutionName_for_folder_path + '/questionUpload/uploadInternalIdsSheet.csv','w+',
                   encoding='utf-8') as questionRes:
             questionRes.write(responseQuestionUploadApi.text)
     else:
@@ -2786,7 +2750,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
         criteriaRubricSheet = wbObservation.sheet_by_name('Criteria_Rubric-Scoring')
         dictSolCritLookUp = dict()
         filePath = os.path.join(solutionName_for_folder_path + "/solutionCriteriaFetch/", "solutionCriteriaDetails.csv")
-        with open(filePath, 'r') as criteriaInternalFile:
+        with open(filePath, 'r',encoding='utf-8') as criteriaInternalFile:
             criteriaInternalReader = csv.DictReader(criteriaInternalFile)
             for crit in criteriaInternalReader:
                 dictSolCritLookUp[crit['criteriaID']] = [crit['criteriaInternalId'], crit['criteriaName']]
@@ -2794,7 +2758,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
         criteriaRubricSheet = wbObservation.sheet_by_name('criteria')
         dictSolCritLookUp = dict()
         filePath = os.path.join(solutionName_for_folder_path + "/solutionCriteriaFetch/", "solutionCriteriaDetails.csv")
-        with open(filePath, 'r') as criteriaInternalFile:
+        with open(filePath, 'r',encoding='utf-8') as criteriaInternalFile:
             criteriaInternalReader = csv.DictReader(criteriaInternalFile)
             for crit in criteriaInternalReader:
                 dictSolCritLookUp[crit['criteriaID']] = [crit['criteriaInternalId'], crit['criteriaName']]
@@ -2824,6 +2788,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
                 dictCriteriaRubric = {keys[col_index]: criteriaRubricSheet.cell(row_index, col_index).value for
                                       col_index in range(criteriaRubricSheet.ncols)}
                 criteriaRubricUpload['externalId'] = dictCriteriaRubric['criteriaId'] + "_" + str(millisAddObs)
+                print(criteriaRubricUpload['externalId'])
                 criteriaRubricUpload['name'] = dictSolCritLookUp[criteriaRubricUpload['externalId']][1]
                 criteriaRubricUpload['criteriaId'] = dictSolCritLookUp[criteriaRubricUpload['externalId']][0]
                 if dictCriteriaRubric['weightage']:
@@ -2870,7 +2835,7 @@ def uploadCriteriaRubrics(solutionName_for_folder_path, wbObservation, millisAdd
     createAPILog(solutionName_for_folder_path, messageArr)
     if responseCriteriaRubricUploadApi.status_code == 200:
         with open(solutionName_for_folder_path + '/criteriaRubrics/uploadInternalIdsSheet.csv',
-                  'w+') as criteriaRubricRes:
+                  'w+',encoding='utf-8') as criteriaRubricRes:
             criteriaRubricRes.write(responseCriteriaRubricUploadApi.text)
     else:
         messageArr = ["Criteria Rubric upload Failed.", "Response : " + str(responseCriteriaRubricUploadApi.text)]
@@ -2895,7 +2860,7 @@ def fetchSolutionCriteria(solutionName_for_folder_path, observationId, accessTok
     if response.status_code == 200:
         print("Solution criteria fetched.")
         with open(solutionName_for_folder_path + "/solutionCriteriaFetch/solutionCriteriaDetails.csv",
-                  'w+') as solutionCriteriaFetch:
+                  'w+',encoding='utf-8') as solutionCriteriaFetch:
             solutionCriteriaFetch.write(response.text)
     else:
         messageArr = ["Criteria solution fetch API failed.", "Response  : " + str(response.text)]
@@ -2931,7 +2896,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
                 dictThemeRubric = {keys[col_index]: themeRubricSheet.cell(row_index, col_index).value for col_index in
                                    range(themeRubricSheet.ncols)}
                 themeRubricUpload['externalId'] = dictThemeRubric['domain_Id']
-                themeRubricUpload['name'] = dictThemeRubric['domain_name']
+                themeRubricUpload['name'] = dictThemeRubric['domain_name'].encode('utf-8').decode('utf-8')
                 if dictThemeRubric['weightage']:
                     themeRubricUpload['weightage'] = dictThemeRubric['weightage']
                 else:
@@ -2969,7 +2934,7 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
                                                  files=filesThemeRubric)
     if responseThemeRubricUploadApi.status_code == 200:
         print('ThemeRubricUploadApi Success')
-        with open(solutionName_for_folder_path + '/themeRubrics/uploadInternalIdsSheet.csv', 'w+') as themeRubricRes:
+        with open(solutionName_for_folder_path + '/themeRubrics/uploadInternalIdsSheet.csv', 'w+',encoding='utf-8') as themeRubricRes:
             themeRubricRes.write(responseThemeRubricUploadApi.text)
     else:
         messageArr = ['theme rubric upload api failed in ' + environment,
@@ -2984,27 +2949,26 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
 def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFile, solutionId, accessToken):
     global solutionRolesArray, solutionStartDate, solutionEndDate
     urlFetchSolutionApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solutionId
-    print(urlFetchSolutionApi)
+    
     headerFetchSolutionApi = {
+        'Content-Type': 'application/json',
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
         'X-Channel-id': config.get(environment, 'X-Channel-id'),
         'internal-access-token': config.get(environment, 'internal-access-token')
     }
-    
     payloadFetchSolutionApi = {}
 
-    responseFetchSolutionApi = requests.post(url=urlFetchSolutionApi, headers=headerFetchSolutionApi,
+    responseFetchSolutionApiUrl = requests.post(url=urlFetchSolutionApi, headers=headerFetchSolutionApi,
                                              data=payloadFetchSolutionApi)
-    # print(responseFetchSolutionApi.text)
-    responseFetchSolutionJson = responseFetchSolutionApi.json()
+    responseFetchSolutionJson = responseFetchSolutionApiUrl.json()
     messageArr = ["Solution Fetch Link.",
                   "solution name : " + responseFetchSolutionJson["result"]["name"],
                   "solution ExternalId : " + responseFetchSolutionJson["result"]["externalId"]]
-    messageArr.append("Upload status code : " + str(responseFetchSolutionApi.status_code))
+    messageArr.append("Upload status code : " + str(responseFetchSolutionApiUrl.status_code))
     createAPILog(solutionName_for_folder_path, messageArr)
 
-    if responseFetchSolutionApi.status_code == 200:
+    if responseFetchSolutionApiUrl.status_code == 200:
         print('Fetch solution Api Success')
         
         solutionName = responseFetchSolutionJson["result"]["name"]
@@ -3288,24 +3252,16 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                 surveySolutionCreationReqBody["description"] = dictDetailsEnv['survey_solution_description'].encode('utf-8').decode('utf-8')
                 surveySolutionExternalId = str(uuid.uuid1())
                 surveySolutionCreationReqBody["externalId"] = surveySolutionExternalId
-                if dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8') == "":
+                if dictDetailsEnv['Name_of_the_creator']== "":
                     exceptionHandlingFlag = True
                     print('survey_creator_username column should not be empty in the details sheet')
                     sys.exit()
                 else:
-                    surveySolutionCreationReqBody['creator'] = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8')
+                    surveySolutionCreationReqBody['creator'] = dictDetailsEnv['Name_of_the_creator']
 
 
-                if environment == "staging":
-                    userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish"]
-                elif environment == "dev":
-                    userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer"]
-                else:    
-                    userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
+                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
                 surveySolutionCreationReqBody['author'] = userDetails[0]
-
-                # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax 
-
                 if dictDetailsEnv["survey_start_date"]:
                     if type(dictDetailsEnv["survey_start_date"]) == str:
                         startDateArr = None
@@ -3323,7 +3279,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                             endDateArr = None
                             endDateArr = (dictDetailsEnv["survey_end_date"]).split("-")
                             surveySolutionCreationReqBody["endDate"] = endDateArr[2] + "-" + endDateArr[1] + "-" + \
-                                                                       endDateArr[0] + " 23:59:59"
+                                                                       endDateArr[0] + "T23:59:59.000Z"
                         elif type(dictDetailsEnv["survey_end_date"]) == float:
                             surveySolutionCreationReqBody["endDate"] = (
                                 xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_end_date"],
@@ -3348,7 +3304,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                                       "BODY : " + str(surveySolutionCreationReqBody),
                                       "Status code : " + str(responseCreateSolutionApi.status_code),
                                       "Response : " + responseCreateSolutionApi.text]
-                        fileheader = [(surveySolutionCreationReqBody['name']),('Program Sheet Validation'), ('noobra')]
+                        fileheader = [surveySolutionCreationReqBody['name'].encode('utf-8').decode('utf-8'),'Program Sheet Validation'," "]
                         createAPILog(parentFolder, messageArr)
                         apicheckslog(parentFolder,fileheader)
                         if responseCreateSolutionApi.status_code == 200:
@@ -3431,7 +3387,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                     os.mkdir(questionFilePath)
                 with open(parentFolder + '/questionUpload/uploadSheet.csv', 'a',
                           encoding='utf-8') as questionUploadFile:
-                    writerQuestionUpload = csv.DictWriter(questionUploadFile, fieldnames=questionUploadFieldnames)
+                    writerQuestionUpload = csv.DictWriter(questionUploadFile, fieldnames=questionUploadFieldnames, lineterminator='\n')
                     if not file_exists_ques:
                         writerQuestionUpload.writeheader()
                     questionFileObj = {}
@@ -3470,7 +3426,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         questionSeqByEcmArr.append(ques['question_id'].strip() + '_' + str(millisecond))
                         quesSeqCnt = quesSeqCnt + 1.0
                     if ques['question_language1']:
-                        questionFileObj['question0'] = ques['question_language1']
+                        questionFileObj['question0'] = ques['question_language1'].encode('utf-8').decode('utf-8')
                     else:
                         questionFileObj['question0'] = None
                     if ques['question_language2']:
@@ -3612,8 +3568,8 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         for quesIndex in range(1, 21):
                             questionFileObj['R' + str(quesIndex)] = None
                             questionFileObj['R' + str(quesIndex) + '-hint'] = None
-                    if ques['section_header'].encode('utf-8').decode('utf-8'):
-                        questionFileObj['sectionHeader'] = ques['section_header']
+                    if ques['section_header']:
+                        questionFileObj['sectionHeader'] = ques['section_header'].encode('utf-8').decode('utf-8')
                     else:
                         questionFileObj['sectionHeader'] = None
 
@@ -3626,8 +3582,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         else:
                             questionFileObj['questionNumber'] = ques['question_number']
                     writerQuestionUpload.writerow(questionFileObj)
-                    # print(questionFileObj)
-                # terminatingMessage("Question")
+                    
             urlQuestionsUploadApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'questionUploadApiUrl')
             headerQuestionUploadApi = {
                 'Authorization': config.get(environment, 'Authorization'),
@@ -3723,9 +3678,8 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
 
 
 def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessToken):
-
     searchSolutionurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "observation&page=1&limit=100&search=" + solutionNameOrId
-    
+
     searchSolutionpayload = {}
     searchSolutionheaders = {
         'X-authenticated-user-token': accessToken,
@@ -3739,9 +3693,6 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                   "URL : " + str(searchSolutionurl),
                   "Status Code : " + str(searchSolutionresponse.status_code),
                   "Response : " + str(searchSolutionresponse.text)]
-    createAPILog(projectName_for_folder_path, messageArr)
-    # print(messageArr)
-    messageArr = []
 
     if searchSolutionresponse.status_code == 200:
         searchSolutionjson = searchSolutionresponse.json()
@@ -3750,8 +3701,7 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
             solution_id = searchSolutionjson["result"]["data"][listOfSoulution]["_id"]
             messageArr.append("solution found : " + str(solution_id))
             createAPILog(projectName_for_folder_path, messageArr)
-            messageArr = []
-            # print("searchSolutionApi Success")
+            print("searchSolutionApi Success")
             solutionDetailsurl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchSolutionDoc') + solution_id
 
             solutionDetailspayload = {}
@@ -3768,8 +3718,7 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                           "URL : " + str(solutionDetailsurl),
                           "Status Code : " + str(solutionDetailsresponse.status_code),
                           "Response : " + str(solutionDetailsresponse.text)]
-            createAPILog(projectName_for_folder_path, messageArr)
-            messageArr = []
+
             if solutionDetailsresponse.status_code == 200:
                 solutionDetailsjson = solutionDetailsresponse.json()
                 if solutionDetailsjson["result"]["isReusable"] == False:
@@ -3777,8 +3726,8 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                     solutionExternalId = solutionDetailsjson["result"]["externalId"]
                     messageArr.append("Task solution Entity Type found : " + str(solutionEntityType))
                     createAPILog(projectName_for_folder_path, messageArr)
-                    # print("FetchSolutionDocApi Success")
-                    
+                    print("FetchSolutionDocApi Success")
+                    break
             else:
                 
                 messageArr = ["Solution found",
@@ -3786,7 +3735,6 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
                       "Status Code : " + str(searchSolutionresponse.status_code),
                       "Response : " + str(searchSolutionresponse.text)]
                 createAPILog(projectName_for_folder_path, messageArr)
-                print(searchSolutionresponse.json())
                 terminatingMessage("FetchSolutionDocApi is failed")
 
     else:
@@ -3828,7 +3776,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
     projectColnames2 = ["rationale", "primaryAudience", "taskCreationForm", "duration", "concepts", "keywords","successIndicators", "risks", "approaches", "_arrayFields"]
     for columns in projectColnames2:
         projectColnames1.append(columns)
-    with open(projectFilePath + 'projectUpload.csv', 'w') as file:
+    with open(projectFilePath + 'projectUpload.csv', 'w',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows([projectColnames1])
 
@@ -3840,7 +3788,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
         categories_list = ["teachers", "students", "infrastructure", "community", "educationLeader", "schoolProcess"]
         categories = str(dictProjectDetails["categories"]).encode('utf-8').decode('utf-8').split(",")
         categories_final = ""
-        projectGoal = ""
+        projectGoal = "TEMP"
         for cat in categories:
             if categories_final == "":
                 categories_final = categories_final + str(
@@ -3851,7 +3799,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
         global projectCreator, projectAuthor
 
         projectAuthor = str(dictProjectDetails["Diksha_loginId"]).encode('utf-8').decode('utf-8').strip()
-        recommendedFor = str(dictProjectDetails["recommendedFor"]).strip()
+        recommendedFor = str(dictProjectDetails["recommendedFor"]).encode('utf-8').decode('utf-8').strip()
         objective = str(dictProjectDetails["objective"]).encode('utf-8').decode('utf-8').strip()
         entityType = None
         project_values = [title, externalId, categories_final,recommendedFor, objective, entityType,projectGoal]
@@ -3910,7 +3858,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
     taskColumns1.append("minNoOfSubmissionsRequired")
     taskColumns1.append("sequenceNumber")
 
-    with open(taskFilePath + 'taskUpload.csv', 'w') as file:
+    with open(taskFilePath + 'taskUpload.csv', 'w',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows([taskColumns1])
     sequenceNumber = 0
@@ -4046,13 +3994,12 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
             task_values.append(taskminNoOfSubmissionsRequired)
             task_values.append(sequenceNumber)
 
-            with open(taskFilePath + 'taskUpload.csv', 'a') as file:
+            with open(taskFilePath + 'taskUpload.csv', 'a',encoding='utf-8') as file:
                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                 writer.writerows([subtaskvalues])
 
 
         if dictTasksDetails["Subtask"] and not dictTasksDetails['TaskTitle']:
-            print(dictTasksDetails["Subtask"])
             if dictTasksDetails["Subtask"] != "":
                 taskHasAParentTask = "YES"
                 taskparentTaskOperator = "EQUALS"
@@ -4233,7 +4180,7 @@ def fetchCertificateBaseTemplate(filePathAddProject,accessToken,projectName_for_
 
 
     
-
+# This function is used to find the base template id of the certificates
 def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
@@ -4268,6 +4215,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
     responsedbFindApi = requests.request("POST", url=urldbFind, headers=headerdbFindApi,
                                          data=payload)
+    # finding the _id of the certificate 
     if responsedbFindApi.status_code == 200:
         responseaddcetificate = responsedbFindApi.json()
         result_list = responseaddcetificate['result']
@@ -4277,6 +4225,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         typeOfCertificate=typeOfCertificate.lower()
         baseTemplateCode=config.get(environment,typeOfCertificate.replace(" ",""))
 
+# returning the base temp id
         return baseTemplateLookup[baseTemplateCode]
         
     else:
@@ -4287,10 +4236,18 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
 
     
+# This function is used to create json format to create certificate
+# This function is used to add SVG to the certificate based on type of certificate
 
 def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
+    tasksLevelEvidance = []
+    projectMinNooEvide = None
+    projectLevelEvidance = []
+    taskMinNooEvide =[]
+
+
     for prosheet in projectsheetforcertificate:
         if prosheet.strip().lower() == 'Project upload'.lower():
             detailsColCheck = wbproject.sheet_by_name(prosheet)
@@ -4305,8 +4262,15 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for col_index_env in range(detailsEnvSheet.ncols)}
 
-                projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
-                projectLevelEvidance = dictDetailsEnv["Project Level Evidence"]
+                projectLevelMinNooEvidence = dictDetailsEnv["Minimum No. of Evidence"]
+                print(projectLevelMinNooEvidence)
+                projectLevelEvidance = dictDetailsEnv["Project Level Evidence"].lower()
+                if projectLevelMinNooEvidence == "":
+                    projectLevelMinNooEvidence = 1  # Set default value to 1
+                    projectMinNooEvide = int(projectLevelMinNooEvidence)
+                else:
+                    projectMinNooEvide = int(projectLevelMinNooEvidence)
+                        
        
     for prosheet in projectsheetforcertificate:
         if prosheet.strip().lower() == 'Tasks upload'.lower():
@@ -4317,14 +4281,23 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
             detailsEnvSheet = wbproject.sheet_by_name(prosheet)
             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
+            
             for row_index_env in range(2, detailsEnvSheet.nrows):
                 dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for col_index_env in range(detailsEnvSheet.ncols)}
-
-                taskMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
-                tasksLevelEvidance = dictDetailsEnv["Task Level Evidence"]
-                print(tasksLevelEvidance)
+                
+                
+                taskLevelEvidence = dictDetailsEnv["Task Level Evidence"].lower()
+                minNoOfEvidence = dictDetailsEnv["Minimum No. of Evidence"]
+            
+                if taskLevelEvidence == "yes":
+                    tasksLevelEvidance.append(dictDetailsEnv["TaskTitle"])
+                    if minNoOfEvidence == "":
+                        minNoOfEvidence = 1  # Set default value to 1
+                        taskMinNooEvide.append(minNoOfEvidence)
+                    else:
+                        taskMinNooEvide.append(minNoOfEvidence)
                 
 
 
@@ -4342,169 +4315,112 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     }
 
     if str(projectLevelEvidance).strip().lower() == "yes":
-        payload = {
-            "criteria": {
-                "validationText": "Complete validation message",
-                "expression": "",
-                "conditions": {
-                    "C1": {
-                        "validationText": "Submit your project.",
-                        "expression": "C1",
-                        "conditions": {
-                            "C1": {
-                                "scope": "project",
-                                "key": "status",
-                                "operator": "==",
-                                "value": "submitted"
-                            }
-                        }
-                    },
-                    "C2": {
-                        "validationText": "",
-                        "expression": "C1",
-                        "conditions": {
-                            "C1": {
-                                "scope": "project",
-                                "key": "attachments",
-                                "function": "count",
-                                "filter": {
-                                    "key": "type",
-                                    "value": "all"
-                                },
-                                "operator": ">=",
-                                "value": ""
-                            }
-                        }
-                    }
-                }
-            },
-            "issuer": {
-                "name": ""
-            },
-            "status": "active",
-            "solutionId": solutionId,
-            "programId": programID,
-            "baseTemplateId": ""
-        }
+        payload = {}
+        payload['criteria'] = {}
+        payload['criteria']['validationText'] = "Complete validation message"
+        payload['criteria']['expression'] = ""
+        payload['criteria']['conditions'] = {}
+        payload['criteria']['conditions']['C1'] = {}
+        payload['criteria']['conditions']['C1']['validationText'] = "Submit your project."
+        payload['criteria']['conditions']['C1']['expression'] = "C1"
+        payload['criteria']['conditions']['C1']['conditions'] = {}
+        payload['criteria']['conditions']['C1']['conditions']['C1'] = {}
+        payload['criteria']['conditions']['C1']['conditions']['C1']['scope'] = "project"
+        payload['criteria']['conditions']['C1']['conditions']['C1']['key'] = "status"
+        payload['criteria']['conditions']['C1']['conditions']['C1']['operator'] = "=="
+        payload['criteria']['conditions']['C1']['conditions']['C1']['value'] = "submitted"
+        payload['criteria']['conditions']['C2'] = {}
+        payload['criteria']['conditions']['C2']['validationText'] = f"Add {int(projectMinNooEvide)} evidence at the project level",
+        payload['criteria']['conditions']['C2']['expression'] = "C1"
+        payload['criteria']['conditions']['C2']['conditions'] = {}
+        payload['criteria']['conditions']['C2']['conditions']['C1'] = {}
+        payload['criteria']['conditions']['C2']['conditions']['C1']['scope'] = "project"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['key'] = "attachments"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['function'] = "count"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['filter'] = {}
+        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['key'] = "type"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['function'] = {}
+        payload['criteria']['conditions']['C2']['conditions']['C1']['function']['operator'] = ">="
+        payload['criteria']['conditions']['C2']['conditions']['C1']['function']['value'] = int(projectMinNooEvide)
+        payload['issuer'] ={}
+        payload['issuer']['name']=""
+        payload['status'] = "active"
+        payload['solutionId'] = solutionId
+        payload['programId'] = programID
+        payload['baseTemplateId'] = ""
+
     else:
-        # str(projectLevelEvidance).strip().lower() == "no"
-        payload = {
-            "criteria": {
-                "validationText": "Complete validation message",
-                "expression": "C1",
-                "conditions": {
-                    "C1": {
-                        "validationText": "Submit your project.",
-                        "expression": "C1",
-                        "conditions": {
-                            "C1": {
-                                "scope": "project",
-                                "key": "status",
-                                "operator": "==",
-                                "value": "submitted"
-                            }
-                        }
-                    }
-                }
-            },
-            "issuer": {
-                "name": ""
-            },
-            "status": "active",
-            "solutionId": solutionId,
-            "programId": programID,
-            "baseTemplateId": ""
-        }
-
-    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
-    projectsheetforcertificate = wbproject.sheet_names()
-    for prosheet in projectsheetforcertificate:
-        if prosheet.strip().lower() == 'Project upload'.lower():
-            detailsColCheck = wbproject.sheet_by_name(prosheet)
-            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
-                                 range(detailsColCheck.ncols)]
-
-            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
-                       range(detailsEnvSheet.ncols)]
-            for row_index_env in range(2, detailsEnvSheet.nrows):
-                dictDetailsEnv = {
-                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                    for
-                    col_index_env in range(detailsEnvSheet.ncols)}
-                
-                projectMinNooEvide = dictDetailsEnv["Minimum No. of Evidence"]
-
-                if projectLevelEvidance == "Yes":
-                    if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
-                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        projectminnoofEvidence = "Add 1  evidence at the project level"
-                    elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
-                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        projectminnoofEvidence = "Add  evidences at the project level"
-                    else:
-                        intProjectMinNOofEvidence = int(projectMinNooEvide)
-                        projectminnoofEvidence = f"Add {intProjectMinNOofEvidence}  evidences at the project level"
-                        print(projectminnoofEvidence)
-
-                    payload["criteria"]["conditions"]["C2"]["validationText"] = projectminnoofEvidence
-                    if str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "yes" and str(
-                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = 1
-                    elif str(dictDetailsEnv['Project Level Evidence']).strip().lower() == "no" and str(
-                           dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                           payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = ""
-
-                    else:
-                        payload["criteria"]["conditions"]["C2"]["conditions"]["C1"]["value"] = projectMinNooEvide
-                else:
-                    pass
-
-        if prosheet.strip().lower() == 'Certificate details'.lower():
-            print("--->Checking Certificate details  sheet...")
-            detailsColCheck = wbproject.sheet_by_name(prosheet)
-            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
-                                 range(detailsColCheck.ncols)]
+        # str(projectLevelEvidance).strip().lower() == "no":
+        payload = {}
+        payload['criteria'] = {}
+        payload['criteria']['validationText'] = "Complete validation message"
+        payload['criteria']['expression'] = ""
+        payload['criteria']['conditions'] = {}
+        payload['criteria']['conditions']['C1'] = {}
+        payload['criteria']['conditions']['C1']['validationText'] = "Submit your project."
+        payload['criteria']['conditions']['C1']['expression'] = "C1"
+        payload['criteria']['conditions']['C1']['conditions'] = {}
+        payload['criteria']['conditions']['C1']['conditions']['C1'] = {}
+        payload['criteria']['conditions']['C1']['conditions']['C1']['scope'] = "project"
+        payload['criteria']['conditions']['C1']['conditions']['C1']['key'] = "status"
+        payload['criteria']['conditions']['C1']['conditions']['C1']['operator'] = "=="
+        payload['criteria']['conditions']['C1']['conditions']['C1']['value'] = "submitted"
+        payload['issuer'] ={}
+        payload['issuer']['name']=""
+        payload['status'] = "active"
+        payload['solutionId'] = solutionId
+        payload['programId'] = programID
+        payload['baseTemplateId'] = ""
+    
+    
+    if prosheet.strip().lower() == 'Certificate details'.lower():
+        print("--->Checking Certificate details  sheet...")
+        detailsColCheck = wbproject.sheet_by_name(prosheet)
+        keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+                range(detailsColCheck.ncols)]
             
-            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+        detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+        keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                        range(detailsEnvSheet.ncols)]
-            for row_index_env in range(2, detailsEnvSheet.nrows):
+        for row_index_env in range(2, detailsEnvSheet.nrows):
 
-                dictDetailsEnv = {
+            dictDetailsEnv = {
                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
                     for
                     col_index_env in range(detailsEnvSheet.ncols)}
-                certificateissuer = dictDetailsEnv['Certificate issuer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Certificate issuer'] else terminatingMessage("\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
-                payload["issuer"]["name"] = certificateissuer
+            certificateissuer = dictDetailsEnv['Certificate issuer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Certificate issuer'] else terminatingMessage("\"Certificate issuer\" must not be Empty in \"Certificate details\" sheet")
+            payload["issuer"]["name"] = certificateissuer
 
-                Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature","Two Logo - Two Signature"] else terminatingMessage("\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
+            Typeofcertificate = dictDetailsEnv['Type of certificate'] if dictDetailsEnv['Type of certificate'] in ["One Logo - One Signature", "One Logo - Two Signature", "Two Logo - One Signature","Two Logo - Two Signature"] else terminatingMessage("\"Type of certificate\" must not be Empty in \"Certificate details\" sheet")
                 
-                payload["baseTemplateId"]=baseTemplate_id
+            payload["baseTemplateId"]=baseTemplate_id
                
-    projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r')
+    projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r',encoding='utf-8')
     projectInternalfile = csv.DictReader(projectInternalfile)
     for projectInternal in projectInternalfile:
         projectExternalId = projectInternal["externalId"]
         project_id = projectInternal["_SYSTEM_ID"]
 
-    taskinternalfile = open(projectName_for_folder_path + '/taskUpload/taskInternal.csv', mode='r')
+    taskinternalfile = open(projectName_for_folder_path + '/taskUpload/taskInternal.csv', mode='r',encoding='utf-8')
     taskinternalfile = csv.DictReader(taskinternalfile)
-    projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r')
+    projectTemplatefile = open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', mode='r',encoding='utf-8')
     projectTemplatefile = csv.DictReader(projectTemplatefile)
     for Projecttemp in projectTemplatefile:
         projectTemplateId = Projecttemp["duplicateTemplate_id"]
     c = 2
     for task in taskinternalfile:
-        if tasksLevelEvidance == "Yes":
+        if task['name'] in tasksLevelEvidance:
             hasAparent = task["hasAParentTask"]
-            if hasAparent == "NO":
+            if task["hasAParentTask"].lower() == "no":
+                
                 task_id = task["_SYSTEM_ID"]
+                
                 c = c + 1
                 cn = "C" + str(c)
                 taskconditions = {
                     cn: {
-                        "validationText": "",
+                        "validationText": f"Add {int(taskMinNooEvide[c-3])} evidence for the task {tasksLevelEvidance[c-3]}",
                         "expression": "C1",
                         "conditions": {
                             "C1": {
@@ -4516,7 +4432,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                                     "value": "all"
                                 },
                                 "operator": ">=",
-                                "value": "",
+                                "value": int(taskMinNooEvide[c-3]),
                                 "taskDetails": [
                                     task_id
                                 ]
@@ -4525,48 +4441,9 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                     }
                 }
                 payload["criteria"]["conditions"].update(taskconditions)
-                
+        else:
+            pass
 
-    wbproject1 = xlrd.open_workbook(filePathAddProject, on_demand=True)
-    projectsheetforcertificate = wbproject1.sheet_names()
-    for prosheet1 in projectsheetforcertificate:
-        if prosheet1.strip().lower() == 'Tasks upload'.lower():
-            print("--->Checking Tasks upload sheet...")
-
-            detailsEnvSheet = wbproject1.sheet_by_name(prosheet1)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in range(detailsEnvSheet.ncols)]
-            c = 2
-            for row_index_env in range(2, detailsEnvSheet.nrows):
-                dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                                  for col_index_env in range(detailsEnvSheet.ncols)}
-                taskminnoofEvidence = dictDetailsEnv["Minimum No. of Evidence"]
-                taskname = dictDetailsEnv['TaskTitle'].encode('utf-8').decode('utf-8')
-                tasklevelevidece = dictDetailsEnv['Task Level Evidence']
-
-                c = c + 1
-                cn = "C" + str(c)
-                if tasklevelevidece == "Yes":
-                    if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(
-                            dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        taskvalidationminnoofEvidence = f"Add 1 evidence for the task {taskname}"
-                    elif str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "no" and str(
-                            dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        taskvalidationminnoofEvidence = f"Add evidence for task {taskname}"
-                    else:
-                        intTaskMinNOofEvidence = int(taskminnoofEvidence)
-                        taskvalidationminnoofEvidence = f"Add {intTaskMinNOofEvidence} evidence(s) for the task {taskname}"
-                        
-
-                    payload["criteria"]["conditions"][cn]["validationText"] = taskvalidationminnoofEvidence
-                    if str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "yes" and str(
-                        dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                        payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = 1
-                    elif str(dictDetailsEnv['Task Level Evidence']).strip().lower() == "no" and str(
-                           dictDetailsEnv['Minimum No. of Evidence']).strip().lower() == "":
-                           payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = ""
-
-                    else:
-                        payload["criteria"]["conditions"][cn]["conditions"]["C1"]["value"] = taskminnoofEvidence
 
     condition = ""
     for a, i in enumerate(payload["criteria"]["conditions"]):
@@ -4578,6 +4455,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
 
     print(json.dumps(payload, indent=1))
+    # sys.exit()
 
     responseaddcertificateUploadApi = requests.request("POST",url=urladdcertificate, headers=headeraddcertificateApi,
                                            data=json.dumps(payload))
@@ -4587,7 +4465,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     messageArr.append("Upload status code : " + str(responseaddcertificateUploadApi.status_code))
     createAPILog(projectName_for_folder_path, messageArr)
     with open(projectName_for_folder_path + '/addCertificate/Addcertificatejson.json',
-              'w+') as tasksRes:
+              'w+',encoding='utf-8') as tasksRes:
         tasksRes.write(json.dumps(payload))
 
     if responseaddcertificateUploadApi.status_code == 200:
@@ -4597,7 +4475,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 
 
         with open(projectName_for_folder_path + '/addCertificate/Addcertificate.text',
-                  'w+') as tasksRes:
+                  'w+',encoding='utf-8') as tasksRes:
             tasksRes.write(responseaddcertificateUploadApi.text)
 
     else:
@@ -4623,7 +4501,6 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
     responseDownloadsvgApi = requests.request("POST",url=urluploadcertificatepi, headers=headeruploadcertificateApi,
                                            data=task_payload,
                                            files=task_file)
-    print(responseDownloadsvgApi)
     if responseDownloadsvgApi.status_code == 200:
         responseeditsvg = responseDownloadsvgApi.json()
         svgid = responseeditsvg['result']['data']['templateId']
@@ -4674,7 +4551,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         else:
             print("error in updating certificate with project")
             sys.exit()
-
+# This function is used to add SVG to the certificate based on type of certificate
 def editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTemplate_id):
 
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
@@ -4786,7 +4663,6 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTempl
 
                 }
                 responseeditsvg = requests.request("POST",url=urleditnigsvgApi, headers=headereditingsvgApi,data=payload, files=downloadedfiles)
-                print(responseeditsvg)
 
                 if responseeditsvg.status_code == 200:
                     responseeditsvg = responseeditsvg.json()
@@ -4805,7 +4681,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
     SolutionFilePath = projectName_for_folder_path + '/solutionDetails/'
     if not os.path.exists(SolutionFilePath):
         os.mkdir(SolutionFilePath)
-    with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'w') as file:
+    with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'w',encoding='utf-8') as file:
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows(
             [["solutionExtId", "solutionName", "solutionDescription", "solution_id", "programExternalId", "entityType",
@@ -4876,7 +4752,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 messageArr.append("duplicate TemplateId successfully created: " + str(duplicateTemplateId))
                 createAPILog(projectName_for_folder_path, messageArr)
                 print("MapSolutionToProjectApi Sucsess")
-                with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'a') as file:
+                with open(projectName_for_folder_path + '/solutionDetails/solutionDetails.csv', 'a',encoding='utf-8') as file:
                     writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
                     writer.writerows([[solutionExternalId, project_name, project_description, solutionId,
                                        programExternalId, projectEntityType,
@@ -4890,19 +4766,13 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                     "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
 
-                if environment == "staging":
-                    userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
-                elif environment == "dev":
-                    userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",[],"",""]
-                else:
-                    userDetails = fetchUserDetails(environment, accessToken, projectAuthor)
+                userDetails = fetchUserDetails(environment, accessToken, projectAuthor)
                 matchedShikshalokamLoginId = userDetails[0]
                 projectCreator = userDetails[2]
                 
                 bodySolutionUpdate = {
                     "creator": projectCreator, "author": matchedShikshalokamLoginId}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
-
                 # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
 
                 if solutionDetails[1]:
@@ -4922,7 +4792,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
             print("Project solution creation api failed.")
             sys.exit()
 
-
+# This function is used to download the logo's anf sign from project template
 def downloadlogosign(filePathAddProject,projectName_for_folder_path):
 
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
@@ -5103,12 +4973,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                 impLedObsFlag = False
             criteriaUpload(parentFolder, wbObservation, millisecond, accessToken, "framework", impLedObsFlag)
             
-            if environment == "staging":
-                userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
-            elif environment == "dev":
-                userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",[],"",""]
-            else:
-                userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+            userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
             matchedShikshalokamLoginId = userDetails[0]
             
             frameworkExternalId = frameWorkUpload(parentFolder, wbObservation, millisecond, accessToken)
@@ -5130,14 +4995,9 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                 section.update({dictECMs['section_id']: dictECMs['section_name']})
                 ecm_sections[EMC_ID] = dictECMs['section_id']
                 if dictECMs['Is ECM Mandatory?']:
-                    print(dictECMs['Is ECM Mandatory?'])
-                    print("to print ECM",str(dictECMs['Is ECM Mandatory?']) == "TRUE" or dictECMs['Is ECM Mandatory?'] == 1 or dictECMs['Is ECM Mandatory?'] == True or str(dictECMs['Is ECM Mandatory?']).lower() == "true")
-                    print("same to print ECM",dictECMs['Is ECM Mandatory?'] == "FALSE" or dictECMs['Is ECM Mandatory?'] == 0 or dictECMs['Is ECM Mandatory?'] == False or str(dictECMs['Is ECM Mandatory?']).lower() == "false")
-                    # sys.exit()
-                    
-                    if str(dictECMs['Is ECM Mandatory?']) == "TRUE" or dictECMs['Is ECM Mandatory?'] == 1 or dictECMs['Is ECM Mandatory?'] == True or str(dictECMs['Is ECM Mandatory?']).lower() == "true" :
+                    if dictECMs['Is ECM Mandatory?'] == "TRUE" or dictECMs['Is ECM Mandatory?'] == 1:
                         dictECMs['Is ECM Mandatory?'] = False
-                    elif dictECMs['Is ECM Mandatory?'] == "FALSE" or dictECMs['Is ECM Mandatory?'] == 0 or dictECMs['Is ECM Mandatory?'] == False or str(dictECMs['Is ECM Mandatory?']).lower() == "false" :
+                    elif dictECMs['Is ECM Mandatory?'] == "FALSE" or dictECMs['Is ECM Mandatory?'] == 0:
                         dictECMs['Is ECM Mandatory?'] = True
                 else:
                     dictECMs['Is ECM Mandatory?'] = False
@@ -5170,9 +5030,6 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             bodySolutionUpdate = {'allowMultipleAssessemts': allow_multiple_submissions, "creator": creator}
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
-
-            # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
-
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
@@ -5193,9 +5050,6 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                     bodySolutionUpdate = {
                         "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                     solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
-
-                    # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
-                    
                     if solutionDetails[1]:
                         startDateArr = str(solutionDetails[1]).split("-")
                         bodySolutionUpdate = {
@@ -5214,12 +5068,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
         elif typeofSolution == 2:
             criteriaUpload(parentFolder, wbObservation, millisecond, accessToken, "criteria", False)
             
-            if environment == "staging":
-                userDetails = ["4cd4c690-eab6-4938-855a-447c7b1b8ea9","content_creator_tn3941","Harish",[],"",""]
-            elif environment == "dev":
-                userDetails = ["469dc732-04f3-42d9-9a85-30957a797acc","content","Contentreviewer",[],"",""]
-            else:
-                userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
+            userDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
             matchedShikshalokamLoginId = userDetails[0]
             
             frameworkExternalId = frameWorkUpload(parentFolder, wbObservation, millisecond, accessToken)
@@ -5246,7 +5095,6 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
 
             solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
-
             # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
 
             if solutionDetails[1]:
@@ -5314,9 +5162,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                             isProgramnamePresent = False
                         else:
                             isProgramnamePresent = True
-                        print(programName)
                         scopeEntityType = scopeEntityType
-                        print(scopeEntityType)
                         userEntity = dictProgramDetails['Targeted state at program level'].encode('utf-8').decode('utf-8').lstrip().rstrip().split(",") if dictProgramDetails['Targeted state at program level'] else terminatingMessage("\"scope_entity\" must not be Empty in \"details\" sheet")
                         
             for sheets in projectSheetNames:
@@ -5390,11 +5236,8 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                                                                ProjectSolutionExternalId,
                                                                ProjectSolutionId, accessToken)
                                 elif str(dictDetailsEnv['has certificate']).lower()== 'Yes'.lower():
-                                    print(str(dictDetailsEnv['has certificate']).lower()== 'Yes'.lower())
-                                    print(str(dictDetailsEnv['has certificate']))
-                                    print("this is certificate with project")
+                                    print("---->this is certificate with project<---")
                                     baseTemplate_id=fetchCertificateBaseTemplate(filePathAddProject,accessToken,projectName_for_folder_path)
-                                    print(baseTemplate_id)
                                     # sys.exit()
                                     downloadlogosign(filePathAddProject,projectName_for_folder_path)
                                     editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTemplate_id)
@@ -5440,6 +5283,7 @@ print(sheetNames)
 print(pgmSheets)
 if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
     print("--->Program Template detected.<---")
+    
     for sheetEnv in sheetNames:
         if sheetEnv.strip().lower() == 'program details':
             print("Checking program details sheet...")
@@ -5456,9 +5300,7 @@ if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
                     isProgramnamePresent = False
                 else:
                     isProgramnamePresent = True
-                print(programName)
                 scopeEntityType = scopeEntityType
-                print(scopeEntityType)
                 userEntity = dictProgramDetails['Targeted state at program level'].encode('utf-8').decode('utf-8').lstrip().rstrip().split(
                     ",") if \
                     dictProgramDetails['Targeted state at program level'] else terminatingMessage("\"scope_entity\" must not be Empty in \"details\" sheet")
