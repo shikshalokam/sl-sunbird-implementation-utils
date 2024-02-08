@@ -258,6 +258,8 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "concepts": [],
         "createdFor": orgIds,
         "rootOrganisations": orgIds,
+        "startDate": startDateOfProgram,
+        "endDate": endDateOfProgram,
         "imageCompression": {
             "quality": 10
         },
@@ -266,10 +268,15 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "author": creatorKeyCloakId,
         "scope": {
             "entityType": scopeEntityType,
-            "entities": entities,
+            "entities": entitiesPGMID,
             "roles": roles
-        }})
-
+        },
+        "metaInformation": {
+            "state":entitiesPGM.split(","),
+            "roles": mainRole.split(",")
+            },
+            "requestForPIIConsent":True
+            })
     messageArr.append("Body : " + str(payload))
     headers = {'X-authenticated-user-token': accessToken,
                'internal-access-token': config.get(environment, 'internal-access-token'),
@@ -471,6 +478,15 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
+                    # taking the start date of program from program template and converting YYYY-MM-DD 00:00:00 format
+                    
+                    startDateArr = str(startDateOfProgram).split("-")
+                    startDateOfProgram = startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"
+
+                    # taking the end date of program from program template and converting YYYY-MM-DD 00:00:00 format
+
+                    endDateArr = str(endDateOfProgram).split("-")
+                    endDateOfProgram = endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"
 
                     global scopeEntityType
                     scopeEntityType = "state"
@@ -545,7 +561,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
 
                         # check if program is created or not 
-                        if getProgramInfo(accessToken, parentFolder, extIdPGM):
+                        if getProgramInfo(accessToken, parentFolder, programNameInp):
                             print("Program Created SuccessFully.")
                         else :
                             terminatingMessage("Program creation failed! Please check logs.")
@@ -574,12 +590,12 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         coursemapping = courseMapToProgram(accessToken, resourceLinkOrExtPGM, parentFolder)
                         if startDateOfResource:
                             startDateArr = str(startDateOfResource).split("-")
-                            bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                            bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                             solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
                         if endDateOfResource:
                             endDateArr = str(endDateOfResource).split("-")
                             bodySolutionUpdate = {
-                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                             solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
                         
 
@@ -684,13 +700,21 @@ def generateAccessToken(solutionName_for_folder_path):
 def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp):
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
-    programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl') + programNameInp.lstrip().rstrip()
+    programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl')
     print(programUrl)
+    payload = json.dumps({
+        "query": {
+            "name": programNameInp.lstrip().rstrip(),
+            "isAPrivateProgram": False,
+            "status": "active"
+            },
+            "mongoIdKeys": []
+            })
     
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
-    responseProgramSearch = requests.post(url=programUrl, headers=headersProgramSearch)
+    responseProgramSearch = requests.post(url=programUrl, headers=headersProgramSearch,data=payload)
     print(responseProgramSearch.text)
     messageArr = []
 
@@ -704,7 +728,7 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
         print('--->Program fetch API Success')
         messageArr.append("--->Program fetch API Success")
         responseProgramSearch = responseProgramSearch.json()
-        countOfPrograms = len(responseProgramSearch['result']['data'])
+        countOfPrograms = len(responseProgramSearch['result'])
         messageArr.append("--->Program Count : " + str(countOfPrograms))
         if countOfPrograms == 0:
             messageArr.append("No program found with the name : " + str(programName.lstrip().rstrip()))
@@ -717,7 +741,7 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
             return False
         else:
             getProgramDetails = []
-            for eachPgm in responseProgramSearch['result']['data']:
+            for eachPgm in responseProgramSearch['result']:
                 if eachPgm['isAPrivateProgram'] == False:
                     programID = eachPgm['_id']
                     programExternalId = eachPgm['externalId']
@@ -3251,7 +3275,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                         startDateArr = None
                         startDateArr = (dictDetailsEnv["survey_start_date"]).split("-")
                         surveySolutionCreationReqBody["startDate"] = startDateArr[2] + "-" + startDateArr[1] + "-" + \
-                                                                     startDateArr[0] + "T00:00:00.000Z"
+                                                                     startDateArr[0] + " 00:00:00"
                     elif type(dictDetailsEnv["survey_start_date"]) == float:
                         surveySolutionCreationReqBody["startDate"] = (
                             xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_start_date"],
@@ -4323,10 +4347,9 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         payload['criteria']['conditions']['C2']['conditions']['C1']['function'] = "count"
         payload['criteria']['conditions']['C2']['conditions']['C1']['filter'] = {}
         payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['key'] = "type"
-        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"
-        payload['criteria']['conditions']['C2']['conditions']['C1']['function'] = {}
-        payload['criteria']['conditions']['C2']['conditions']['C1']['function']['operator'] = ">="
-        payload['criteria']['conditions']['C2']['conditions']['C1']['function']['value'] = int(projectMinNooEvide)
+        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"  
+        payload['criteria']['conditions']['C2']['conditions']['C1']['operator'] = ">="
+        payload['criteria']['conditions']['C2']['conditions']['C1']['value'] = int(projectMinNooEvide)
         payload['issuer'] ={}
         payload['issuer']['name']=""
         payload['status'] = "active"
@@ -4757,15 +4780,17 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 bodySolutionUpdate = {
                     "creator": projectCreator, "author": matchedShikshalokamLoginId}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
+                # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
                 if solutionDetails[1]:
                     startDateArr = str(solutionDetails[1]).split("-")
                     bodySolutionUpdate = {
-                        "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                        "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                     solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
                 if solutionDetails[2]:
                     endDateArr = str(solutionDetails[2]).split("-")
                     bodySolutionUpdate = {
-                        "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                        "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                     solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
             else:
                 terminatingMessage("Map project to solution api failed.")
@@ -4843,7 +4868,7 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
                     signature1 = gdown.download(file_url, dest_file, quiet=False)
 
                     Authsign2 = dictDetailsEnv['Authorised Signature Image - 2']
-                    logo_split = str(Authsign1).split('/')[5]
+                    logo_split = str(Authsign2).split('/')[5]
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
                     
@@ -4924,7 +4949,7 @@ def downloadlogosign(filePathAddProject,projectName_for_folder_path):
                     
 
                     Authsign2 = dictDetailsEnv['Authorised Signature Image - 2']
-                    logo_split = str(Authsign1).split('/')[5]
+                    logo_split = str(Authsign2).split('/')[5]
                     
 
                     file_url = 'https://drive.google.com/uc?export=download&id=' + logo_split
@@ -5015,12 +5040,12 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
-                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if solutionDetails[2]:
                 endDateArr = str(solutionDetails[2]).split("-")
                 bodySolutionUpdate = {
-                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if isProgramnamePresent:
                 childId = createChild(parentFolder, observationExternalId, accessToken)
@@ -5036,12 +5061,12 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                         startDateArr = str(solutionDetails[1]).split("-")
                         bodySolutionUpdate = {
                             "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
-                                0] + "T00:00:00.000Z"}
+                                0] + " 00:00:00"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     if solutionDetails[2]:
                         endDateArr = str(solutionDetails[2]).split("-")
                         bodySolutionUpdate = {
-                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, childId[1], childId[0],
                                                accessToken)
@@ -5077,15 +5102,17 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
 
             solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
+            # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
-                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if solutionDetails[2]:
                 endDateArr = str(solutionDetails[2]).split("-")
                 bodySolutionUpdate = {
-                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if isProgramnamePresent:
                 childId = createChild(parentFolder, observationExternalId, accessToken)
@@ -5101,12 +5128,12 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                         startDateArr = str(solutionDetails[1]).split("-")
                         bodySolutionUpdate = {
                             "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
-                                0] + "T00:00:00.000Z"}
+                                0] + " 00:00:00"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     if solutionDetails[2]:
                         endDateArr = str(solutionDetails[2]).split("-")
                         bodySolutionUpdate = {
-                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, childId[1], childId[0],
                                                accessToken)
@@ -5263,6 +5290,7 @@ print(sheetNames)
 print(pgmSheets)
 if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
     print("--->Program Template detected.<---")
+    
     for sheetEnv in sheetNames:
         if sheetEnv.strip().lower() == 'program details':
             print("Checking program details sheet...")
