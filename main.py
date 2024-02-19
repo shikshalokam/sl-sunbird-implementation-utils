@@ -271,11 +271,11 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "scope": {
             "entityType": scopeEntityType,
             "entities": entitiesPGMID,
-            "roles": roles
+            "role": roles
         },
         "metaInformation": {
             "state":entitiesPGM.split(","),
-            "roles": mainRole.split(",")
+            "role": mainRole.split(",")
             },
             "requestForPIIConsent":True
             })
@@ -3676,7 +3676,7 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         scopeEntities = entitiesPGMID
                         scopeRoles = solutionDetails[0]
                         surveyScopeBody = {
-                            "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
+                            "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "role": scopeRoles}}
                         solutionUpdate(parentFolder, accessToken, solutionIdSuc, surveyScopeBody)
                         prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, solutionExtIdSuc,
                                                    solutionIdSuc, accessToken)
@@ -4790,7 +4790,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
         writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
         writer.writerows(
             [["solutionExtId", "solutionName", "solutionDescription", "solution_id", "programExternalId", "entityType",
-              "scopeEntityType", "entityNames", "roles", "duplicateTemplateExtId", "duplicateTemplate_id"]])
+              "scopeEntityType", "entityNames", "role", "duplicateTemplateExtId", "duplicateTemplate_id"]])
 
     projectInternalfile = open(projectName_for_folder_path + '/projectUpload/projectInternal.csv', mode='r',encoding='utf-8')
     projectInternalfile = csv.DictReader(projectInternalfile)
@@ -4868,7 +4868,7 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 scopeEntities = entitiesPGMID
                 scopeRoles = solutionDetails[0]
                 bodySolutionUpdate = {
-                    "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
+                    "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "role": scopeRoles}}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
 
                 userDetails = fetchUserDetails(environment, accessToken, projectAuthor)
@@ -5068,11 +5068,11 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
     if not isCourse:
         parentFolder = createFileStruct(MainFilePath, addObservationSolution)
         accessToken = generateAccessToken(parentFolder)
-        print("1 ")
+
         programsFileCheck(programFile, accessToken, parentFolder, MainFilePath)
-        print("2 ")
+
         typeofSolution = validateSheets(addObservationSolution, accessToken, parentFolder)
-        print(typeofSolution)
+
         # sys.exit()
         wbObservation = xlrd.open_workbook(addObservationSolution, on_demand=True)
         wbProgram = xlrd.open_workbook(programFile, on_demand=True)
@@ -5166,7 +5166,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                     scopeEntities = entitiesPGMID
                     scopeRoles = solutionDetails[0]
                     bodySolutionUpdate = {
-                        "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
+                        "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "role": scopeRoles}}
                     solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
 
                     # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
@@ -5237,7 +5237,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                     scopeEntities = entitiesPGMID
                     scopeRoles = solutionDetails[0]
                     bodySolutionUpdate = {
-                        "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
+                        "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "role": scopeRoles}}
                     solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     if solutionDetails[1]:
                         startDateArr = str(solutionDetails[1]).split("-")
@@ -5394,8 +5394,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--programFile', '--programFile', type=valid_file)
 parser.add_argument('--env', '--env')
 argument = parser.parse_args()
-programFile = argument.programFile
-environment = argument.env
+# programFile = argument.programFile
+programFile = "staging_test.xlsx"
+environment = "local"
 millisecond = int(time.time() * 1000)
 
 if envCheck():
