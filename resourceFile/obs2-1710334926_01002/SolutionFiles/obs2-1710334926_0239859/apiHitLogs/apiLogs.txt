@@ -1,0 +1,28 @@
+===============================================================================
+ENVIRONMENT : dev
+===============================================================================
+
+URL : /auth/realms/sunbird/protocol/openid-connect/token
+Body : client_id=lms&client_secret=6905743d-c7e5-410c-a5f8-917607b7babc&grant_type=client_credentials&scope=offline_access
+Status Code : 200
+Acccess Token : eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJwMTRYR1lrdHAxUnNScEZZeXZGTnZuekUxVDBMT3hVSHBoNnhHSzUxdGhvIn0.eyJqdGkiOiI0N2Q4YzE5MC1lYzEwLTRkMGQtOTA2Zi04MDVlNTYxYjNjYzAiLCJleHAiOjE3MTAzNzgxMjYsIm5iZiI6MCwiaWF0IjoxNzEwMzM0OTI2LCJpc3MiOiJodHRwczovL3BvcnRhbC5rYXJtYXlvZ2kubmljLmluL2F1dGgvcmVhbG1zL3N1bmJpcmQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFkbWluLWNsaSIsImFjY291bnQiXSwic3ViIjoiMDM0ZjU5MmUtMTlhNy00M2U5LTlhZTQtODVjMmI1YTc2ODNjIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibG1zIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiYTYyYTA1ZWUtMWZiMC00NGRjLWE0YmYtODQ4NGQ4NGUzNGYwIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsImFkbWluIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbIm1hbmFnZS11c2VycyJdfSwibG1zIjp7InJvbGVzIjpbInVtYV9wcm90ZWN0aW9uIl19LCJhZG1pbi1jbGkiOnsicm9sZXMiOlsiYWRtaW4iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib2ZmbGluZV9hY2Nlc3MiLCJjbGllbnRJZCI6ImxtcyIsImNsaWVudEhvc3QiOiIyNDA1OjIwNDphMDIwOjgwZGQ6ZDllMzpkODNhOjMyNjE6NmQ5ZCIsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1sbXMiLCJjbGllbnRBZGRyZXNzIjoiMjQwNToyMDQ6YTAyMDo4MGRkOmQ5ZTM6ZDgzYTozMjYxOjZkOWQiLCJlbWFpbCI6InNlcnZpY2UtYWNjb3VudC1sbXNAcGxhY2Vob2xkZXIub3JnIn0.VPdZ8m3Giz41Z_UcXufQaJmDsntecXxhB8308Vpujm5IeA9ycTtkR9DvjlwK-vOlc4w1wxwzHHH5n72D86wXQ_flggFBlUeELAORDCiCznIKkGfSjV1a3nR4URPE6h78HUt1ylj5UTRqt1x3smlzAAw7dHdR48fGNHOJvwNp8bJ9aOwd6L10Zj3ocb9wCancjVHEdR0jGp-XKy-5kITyu9tF8wY1vCE2zTP_xkCM5tiFxhmuaSFMfwAnDl_LysNo3jV1jSFhSSw0o_OFqXrj3eb90_xdRx7MRjxFJbg2I8Jx7JcNjJeE4Slfrcy-zDLCB0AVMrCvm2d_mKQO5CPCMg
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Testing Survey for Support (observation)
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[]}}
+
+--->Program fetch API Success
+--->Program Count : 0
+No program found with the name : Testing Survey for Support (observation)
+******************** Preparing for program Upload **********************
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Testing Survey for Support (observation)
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[]}}
+
+--->Program fetch API Success
+--->Program Count : 0
+No program found with the name : Testing Survey for Support (observation)
+******************** Preparing for program Upload **********************

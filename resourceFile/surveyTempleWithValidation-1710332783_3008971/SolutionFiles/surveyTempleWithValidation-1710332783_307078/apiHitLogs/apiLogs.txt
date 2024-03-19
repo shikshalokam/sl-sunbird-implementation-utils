@@ -1,0 +1,83 @@
+===============================================================================
+ENVIRONMENT : dev
+===============================================================================
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form 2
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[]}}
+
+--->Program fetch API Success
+--->Program Count : 0
+No program found with the name : Emerging Technologies Course Feedback Form 2
+******************** Preparing for program Upload **********************
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form 2
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[]}}
+
+--->Program fetch API Success
+--->Program Count : 0
+No program found with the name : Emerging Technologies Course Feedback Form 2
+******************** Preparing for program Upload **********************
+
+++++++++++++ Program Creation ++++++++++++
+Program Creation URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/create
+Body : {"externalId": "Emerging Technologies Course Feedback Form 2\n", "name": "Emerging Technologies Course Feedback Form 2\n", "description": "Program", "resourceType": ["program"], "language": ["English"], "keywords": [], "concepts": [], "createdFor": ["01366837379517644830"], "rootOrganisations": ["01366837379517644830"], "startDate": "2023-07-10 00:00:00", "endDate": "2025-07-13 23:59:59", "imageCompression": {"quality": 10}, "creator": "Guest new name", "owner": "fca2925f-1eee-4654-9177-fece3fd6afc9", "author": "fca2925f-1eee-4654-9177-fece3fd6afc9", "requestForPIIConsent": false}
+Program Creation Status Code : 200
+Program Creation Response : {"message":"Programs created successfully","status":200,"result":{"_id":"65f19b7137669b0007efe6f4"}}
+Program body : {"externalId": "Emerging Technologies Course Feedback Form 2\n", "name": "Emerging Technologies Course Feedback Form 2\n", "description": "Program", "resourceType": ["program"], "language": ["English"], "keywords": [], "concepts": [], "createdFor": ["01366837379517644830"], "rootOrganisations": ["01366837379517644830"], "startDate": "2023-07-10 00:00:00", "endDate": "2025-07-13 23:59:59", "imageCompression": {"quality": 10}, "creator": "Guest new name", "owner": "fca2925f-1eee-4654-9177-fece3fd6afc9", "author": "fca2925f-1eee-4654-9177-fece3fd6afc9", "requestForPIIConsent": false}
+
+++++++++++++ Program Creation ++++++++++++
+Program Creation URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/create
+Body : {"externalId": "Emerging Technologies Course Feedback Form 2\n", "name": "Emerging Technologies Course Feedback Form 2\n", "description": "Program", "resourceType": ["program"], "language": ["English"], "keywords": [], "concepts": [], "createdFor": ["01366837379517644830"], "rootOrganisations": ["01366837379517644830"], "startDate": "2023-07-10 00:00:00", "endDate": "2025-07-13 23:59:59", "imageCompression": {"quality": 10}, "creator": "Guest new name", "owner": "fca2925f-1eee-4654-9177-fece3fd6afc9", "author": "fca2925f-1eee-4654-9177-fece3fd6afc9", "requestForPIIConsent": false}
+Program Creation Status Code : 200
+Program Creation Response : {"message":"Programs created successfully","status":200,"result":{"_id":"65f19b7137669b0007efe6f4"}}
+Program body : {"externalId": "Emerging Technologies Course Feedback Form 2\n", "name": "Emerging Technologies Course Feedback Form 2\n", "description": "Program", "resourceType": ["program"], "language": ["English"], "keywords": [], "concepts": [], "createdFor": ["01366837379517644830"], "rootOrganisations": ["01366837379517644830"], "startDate": "2023-07-10 00:00:00", "endDate": "2025-07-13 23:59:59", "imageCompression": {"quality": 10}, "creator": "Guest new name", "owner": "fca2925f-1eee-4654-9177-fece3fd6afc9", "author": "fca2925f-1eee-4654-9177-fece3fd6afc9", "requestForPIIConsent": false}
+
+********* Create Survey Solution *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/surveys/createSolutionTemplate
+BODY : {'name': 'Emerging Technologies Course Feedback Form 2\n', 'description': 'survey Solution', 'externalId': 'e90f90fc-e134-11ee-8c86-1e9c08f9812c', 'author': 'fca2925f-1eee-4654-9177-fece3fd6afc9', 'startDate': '2023-07-10 00:00:00', 'endDate': '2025-07-13 23:59:59'}
+Status code : 200
+Response : {"message":"Survey solution template created successfully","status":200,"result":{"solutionId":"65f19b72d2bc56000784a58d"}}
+
+********* Search Survey Solution *********
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/solutions/list?type=survey&page=1&limit=10&search=e90f90fc-e134-11ee-8c86-1e9c08f9812c
+Status code : 200
+Response : {"message":"Solutions lists fetched successfully","status":200,"result":{"data":[{"_id":"65f19b72d2bc56000784a58d","name":"Emerging Technologies Course Feedback Form 2\n","externalId":"e90f90fc-e134-11ee-8c86-1e9c08f9812c-SURVEY-TEMPLATE","description":"survey Solution"}],"count":1}}
+
+Solution Update API called.
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/solutions/update/65f19b72d2bc56000784a58d
+Body : {'creator': 'Guest new name'}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+Solution Update API called.
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/solutions/update/65f19b72d2bc56000784a58d
+Body : {'status': 'active', 'isDeleted': False}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+********* Question Upload api *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/questions/bulkCreate
+Path : resourceFile/surveyTempleWithValidation-1710332783_3008971/SolutionFiles/surveyTempleWithValidation-1710332783_307078/questionUpload/uploadSheet.csv
+Status code : 200
+Response : "_SYSTEM_ID","Question External Id","Question Name"
+"65f19b74d2bc56000784a593","SUR_TEST_001_1710332783300","Email"
+"65f19b74d2bc56000784a599","SUR_TEST_002_1710332783300","Name"
+"65f19b74d2bc56000784a59f","SUR_TEST_004_1710332783300","Ministry/Department"
+,"SUR_TEST_004_1710332783300","Designation"
+"65f19b74d2bc56000784a5a5","SUR_TEST_005_1710332783300","Which of the following technology domains are you most interested in learning about? (You may select more than one)"
+"65f19b74d2bc56000784a5ab","SUR_TEST_006_1710332783300","What should be the preferred duration of the online course on a subject?"
+"65f19b74d2bc56000784a5b1","SUR_TEST_007_1710332783300","How imprtant is hands-on or practical training in a course for you?"
+"65f19b74d2bc56000784a5b7","SUR_TEST_008_1710332783300","Which format of learning do you prefer?"
+"65f19b74d2bc56000784a5bd","SUR_TEST_009_1710332783300","What is your main goal for taking these courses?"
+"65f19b74d2bc56000784a5c3","SUR_TEST_010_1710332783300","After taking courses on emerging technologies, I would like to:
+ 
+(Select all that apply) [we shall include improvement in service delivery/ program or scheme delivery]"
+
+********* Creating Child api *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/surveys/importSurveryTemplateToSolution/65f19b72d2bc56000784a58d?appName=manage-learn
+Status code : 200
+Response : {"message":"Survey solution imported successfully","status":200,"result":{"solutionId":"65f19b74d2bc56000784a5e3","solutionExternalId":"e90f90fc-e134-11ee-8c86-1e9c08f9812c-1710332788630","link":"https://portal.karmayogi.nic.in/manage-learn/take-survey/db324387fb8c842a2f761c1d2c44ff3b"}}

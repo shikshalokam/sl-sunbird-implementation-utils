@@ -1,0 +1,34 @@
+===============================================================================
+ENVIRONMENT : dev
+===============================================================================
+
+URL : /auth/realms/sunbird/protocol/openid-connect/token
+Body : client_id=lms&client_secret=6905743d-c7e5-410c-a5f8-917607b7babc&grant_type=client_credentials&scope=offline_access
+Status Code : 200
+Acccess Token : eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJwMTRYR1lrdHAxUnNScEZZeXZGTnZuekUxVDBMT3hVSHBoNnhHSzUxdGhvIn0.eyJqdGkiOiJhOWNlOTgwZS1jMjViLTQ1MTUtYjI3MS04YWNlOGJkNTEyNDYiLCJleHAiOjE3MTA0NjAxOTYsIm5iZiI6MCwiaWF0IjoxNzEwNDE2OTk2LCJpc3MiOiJodHRwczovL3BvcnRhbC5rYXJtYXlvZ2kubmljLmluL2F1dGgvcmVhbG1zL3N1bmJpcmQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFkbWluLWNsaSIsImFjY291bnQiXSwic3ViIjoiMDM0ZjU5MmUtMTlhNy00M2U5LTlhZTQtODVjMmI1YTc2ODNjIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibG1zIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiYzMzMmQ1OWEtMjg4Yi00ZDg3LTk2MzktYTA4NjdjNDQ1MDhjIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsImFkbWluIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbIm1hbmFnZS11c2VycyJdfSwibG1zIjp7InJvbGVzIjpbInVtYV9wcm90ZWN0aW9uIl19LCJhZG1pbi1jbGkiOnsicm9sZXMiOlsiYWRtaW4iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib2ZmbGluZV9hY2Nlc3MiLCJjbGllbnRJZCI6ImxtcyIsImNsaWVudEhvc3QiOiIyNDA5OjQwNjM6NGE5NDphOTIyOjNjNGE6ZDEwMjoxNmM0OmIyMzUiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtbG1zIiwiY2xpZW50QWRkcmVzcyI6IjI0MDk6NDA2Mzo0YTk0OmE5MjI6M2M0YTpkMTAyOjE2YzQ6YjIzNSIsImVtYWlsIjoic2VydmljZS1hY2NvdW50LWxtc0BwbGFjZWhvbGRlci5vcmcifQ.LV56sOoMT3diHHjL3p7q3KNXXYYC6krbHiMhtTVdwZ_UxX3NYtA_QhenxBIBRhhDpHFo51aBWm34NKEZnBD_L2ydZEeGOs8Ju5JBgOFXONyMzgKRRKF5mPncCItQbe9TM1wqGz6okxNMmwhaJ-DKMX3MbpX-q4xHj7RUgdP_meLa_3dxEtQXomViz4zflcTX7RkK3WFlOCr-uA6X7MFrAye3_rdVi8W9Q6L4m_sQdHpulT91vhX39i2Bn67PdPctwh5tJIQjUY2NZlOP42P9QSPp9tY5cJkfzwuSL5V00ThkcGDTcMyeI6YBIhXhsmXchMVumbRrOheqmwx71R5ETA
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form 2
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[{"_id":"65f19b7137669b0007efe6f4","isAPrivateProgram":false,"externalId":"Emerging Technologies Course Feedback Form 2\n","description":"Program"}],"count":1}}
+
+--->Program fetch API Success
+--->Program Count : 1
+programID : 65f19b7137669b0007efe6f4
+programExternalId : Emerging Technologies Course Feedback Form 2
+
+programDescription : Program
+isAPrivateProgram : False
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form 2
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[{"_id":"65f19b7137669b0007efe6f4","isAPrivateProgram":false,"externalId":"Emerging Technologies Course Feedback Form 2\n","description":"Program"}],"count":1}}
+
+--->Program fetch API Success
+--->Program Count : 1
+programID : 65f19b7137669b0007efe6f4
+programExternalId : Emerging Technologies Course Feedback Form 2
+
+programDescription : Program
+isAPrivateProgram : False

@@ -1,0 +1,72 @@
+===============================================================================
+ENVIRONMENT : local
+===============================================================================
+
+URL : /auth/realms/sunbird/protocol/openid-connect/token
+Body : client_id=lms&client_secret=80ea98b5-f8a3-4745-8994-8bf41d75642e&grant_type=client_credentials&scope=offline_access
+Status Code : 200
+Acccess Token : eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJHUnh4OHVyNDNwWEgzX1FNekJXZXJRUFdyWDAyUEprSzlDemwzaGM2MGZBIn0.eyJqdGkiOiI2M2Q2N2RmMS03ZjE0LTQ1NWItOWIwNi0wZWYyMzBmZGQwOTciLCJleHAiOjE3MTI4OTQ0MjMsIm5iZiI6MCwiaWF0IjoxNzEwMzAyNDIzLCJpc3MiOiJodHRwczovL3N0YWdpbmcuc3VuYmlyZGVkLm9yZy9hdXRoL3JlYWxtcy9zdW5iaXJkIiwiYXVkIjpbInJlYWxtLW1hbmFnZW1lbnQiLCJhY2NvdW50Il0sInN1YiI6IjliYjg4NGZjLThhNTYtNDcyNy05NTIyLTI1YTdkNWI4ZWEwNiIsInR5cCI6IkJlYXJlciIsImF6cCI6ImxtcyIsImF1dGhfdGltZSI6MCwic2Vzc2lvbl9zdGF0ZSI6ImFlNTMxZDUwLTlkNzAtNDBlYS04NzM4LTlmNWE5OWEwNzEyOSIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiaHR0cHM6Ly9zdGFnaW5nLnN1bmJpcmRlZC5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiYWRtaW4iLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InJlYWxtLW1hbmFnZW1lbnQiOnsicm9sZXMiOlsibWFuYWdlLXVzZXJzIl19LCJsbXMiOnsicm9sZXMiOlsidW1hX3Byb3RlY3Rpb24iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib2ZmbGluZV9hY2Nlc3MiLCJjbGllbnRJZCI6ImxtcyIsImNsaWVudEhvc3QiOiI0Ny4xNS4xODAuMTgzIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWxtcyIsImNsaWVudEFkZHJlc3MiOiI0Ny4xNS4xODAuMTgzIiwiZW1haWwiOiJzZXJ2aWNlLWFjY291bnQtbG1zQHBsYWNlaG9sZGVyLm9yZyJ9.aSplcm0DNt3x1MH7AnUnPiRyLHfNQyRI0_iko0Y5V3UCyTGM4f1ZqYStCl89k-6amud7SPkipgsmQLwyh--joiJE88W50AzQM0tkurxv9DHyKukHvgKVC_kqgo_-iI8l1wOGv5g4NJahnz0I6YvFbVz4vymIoS8p--247RSnuKWoCsmVaSkqxJbUj5pTAuZvjwFtBMsUgdjoS_TgD3hHZtMasni1xyApdl5I3Kse3l68JC128zHOBhA8HPwWPYoJ9kV6RothSfiOvt4DBF-wFHwSoxUsI3YZJDF3xMczRD6-VfdY9faFtP2jXb1tHnF6PauHelGeGVXAyj7cCvTb9g
+
+Program Search API
+URL : http://localhost:3005/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[{"_id":"65efd0199584e4ef3ca15c10","isAPrivateProgram":false,"externalId":"Emerging Technologies Course Feedback Form\n","description":"Program"}],"count":1}}
+
+--->Program fetch API Success
+--->Program Count : 1
+programID : 65efd0199584e4ef3ca15c10
+programExternalId : Emerging Technologies Course Feedback Form
+
+programDescription : Program
+isAPrivateProgram : False
+
+********* Create Survey Solution *********
+URL : http://localhost:3010/v1/surveys/createSolutionTemplate
+BODY : {'name': 'Emerging Technologies Course Feedback Form\n', 'description': 'survey Solution', 'externalId': '3a47050a-e0ee-11ee-8e78-1e9c08f9812c', 'author': 'fca2925f-1eee-4654-9177-fece3fd6afc9', 'startDate': '2023-07-10 00:00:00', 'endDate': '2025-07-13 23:59:59'}
+Status code : 200
+Response : {"message":"Survey solution template created successfully","status":200,"result":{"solutionId":"65f124dc8faad681fce74e98"}}
+
+********* Search Survey Solution *********
+URL : http://localhost:3005/v1/solutions/list?type=survey&page=1&limit=10&search=3a47050a-e0ee-11ee-8e78-1e9c08f9812c
+Status code : 200
+Response : {"message":"Solutions lists fetched successfully","status":200,"result":{"data":[{"_id":"65f124dc8faad681fce74e98","name":"Emerging Technologies Course Feedback Form\n","externalId":"3a47050a-e0ee-11ee-8e78-1e9c08f9812c-SURVEY-TEMPLATE","description":"survey Solution"}],"count":1}}
+
+Solution Update API called.
+URL : http://localhost:3005/v1/solutions/update/65f124dc8faad681fce74e98
+Body : {'creator': 'Guest new name'}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+Solution Update API called.
+URL : http://localhost:3005/v1/solutions/update/65f124dc8faad681fce74e98
+Body : {'status': 'active', 'isDeleted': False}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+********* Question Upload api *********
+URL : http://localhost:3010/v1/questions/bulkCreate
+Path : resourceFile/sur-1710302422_607611/SolutionFiles/sur-1710302422_620385/questionUpload/uploadSheet.csv
+Status code : 200
+Response : "_SYSTEM_ID","Question External Id","Question Name"
+"65f124ec8faad681fce74e9e","SUR_TEST_001_1710302422607","Email"
+"65f124ee8faad681fce74ea4","SUR_TEST_002_1710302422607","Name"
+"65f124ef8faad681fce74eaa","SUR_TEST_004_1710302422607","Ministry/Department"
+,"SUR_TEST_004_1710302422607","Designation"
+"65f124f08faad681fce74eb0","SUR_TEST_005_1710302422607","Which of the following technology domains are you most interested in learning about? (You may select more than one)"
+"65f124f18faad681fce74eb6","SUR_TEST_006_1710302422607","What should be the preferred duration of the online course on a subject?"
+"65f124f28faad681fce74ebc","SUR_TEST_007_1710302422607","How imprtant is hands-on or practical training in a course for you?"
+"65f124f38faad681fce74ec2","SUR_TEST_008_1710302422607","Which format of learning do you prefer?"
+"65f124f48faad681fce74ec8","SUR_TEST_009_1710302422607","What is your main goal for taking these courses?"
+"65f124f58faad681fce74ece","SUR_TEST_010_1710302422607","After taking courses on emerging technologies, I would like to:
+ 
+(Select all that apply) [we shall include improvement in service delivery/ program or scheme delivery]"
+
+********* Creating Child api *********
+URL : http://localhost:3010/v1/surveys/importSurveryTemplateToSolution/65f124dc8faad681fce74e98?appName=manage-learn
+Status code : 200
+Response : {"message":"Survey solution imported successfully","status":200,"result":{"solutionId":"65f124f98faad681fce74eee","solutionExternalId":"3a47050a-e0ee-11ee-8e78-1e9c08f9812c-1710302457235","link":"https://apps.shikshalokam.org/manage-learn/take-survey/1bc62fe00bcd72c657c5c3875fb5e0b3"}}
+
+********* Program mapping api *********
+URL : http://localhost:3010/v1/surveys/mapSurverySolutionToProgram/65f124f98faad681fce74eee?programId=Emerging Technologies Course Feedback Form
+Status code : 200
+Response : {"message":"No program found.","status":200}

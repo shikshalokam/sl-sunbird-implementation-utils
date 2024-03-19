@@ -1,0 +1,23 @@
+===============================================================================
+ENVIRONMENT : dev
+===============================================================================
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Testing Survey for Support (observation)
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[]}}
+
+--->Program fetch API Success
+--->Program Count : 0
+No program found with the name : Testing Survey for Support (observation)
+******************** Preparing for program Upload **********************
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Testing Survey for Support (observation)
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[]}}
+
+--->Program fetch API Success
+--->Program Count : 0
+No program found with the name : Testing Survey for Support (observation)
+******************** Preparing for program Upload **********************

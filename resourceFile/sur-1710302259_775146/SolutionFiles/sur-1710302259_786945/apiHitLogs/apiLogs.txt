@@ -1,0 +1,44 @@
+===============================================================================
+ENVIRONMENT : local
+===============================================================================
+
+URL : /auth/realms/sunbird/protocol/openid-connect/token
+Body : client_id=lms&client_secret=80ea98b5-f8a3-4745-8994-8bf41d75642e&grant_type=client_credentials&scope=offline_access
+Status Code : 200
+Acccess Token : eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJHUnh4OHVyNDNwWEgzX1FNekJXZXJRUFdyWDAyUEprSzlDemwzaGM2MGZBIn0.eyJqdGkiOiJhZDdkYTI0NS02ZDFlLTRhZmItYjg4Yi1hOGFlZmJkYjVjOTUiLCJleHAiOjE3MTI4OTQyNjAsIm5iZiI6MCwiaWF0IjoxNzEwMzAyMjYwLCJpc3MiOiJodHRwczovL3N0YWdpbmcuc3VuYmlyZGVkLm9yZy9hdXRoL3JlYWxtcy9zdW5iaXJkIiwiYXVkIjpbInJlYWxtLW1hbmFnZW1lbnQiLCJhY2NvdW50Il0sInN1YiI6IjliYjg4NGZjLThhNTYtNDcyNy05NTIyLTI1YTdkNWI4ZWEwNiIsInR5cCI6IkJlYXJlciIsImF6cCI6ImxtcyIsImF1dGhfdGltZSI6MCwic2Vzc2lvbl9zdGF0ZSI6IjI4OGJjMzQ0LTBlMjgtNDQxOS04OGNiLWM0MDQxNTkyN2Y1NCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiaHR0cHM6Ly9zdGFnaW5nLnN1bmJpcmRlZC5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiYWRtaW4iLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7InJlYWxtLW1hbmFnZW1lbnQiOnsicm9sZXMiOlsibWFuYWdlLXVzZXJzIl19LCJsbXMiOnsicm9sZXMiOlsidW1hX3Byb3RlY3Rpb24iXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib2ZmbGluZV9hY2Nlc3MiLCJjbGllbnRJZCI6ImxtcyIsImNsaWVudEhvc3QiOiI0Ny4xNS4xODAuMTgzIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWxtcyIsImNsaWVudEFkZHJlc3MiOiI0Ny4xNS4xODAuMTgzIiwiZW1haWwiOiJzZXJ2aWNlLWFjY291bnQtbG1zQHBsYWNlaG9sZGVyLm9yZyJ9.NFC19CkOl7ledXD9huSp2tES0Ng9NbH3V5jxgHfui63XwwBnqdW0Ye2pur5dhBB5q3Aji4H6lySrICdLJ9vMTjZqT8uN0fccy9d-450tuzwBXPaGYBOzlMPWbldWxLKHFezPJ32esNtj0nj0day3QhdKDbnyYBpIRs3HSDenZyCGaiI3bA_LxsBDqsz_WkbPceZKmHd4FOEs4aVRYO7lUqVcZStIe8LBkFwWOTqwjP_ptHpUeGWzurqZExhwC6614pM3xXzHIpQdITnPO0vOuqpUwf-SgNUOimi_1hlsGB8Z7ZomGNKqlkXS9GdceO0--lPOJta2KHG-AAP-l0g6kg
+
+Program Search API
+URL : http://localhost:3005/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[{"_id":"65efd0199584e4ef3ca15c10","isAPrivateProgram":false,"externalId":"Emerging Technologies Course Feedback Form\n","description":"Program"}],"count":1}}
+
+--->Program fetch API Success
+--->Program Count : 1
+programID : 65efd0199584e4ef3ca15c10
+programExternalId : Emerging Technologies Course Feedback Form
+
+programDescription : Program
+isAPrivateProgram : False
+
+********* Create Survey Solution *********
+URL : http://localhost:3010/v1/surveys/createSolutionTemplate
+BODY : {'name': 'Emerging Technologies Course Feedback Form\n', 'description': 'survey Solution', 'externalId': 'd7fe08ee-e0ed-11ee-85c4-1e9c08f9812c', 'author': 'fca2925f-1eee-4654-9177-fece3fd6afc9', 'startDate': '2023-07-10 00:00:00', 'endDate': '2025-07-13 23:59:59'}
+Status code : 200
+Response : {"message":"Survey solution template created successfully","status":200,"result":{"solutionId":"65f12438dce15b803811bd45"}}
+
+********* Search Survey Solution *********
+URL : http://localhost:3005/v1/solutions/list?type=survey&page=1&limit=10&search=d7fe08ee-e0ed-11ee-85c4-1e9c08f9812c
+Status code : 200
+Response : {"message":"Solutions lists fetched successfully","status":200,"result":{"data":[{"_id":"65f12438dce15b803811bd45","name":"Emerging Technologies Course Feedback Form\n","externalId":"d7fe08ee-e0ed-11ee-85c4-1e9c08f9812c-SURVEY-TEMPLATE","description":"survey Solution"}],"count":1}}
+
+Solution Update API called.
+URL : http://localhost:3005/v1/solutions/update/65f12438dce15b803811bd45
+Body : {'creator': 'Guest new name'}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+Solution Update API called.
+URL : http://localhost:3005/v1/solutions/update/65f12438dce15b803811bd45
+Body : {'status': 'active', 'isDeleted': False}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200

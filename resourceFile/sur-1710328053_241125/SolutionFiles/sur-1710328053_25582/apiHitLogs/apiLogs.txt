@@ -1,0 +1,67 @@
+===============================================================================
+ENVIRONMENT : dev
+===============================================================================
+
+Program Search API
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form
+Status Code : 200
+Response : {"message":"Program lists fetched successfully","status":200,"result":{"data":[{"_id":"65eb048137669b0007efe59c","isAPrivateProgram":false,"externalId":"Emerging Technologies Course Feedback Form\n","description":"Program"}],"count":1}}
+
+--->Program fetch API Success
+--->Program Count : 1
+programID : 65eb048137669b0007efe59c
+programExternalId : Emerging Technologies Course Feedback Form
+
+programDescription : Program
+isAPrivateProgram : False
+
+********* Create Survey Solution *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/surveys/createSolutionTemplate
+BODY : {'name': 'Emerging Technologies Course Feedback Form\n', 'description': 'survey Solution', 'externalId': 'e7f5e938-e129-11ee-8c82-1e9c08f9812c', 'author': 'fca2925f-1eee-4654-9177-fece3fd6afc9', 'startDate': '2023-07-10 00:00:00', 'endDate': '2025-07-13 23:59:59'}
+Status code : 200
+Response : {"message":"Survey solution template created successfully","status":200,"result":{"solutionId":"65f188fed2bc56000784a28c"}}
+
+********* Search Survey Solution *********
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/solutions/list?type=survey&page=1&limit=10&search=e7f5e938-e129-11ee-8c82-1e9c08f9812c
+Status code : 200
+Response : {"message":"Solutions lists fetched successfully","status":200,"result":{"data":[{"_id":"65f188fed2bc56000784a28c","name":"Emerging Technologies Course Feedback Form\n","externalId":"e7f5e938-e129-11ee-8c82-1e9c08f9812c-SURVEY-TEMPLATE","description":"survey Solution"}],"count":1}}
+
+Solution Update API called.
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/solutions/update/65f188fed2bc56000784a28c
+Body : {'creator': 'Guest new name'}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+Solution Update API called.
+URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/solutions/update/65f188fed2bc56000784a28c
+Body : {'status': 'active', 'isDeleted': False}
+Response : {"message":"Solution updated successfully","status":200}
+Status Code : 200
+
+********* Question Upload api *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/questions/bulkCreate
+Path : resourceFile/sur-1710328053_241125/SolutionFiles/sur-1710328053_25582/questionUpload/uploadSheet.csv
+Status code : 200
+Response : "_SYSTEM_ID","Question External Id","Question Name"
+"65f18903d2bc56000784a292","SUR_TEST_001_1710328053240","Email"
+"65f18903d2bc56000784a298","SUR_TEST_002_1710328053240","Name"
+"65f18903d2bc56000784a29e","SUR_TEST_004_1710328053240","Ministry/Department"
+,"SUR_TEST_004_1710328053240","Designation"
+"65f18903d2bc56000784a2a4","SUR_TEST_005_1710328053240","Which of the following technology domains are you most interested in learning about? (You may select more than one)"
+"65f18903d2bc56000784a2aa","SUR_TEST_006_1710328053240","What should be the preferred duration of the online course on a subject?"
+"65f18903d2bc56000784a2b0","SUR_TEST_007_1710328053240","How imprtant is hands-on or practical training in a course for you?"
+"65f18903d2bc56000784a2b6","SUR_TEST_008_1710328053240","Which format of learning do you prefer?"
+"65f18903d2bc56000784a2bc","SUR_TEST_009_1710328053240","What is your main goal for taking these courses?"
+"65f18903d2bc56000784a2c2","SUR_TEST_010_1710328053240","After taking courses on emerging technologies, I would like to:
+ 
+(Select all that apply) [we shall include improvement in service delivery/ program or scheme delivery]"
+
+********* Creating Child api *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/surveys/importSurveryTemplateToSolution/65f188fed2bc56000784a28c?appName=manage-learn
+Status code : 200
+Response : {"message":"Survey solution imported successfully","status":200,"result":{"solutionId":"65f18906d2bc56000784a2e2","solutionExternalId":"e7f5e938-e129-11ee-8c82-1e9c08f9812c-1710328070764","link":"https://portal.karmayogi.nic.in/manage-learn/take-survey/12ff7276c8402ea355d3987b0b5032a1"}}
+
+********* Program mapping api *********
+URL : https://portal.karmayogi.nic.in/api/private/mlsurvey/api/v1/surveys/mapSurverySolutionToProgram/65f18906d2bc56000784a2e2?programId=Emerging Technologies Course Feedback Form
+Status code : 200
+Response : {"message":"No program found.","status":200}
