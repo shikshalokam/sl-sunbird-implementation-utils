@@ -1,7 +1,0 @@
-===============================================================================
-ENVIRONMENT : dev
-===============================================================================
-
-URL : /auth/realms/sunbird/protocol/openid-connect/token
-Body : client_id=lms&client_secret=80ea98b5-f8a3-4745-8994-8bf41d75642e&grant_type=client_credentials&scope=offline_access
-Status Code : 400

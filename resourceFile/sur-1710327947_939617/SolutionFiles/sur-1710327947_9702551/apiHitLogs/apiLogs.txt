@@ -1,8 +1,0 @@
-===============================================================================
-ENVIRONMENT : dev
-===============================================================================
-
-Program Search API
-URL : https://portal.karmayogi.nic.in/api/private/mlcore/api/v1/programs/list?page=1&limit=1000&search=Emerging Technologies Course Feedback Form
-Status Code : 401
-Response : {"status":"ERR_TOKEN_FIELD_MISSING","message":"Required field token is missing","currentDate":"2024-03-08T05:22:43.850Z"}
