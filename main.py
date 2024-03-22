@@ -3736,6 +3736,8 @@ def checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessT
 
 def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path, accessToken):
     millisecond = int(time.time() * 1000)
+    PreviousTaskname = None
+    PreviousTaskid = None
     projectFilePath = projectName_for_folder_path + '/projectUpload/'
     taskFilePath = projectName_for_folder_path + '/taskUpload/'
     file_exists = os.path.isfile(projectName_for_folder_path + '/projectUpload/projectUpload.csv')
@@ -3924,12 +3926,20 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                    task_lr_value_count += 1
            task_values.append(taskminNoOfSubmissionsRequired)
            task_values.append(sequenceNumber)
-
-           with open(taskFilePath + 'taskUpload.csv','a',encoding='utf-8') as file:
-               writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
-               writer.writerows([task_values])
+           
+           # To check weather the previous-task and the curent-task Taskname & Taskid is same 
+           if str(taskName) == str(PreviousTaskname) and str(taskId) == str(PreviousTaskid):
+                print("true")
+           else:
+               print("false")
+               with open(taskFilePath + 'taskUpload.csv','a',encoding='utf-8') as file:
+                writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
+                writer.writerows([task_values])
            subtaskname2 = str(dictTasksDetails["Subtask"]).encode('utf-8').decode('utf-8').strip()
+           PreviousTaskname = taskName
+           PreviousTaskid = taskId
 
+    c = 0
     for row_index_env in range(2, tasksDetailsSheet.nrows):
         dictTasksDetails = {keysTasks[col_index_env]: tasksDetailsSheet.cell(row_index_env, col_index_env).value
                             for col_index_env in range(tasksDetailsSheet.ncols)}
@@ -3938,8 +3948,8 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                 taskHasAParentTask = "YES"
                 taskparentTaskOperator = "EQUALS"
                 taskparentTaskValue = "started"
-                # c = c + 1
-                # cn = "Task"+str(c)
+                c = c + 1
+                cn = "Task"+str(c)
                 parentTaskIdofsubtask = str(dictTasksDetails["TaskId"]).strip() + "-" + str(millisecond)
                 taskminNoOfSubmissionsRequired = str(dictTasksDetails["Number of submissions for observation"]).strip()
                 sequenceNumber = sequenceNumber + 1
@@ -3956,8 +3966,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                     projecttaskType = "simple"
 
 
-            subtaskId = str(dictTasksDetails["TaskId"]).encode('utf-8').decode('utf-8').strip() + "-" + str(millisecond) + "-subtask-" + str(
-                tasksDetailsSheet.nrows)
+            subtaskId = str(dictTasksDetails["TaskId"]).encode('utf-8').decode('utf-8').strip() + "-" + str(millisecond) + cn
 
             subtaskName1 = str(dictTasksDetails["Subtask"]).strip()
             if str(dictTasksDetails["Mandatory task(Yes or No)"]).strip().strip().lower() == "no":
@@ -4011,8 +4020,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                 else:
                     projecttaskType = "simple"
 
-            subtaskId = str(dictTasksDetails["TaskId"]).encode('utf-8').decode('utf-8').strip() + "-" + str(millisecond) + "-subtask-" + str(
-                tasksDetailsSheet.nrows)
+            subtaskId = str(dictTasksDetails["TaskId"]).encode('utf-8').decode('utf-8').strip() + "-" + str(millisecond) + cn
 
             subtaskName1 = str(dictTasksDetails["Subtask"]).encode('utf-8').decode('utf-8').strip()
             subtaskvalues = [subtaskName1, subtaskId,proejcttaskDescription,projecttaskType,taskHasAParentTask,taskparentTaskOperator,taskparentTaskValue,
