@@ -2952,7 +2952,12 @@ def uploadSuccessSheetToBucket(solutionId,successSheetName,accessToken):
         response = requests.put(url=fileUploadUrl, headers=headers, files=files)
         if response.status_code == 200:
             print("File Uploaded successfully")
-            getProgramDetailsMetaAndUpdate(programupdateData,accessToken)
+            solutionFileData = programupdateData[solutionId]
+            programUpdateDetails = {
+                "solutionId" : solutionId,
+                **solutionFileData
+            }
+            getProgramDetailsMetaAndUpdate(programUpdateDetails,accessToken)
 
        
 def getProgramDetailsMetaAndUpdate(programMetaInfo,accessToken) :
