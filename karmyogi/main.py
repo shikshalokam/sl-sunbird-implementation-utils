@@ -2949,7 +2949,7 @@ def uploadSuccessSheetToBucket(solutionId,successSheetName,accessToken):
             'file': open(successSheetName, 'rb')
         }
 
-        response = requests.put(url=fileUploadUrl, headers=headers, files=files)
+        response = requests.post(url=fileUploadUrl, headers=headers, files=files)
         if response.status_code == 200:
             print("File Uploaded successfully")
             solutionFileData = programupdateData[solutionId]
