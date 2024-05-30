@@ -710,9 +710,8 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
     headersProgramSearch = {'Authorization': config.get(environment, 'Authorization'),
                             'Content-Type': 'application/json', 'X-authenticated-user-token': accessTokenUser,
                             'internal-access-token': config.get(environment, 'internal-access-token')}
-    responseProgramSearch = requests.post(url=programUrl, headers=headersProgramSearch)
+    responseProgramSearch = requests.get(url=programUrl, headers=headersProgramSearch)
     messageArr = []
-
     messageArr.append("Program Search API")
     messageArr.append("URL : " + programUrl)
     messageArr.append("Status Code : " + str(responseProgramSearch.status_code))
@@ -1556,8 +1555,6 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                 detailsColCheck = wbObservation1.sheet_by_name(sheetColCheck)
                 keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                      range(detailsColCheck.ncols)]
-                print(keysColCheckDetai)
-                print(taskUploadCols)
                 if len(keysColCheckDetai) != len(taskUploadCols) or set(keysColCheckDetai) == set(taskUploadCols):
                     terminatingMessage('Columns is missing in details sheet')
                 detailsEnvSheet = wbObservation1.sheet_by_name(sheetColCheck)
@@ -4080,7 +4077,6 @@ def projectUpload(projectFile, projectName_for_folder_path, accessToken):
     messageArr = ["program mapping is success.","File path : " + projectName_for_folder_path + '/projectUpload/projectUpload.csv']
     messageArr.append("Upload status code : " + str(responseProjectUploadApi.status_code))
     createAPILog(projectName_for_folder_path, messageArr)
-
     if responseProjectUploadApi.status_code == 200:
         print('ProjectUploadApi Success')
         with open(projectName_for_folder_path + '/projectUpload/projectInternal.csv','w+',encoding='utf-8') as projectRes:
@@ -4754,7 +4750,6 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
         
         responseCreateSolutionApi = requests.post(url=urlCreateProjectSolutionApi,headers=headerCreateSolutionApi, data=json.dumps(sol_payload))
         print(sol_payload)
-
         messageArr = ["Project Solution Created.","URL : " + str(urlCreateProjectSolutionApi),"Status Code : " + str(responseCreateSolutionApi.status_code),"Response : " + str(responseCreateSolutionApi.text)]
         if responseCreateSolutionApi.status_code == 200:
             responseCreateSolutionApi = responseCreateSolutionApi.json()
@@ -4764,7 +4759,8 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
             print("ProjectSolutionCreationApi Success")
             duplicateTemplateExtId = projectExternalId + '_IMPORTED'
             queryparamsMapProjectSolutionApi = projectExternalId + '?solutionId='
-            urlMapProjectSolutionApi = config.get(environment, 'host1') + config.get(environment, 'mapSolutionToProject') + queryparamsMapProjectSolutionApi
+            print(queryparamsMapProjectSolutionApi)
+            urlMapProjectSolutionApi = config.get(environment, 'host1') + config.get(environment, 'mapSolutionToProject')+queryparamsMapProjectSolutionApi
             print(urlMapProjectSolutionApi)
             headerMapSolutionProject = {
                 'Content-Type': config.get(environment, 'Content-Type'),
@@ -4772,18 +4768,19 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 'X-authenticated-user-token': accessToken,
                 'X-Channel-id': config.get(environment, 'X-Channel-id')
             }
-            # payloadMapSolutionProject = {
-            #     "externalId": duplicateTemplateExtId,
-            #     "rating": 5
-            # }
+            payloadMapSolutionProject = {
+                "externalId": duplicateTemplateExtId,
+                "rating": 5
+            }
 
             responseMapProjectSolutionApi = requests.post(
                 url=urlMapProjectSolutionApi ,
-                headers=headerMapSolutionProject)
+                headers=headerMapSolutionProject,data=json.dumps(payloadMapSolutionProject))
             messageArr = ["Successfully mapped the project to Solution",
                           "URL : " + str(urlMapProjectSolutionApi + queryparamsMapProjectSolutionApi),
                           "Status Code : " + str(responseMapProjectSolutionApi.status_code),
                           "Response : " + str(responseMapProjectSolutionApi.text)]
+            print(responseMapProjectSolutionApi.text)
             if responseMapProjectSolutionApi.status_code == 200:
                 responseMapProjectSolutionApi = responseMapProjectSolutionApi.json()
                 duplicateTemplateId = responseMapProjectSolutionApi['result']['_id']
