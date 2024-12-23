@@ -258,6 +258,8 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "concepts": [],
         "createdFor": orgIds,
         "rootOrganisations": orgIds,
+        "startDate": startDateOfProgram,
+        "endDate": endDateOfProgram,
         "imageCompression": {
             "quality": 10
         },
@@ -266,10 +268,15 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "author": creatorKeyCloakId,
         "scope": {
             "entityType": scopeEntityType,
-            "entities": entities,
+            "entities": entitiesPGMID,
             "roles": roles
-        }})
-
+        },
+        "metaInformation": {
+            "state":entitiesPGM.split(","),
+            "roles": mainRole.split(",")
+            },
+            "requestForPIIConsent":True
+            })
     messageArr.append("Body : " + str(payload))
     headers = {'X-authenticated-user-token': accessToken,
                'internal-access-token': config.get(environment, 'internal-access-token'),
@@ -468,17 +475,37 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global entitiesPGM
                     entitiesPGM = dictDetailsEnv['Targeted state at program level'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Targeted state at program level'] else terminatingMessage("\"Targeted state at program level\" must not be Empty in \"Program details\" sheet")
                     districtentitiesPGM = dictDetailsEnv['Targeted district at program level'].encode('utf-8').decode('utf-8')
+                    blockentitiesPGM = dictDetailsEnv['Targeted block at program level'].encode('utf-8').decode('utf-8')
+                    clusterentitiesPGM = dictDetailsEnv['Targeted cluster at program level'].encode('utf-8').decode('utf-8')
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
+                    # taking the start date of program from program template and converting YYYY-MM-DD 00:00:00 format
+                    
+                    startDateArr = str(startDateOfProgram).split("-")
+                    startDateOfProgram = startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"
+
+                    # taking the end date of program from program template and converting YYYY-MM-DD 00:00:00 format
+
+                    endDateArr = str(endDateOfProgram).split("-")
+                    endDateOfProgram = endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"
 
                     global scopeEntityType
                     scopeEntityType = "state"
 
 
-                    if districtentitiesPGM:
+                    if clusterentitiesPGM:
+                        entitiesPGM = clusterentitiesPGM
+                        EntityType = "cluster"
+
+                    elif blockentitiesPGM:
+                        entitiesPGM = blockentitiesPGM
+                        EntityType = "block"
+
+                    elif districtentitiesPGM:
                         entitiesPGM = districtentitiesPGM
                         EntityType = "district"
+
                     else:
                         entitiesPGM = entitiesPGM
                         EntityType = "state"
@@ -502,13 +529,25 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         keywordsPGM = dictDetailsEnv['Keywords'].encode('utf-8').decode('utf-8')
                         entitiesPGM = dictDetailsEnv['Targeted state at program level'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Targeted state at program level'] else terminatingMessage("\"Targeted state at program level\" must not be Empty in \"Program details\" sheet")
                         districtentitiesPGM = dictDetailsEnv['Targeted district at program level'].encode('utf-8').decode('utf-8')
+                        blockentitiesPGM = dictDetailsEnv['Targeted block at program level'].encode('utf-8').decode('utf-8')
+                        clusterentitiesPGM = dictDetailsEnv['Targeted cluster at program level'].encode('utf-8').decode('utf-8')
                         # selecting entity type based on the users input 
-                        if districtentitiesPGM:
+                        if clusterentitiesPGM:
+                            entitiesPGM = clusterentitiesPGM
+                            EntityType = "cluster"
+
+                        elif blockentitiesPGM:
+                            entitiesPGM = blockentitiesPGM
+                            EntityType = "block"
+
+                        elif districtentitiesPGM:
                             entitiesPGM = districtentitiesPGM
                             EntityType = "district"
+
                         else:
                             entitiesPGM = entitiesPGM
                             EntityType = "state"
+
 
                         scopeEntityType = EntityType
 
@@ -574,12 +613,12 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         coursemapping = courseMapToProgram(accessToken, resourceLinkOrExtPGM, parentFolder)
                         if startDateOfResource:
                             startDateArr = str(startDateOfResource).split("-")
-                            bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                            bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                             solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
                         if endDateOfResource:
                             endDateArr = str(endDateOfResource).split("-")
                             bodySolutionUpdate = {
-                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                             solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
                         
 
@@ -1537,7 +1576,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                       col_index_env in range(detailsEnvSheet.ncols)}
                     projectTaskMandatory = dictDetailsEnv['Mandatory task(Yes or No)'] if dictDetailsEnv[
                         'Mandatory task(Yes or No)'] else terminatingMessage(
-                        "\"Mandatory task(Yes or No)\" must not be Empty in \"Tasks Upload\" sheet")
+                        "\"Mandatory task(Yes or No)\" must not be Empty in \"Tasks Upload\" sheet1")
+                    print(projectTaskMandatory,"projectTaskMandatory")
                     
 
             if sheetColCheck.strip().lower() == 'Certificate details'.lower():
@@ -3259,7 +3299,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                         startDateArr = None
                         startDateArr = (dictDetailsEnv["survey_start_date"]).split("-")
                         surveySolutionCreationReqBody["startDate"] = startDateArr[2] + "-" + startDateArr[1] + "-" + \
-                                                                     startDateArr[0] + "T00:00:00.000Z"
+                                                                     startDateArr[0] + " 00:00:00"
                     elif type(dictDetailsEnv["survey_start_date"]) == float:
                         surveySolutionCreationReqBody["startDate"] = (
                             xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_start_date"],
@@ -3926,7 +3966,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                    task_lr_value_count += 1
            task_values.append(taskminNoOfSubmissionsRequired)
            task_values.append(sequenceNumber)
-           
+
            # To check weather the previous-task and the curent-task Taskname & Taskid is same 
            if str(taskName) == str(PreviousTaskname) and str(taskId) == str(PreviousTaskid):
                 print("true")
@@ -4339,7 +4379,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         payload['criteria']['conditions']['C2']['conditions']['C1']['function'] = "count"
         payload['criteria']['conditions']['C2']['conditions']['C1']['filter'] = {}
         payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['key'] = "type"
-        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"  
         payload['criteria']['conditions']['C2']['conditions']['C1']['operator'] = ">="
         payload['criteria']['conditions']['C2']['conditions']['C1']['value'] = int(projectMinNooEvide)
         payload['issuer'] ={}
@@ -4772,15 +4812,17 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 bodySolutionUpdate = {
                     "creator": projectCreator, "author": matchedShikshalokamLoginId}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
+                # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
                 if solutionDetails[1]:
                     startDateArr = str(solutionDetails[1]).split("-")
                     bodySolutionUpdate = {
-                        "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                        "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                     solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
                 if solutionDetails[2]:
                     endDateArr = str(solutionDetails[2]).split("-")
                     bodySolutionUpdate = {
-                        "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                        "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                     solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
             else:
                 terminatingMessage("Map project to solution api failed.")
@@ -5030,12 +5072,12 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
-                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if solutionDetails[2]:
                 endDateArr = str(solutionDetails[2]).split("-")
                 bodySolutionUpdate = {
-                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if isProgramnamePresent:
                 childId = createChild(parentFolder, observationExternalId, accessToken)
@@ -5051,12 +5093,12 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                         startDateArr = str(solutionDetails[1]).split("-")
                         bodySolutionUpdate = {
                             "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
-                                0] + "T00:00:00.000Z"}
+                                0] + " 00:00:00"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     if solutionDetails[2]:
                         endDateArr = str(solutionDetails[2]).split("-")
                         bodySolutionUpdate = {
-                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, childId[1], childId[0],
                                                accessToken)
@@ -5092,15 +5134,17 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
 
             solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
+            # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
             if solutionDetails[1]:
                 startDateArr = str(solutionDetails[1]).split("-")
                 bodySolutionUpdate = {
-                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if solutionDetails[2]:
                 endDateArr = str(solutionDetails[2]).split("-")
                 bodySolutionUpdate = {
-                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                 solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if isProgramnamePresent:
                 childId = createChild(parentFolder, observationExternalId, accessToken)
@@ -5116,12 +5160,12 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                         startDateArr = str(solutionDetails[1]).split("-")
                         bodySolutionUpdate = {
                             "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
-                                0] + "T00:00:00.000Z"}
+                                0] + " 00:00:00"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     if solutionDetails[2]:
                         endDateArr = str(solutionDetails[2]).split("-")
                         bodySolutionUpdate = {
-                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
                     prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, childId[1], childId[0],
                                                accessToken)
@@ -5278,6 +5322,7 @@ print(sheetNames)
 print(pgmSheets)
 if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
     print("--->Program Template detected.<---")
+    
     for sheetEnv in sheetNames:
         if sheetEnv.strip().lower() == 'program details':
             print("Checking program details sheet...")
