@@ -2,7 +2,7 @@
 
 Python script to upload a program and add multiple resources like Projects , Surveys , Observations (with and without rubrics) to it.
 ### Resource templates
-- [Programs](https://docs.google.com/spreadsheets/d/1Q4z1d1aUHY5VVrco2TvHPuWEq7314glUjFxB-jYjfiY/edit?usp=share_link)
+- [Programs](https://docs.google.com/spreadsheets/d/1D9jKEVmpY3EBT1O9hrv_FkWmtjkFFEPiJjuYRBl8rFQ/edit?gid=491109898#gid=491109898)
 - [Projects](https://docs.google.com/spreadsheets/d/1YnWTcHrmvDYVedGktKr2V25G7qBNUmYjwk1huHwGwNc/edit?usp=share_link)
 - [Surveys](https://docs.google.com/spreadsheets/d/1iA0lm_jq0IAgrvZRed8Vdj3uVdtvKAqni-SshiPbCo4/edit?usp=share_link)
 - [Observation with out rubrics](https://docs.google.com/spreadsheets/d/1uErekrCkuOXMdIvXsCSOr7YiBk4HcS4iJrh0tdALlsw/edit?usp=share_link)
