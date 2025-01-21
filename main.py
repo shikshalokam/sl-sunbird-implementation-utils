@@ -339,7 +339,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
             extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
 
-            programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
+            programdesigner = dictDetailsEnv['Username/user id/email id/phone no. of the Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Username/user id/email id/phone no. of the Program Designer\" must not be Empty in \"Program details\" sheet")
             userDetails = fetchUserDetails(environment, accessToken, programdesigner)
             
             creatorKeyCloakId = userDetails[0]
@@ -369,13 +369,13 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                                   col_index_env in range(detailsEnvSheet.ncols)}
 
                 if str(dictDetailsEnv['Is a SSO user?']).strip() == "YES":
-                    programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'] if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
+                    programmanagername2 = dictDetailsEnv['user id ( profile ID)'] if dictDetailsEnv['user id ( profile ID)'] else terminatingMessage("\"user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
                 else:
                     try :
-                        programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Login ID on DIKSHA'] else terminatingMessage("\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
+                        programmanagername2 = dictDetailsEnv['Username/user id/email id/phone no. of the Program Manager'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Username/user id/email id/phone no. of the Program Manager'] else terminatingMessage("\"Username/user id/email id/phone no. of the Program Manager\" must not be Empty in \"Program details\" sheet")
                         userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
                     except :
-                        programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
+                        programmanagername2 = dictDetailsEnv['user id ( profile ID)'].encode('utf-8').decode('utf-8') if dictDetailsEnv['user id ( profile ID)'] else terminatingMessage("\"user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
                         userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
 
                 userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
@@ -557,7 +557,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         
                         if "teacher" in mainRole.strip().lower():
                             rolesPGM = str(rolesPGM).strip() + ",TEACHER"
-                        userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
+                        userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Username/user id/email id/phone no. of the Program Designer'])
                         OrgName=userDetails[4]
                         orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
                         creatorKeyCloakId = userDetails[0]
@@ -1122,7 +1122,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
             else:
                 if sheetEnv.strip().lower() == 'details':
                     print("--->Checking details sheet...")
-                    detailsCols = ["observation_solution_name", "observation_solution_description", "Diksha_loginId","Name_of_the_creator", "language", "allow_multiple_submissions", "keywords","scoring_system", "entity_type"]
+                    detailsCols = ["observation_solution_name", "observation_solution_description", "Username/user id/email id/phone no. of the Content creator","Name_of_the_creator", "language", "allow_multiple_submissions", "keywords","scoring_system", "entity_type"]
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
                     keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
                                range(detailsEnvSheet.ncols)]
@@ -1132,7 +1132,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             col_index_env in range(detailsEnvSheet.ncols)}
                         if set(detailsCols) == set(dictDetailsEnv.keys()):
                             solutionName = dictDetailsEnv['observation_solution_name'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_name'] else terminatingMessage("\"observation_solution_name\" must not be Empty in \"details\" sheet")
-                            dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
+                            dikshaLoginId = dictDetailsEnv['Username/user id/email id/phone no. of the Content creator'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Username/user id/email id/phone no. of the Content creator'] else terminatingMessage("\"Username/user id/email id/phone no. of the Content creator\" must not be Empty in \"details\" sheet")
                             ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                             if not "CONTENT_CREATOR" in ccUserDetails[3]:
                                 terminatingMessage("---> "+dikshaLoginId +" is not a CONTENT_CREATOR in Diksha " + environment)
@@ -1326,7 +1326,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
         # Point based value set as null by default for observation without rubrics
         pointBasedValue = "null"
         criteria_id_arr = []
-        detailsColNames = ['observation_solution_name', 'observation_solution_description', 'Diksha_loginId','language', 'keywords', 'entity_type', "scope_entity"]
+        detailsColNames = ['observation_solution_name', 'observation_solution_description', 'Username/user id/email id/phone no. of the Content creator','language', 'keywords', 'entity_type', "scope_entity"]
         criteriaColNames = ['criteria_id', 'criteria_name']
         questionsColNames = ["criteria_id","question_sequence","question_id","instance_parent_question_id","parent_question_id","show_when_parent_question_value_is","parent_question_value","page","question_number","question_primary_language","question_secondory_language","question_tip","question_hint","instance_identifier","question_response_type","date_auto_capture","response_required","min_number_value","max_number_value","file_upload","show_remarks","response(R1)","response(R1)_hint","response(R2)","response(R2)_hint","response(R3)","response(R3)_hint","response(R4)","response(R4)_hint","response(R5)","response(R5)_hint","response(R6)","response(R6)_hint","response(R7)","response(R7)_hint","response(R8)","response(R8)_hint","response(R9)","response(R9)_hint","response(R10)","response(R10)_hint","response(R11)","response(R11)_hint","response(R12)","response(R12)_hint","response(R13)","response(R13)_hint","response(R14)","response(R14)_hint","response(R15)","response(R15)_hint","response(R16)","response(R16)_hint","response(R17)","response(R17)_hint","response(R18)","response(R18)_hint","response(R19)","response(R19)_hint","response(R20)","response(R20)_hint","question_weightage","section_header"]
         for sheetColCheck in sheetNames1:
@@ -1363,7 +1363,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             col_index_env in range(detailsEnvSheet.ncols)}
                         solutionName = dictDetailsEnv['observation_solution_name'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_name'] else terminatingMessage("\"observation_solution_name\" must not be Empty in \"details\" sheet")
                         solutionDescription = dictDetailsEnv['observation_solution_description'].encode('utf-8').decode('utf-8') if dictDetailsEnv['observation_solution_description'] else terminatingMessage("\"observation_solution_description\" must not be Empty in \"details\" sheet")
-                        dikshaLoginId = dictDetailsEnv['Diksha_loginId'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha_loginId'] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"details\" sheet")
+                        dikshaLoginId = dictDetailsEnv['Username/user id/email id/phone no. of the Content creator'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Username/user id/email id/phone no. of the Content creator'] else terminatingMessage("\"Username/user id/email id/phone no. of the Content creator\" must not be Empty in \"details\" sheet")
                         creator = dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Name_of_the_creator'] else terminatingMessage("\"Name_of_the_creator\" must not be Empty in \"details\" sheet")
                         ccUserDetails = fetchUserDetails(environment, accessToken, dikshaLoginId)
                         if not "CONTENT_CREATOR" in ccUserDetails[3]:
@@ -1430,7 +1430,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
             else:
                 terminatingMessage('Sheet Names in excel file is wrong , Sheet Names are details,questions')
 
-        detailsColNames = ["survey_solution_name", "survey_solution_description", "Name_of_the_creator","survey_creator_username", "survey_start_date", "survey_end_date"]
+        detailsColNames = ["survey_solution_name", "survey_solution_description", "Name_of_the_creator","Username/user id/email id/phone no. of the Content creator", "survey_start_date", "survey_end_date"]
         questionsColNames = ["question_sequence", "question_id", "section_header", "instance_parent_question_id",
                              "parent_question_id", "show_when_parent_question_value_is", "parent_question_value",
                              "page", "question_number", "question_language1", "question_language2", "question_tip",
@@ -1483,7 +1483,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         "\"response_required\" must not be Empty in \"details\" sheet")
     elif typeofSolutin == 4:
         criteria_id_arr = list()
-        projectDetailsCols = ["title", "projectId", "is a SSO user?", "Diksha_loginId", "categories",
+        projectDetailsCols = ["title", "projectId", "is a SSO user?", "Username/user id/email id/phone no. of the Content creator", "categories",
                               "objective","duration","recommendedFor","keywords"]
         detailsColCheck = wbObservation1.sheet_by_name('Project upload')
         keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
@@ -1544,7 +1544,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                     projectSSOuser = dictDetailsEnv["is a SSO user?"] if dictDetailsEnv[
                         "is a SSO user?"] else terminatingMessage(
                         "\"is a SSO user?\" must not be Empty in \"Project Upload\" sheet")
-                    projectDikshaloginid = dictDetailsEnv["Diksha_loginId"].encode('utf-8').decode('utf-8') if dictDetailsEnv["Diksha_loginId"] else terminatingMessage("\"Diksha_loginId\" must not be Empty in \"Project Upload\" sheet")
+                    projectDikshaloginid = dictDetailsEnv["Username/user id/email id/phone no. of the Content creator"].encode('utf-8').decode('utf-8') if dictDetailsEnv["Username/user id/email id/phone no. of the Content creator"] else terminatingMessage("\"Username/user id/email id/phone no. of the Content creator\" must not be Empty in \"Project Upload\" sheet")
                     projectDuration = dictDetailsEnv["duration"].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                         "duration"] else terminatingMessage(
                         "\"duration\" must not be Empty in \"Project Upload\" sheet")
@@ -3286,13 +3286,13 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                 surveySolutionCreationReqBody["externalId"] = surveySolutionExternalId
                 if dictDetailsEnv['Name_of_the_creator']== "":
                     exceptionHandlingFlag = True
-                    print('survey_creator_username column should not be empty in the details sheet')
+                    print('Username/user id/email id/phone no. of the Content creator column should not be empty in the details sheet')
                     sys.exit()
                 else:
                     surveySolutionCreationReqBody['creator'] = dictDetailsEnv['Name_of_the_creator']
 
 
-                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
+                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Username/user id/email id/phone no. of the Content creator'])
                 surveySolutionCreationReqBody['author'] = userDetails[0]
                 if dictDetailsEnv["survey_start_date"]:
                     if type(dictDetailsEnv["survey_start_date"]) == str:
@@ -3832,7 +3832,7 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
                     (get_close_matches(cat.strip().lower().replace(" ", ""), categories_list)[0]))
         global projectCreator, projectAuthor
 
-        projectAuthor = str(dictProjectDetails["Diksha_loginId"]).encode('utf-8').decode('utf-8').strip()
+        projectAuthor = str(dictProjectDetails["Username/user id/email id/phone no. of the Content creator"]).encode('utf-8').decode('utf-8').strip()
         recommendedFor = str(dictProjectDetails["recommendedFor"]).encode('utf-8').decode('utf-8').strip()
         objective = str(dictProjectDetails["objective"]).encode('utf-8').decode('utf-8').strip()
         entityType = None
