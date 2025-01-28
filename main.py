@@ -270,13 +270,13 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
             "entityType": scopeEntityType,
             "entities": entitiesPGMID,
             "roles": roles
-        },
-        "metaInformation": {
-            "state":entitiesPGM.split(","),
-            "roles": mainRole.split(",")
-            },
-            "requestForPIIConsent":True
-            })
+        }})
+        # "metaInformation": {
+        #     "state":entitiesPGM.split(","),
+        #     "roles": mainRole.split(",")
+        #     },
+        #     "requestForPIIConsent":True
+        #     })
     messageArr.append("Body : " + str(payload))
     headers = {'X-authenticated-user-token': accessToken,
                'internal-access-token': config.get(environment, 'internal-access-token'),
@@ -475,6 +475,10 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global entitiesPGM
                     entitiesPGM = dictDetailsEnv['Targeted state at program level'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Targeted state at program level'] else terminatingMessage("\"Targeted state at program level\" must not be Empty in \"Program details\" sheet")
                     districtentitiesPGM = dictDetailsEnv['Targeted district at program level'].encode('utf-8').decode('utf-8')
+                    blockentitiesPGM = ""
+                    clusterentitiesPGM = ""
+                    # blockentitiesPGM = dictDetailsEnv['Targeted block at program level'].encode('utf-8').decode('utf-8')
+                    # clusterentitiesPGM = dictDetailsEnv['Targeted cluster at program level'].encode('utf-8').decode('utf-8')
                     global startDateOfProgram, endDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
@@ -492,9 +496,18 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     scopeEntityType = "state"
 
 
-                    if districtentitiesPGM:
+                    if clusterentitiesPGM:
+                        entitiesPGM = clusterentitiesPGM
+                        EntityType = "cluster"
+
+                    elif blockentitiesPGM:
+                        entitiesPGM = blockentitiesPGM
+                        EntityType = "block"
+
+                    elif districtentitiesPGM:
                         entitiesPGM = districtentitiesPGM
                         EntityType = "district"
+
                     else:
                         entitiesPGM = entitiesPGM
                         EntityType = "state"
@@ -518,13 +531,27 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         keywordsPGM = dictDetailsEnv['Keywords'].encode('utf-8').decode('utf-8')
                         entitiesPGM = dictDetailsEnv['Targeted state at program level'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Targeted state at program level'] else terminatingMessage("\"Targeted state at program level\" must not be Empty in \"Program details\" sheet")
                         districtentitiesPGM = dictDetailsEnv['Targeted district at program level'].encode('utf-8').decode('utf-8')
+                        blockentitiesPGM = ""
+                        clusterentitiesPGM = ""
+                        # blockentitiesPGM = dictDetailsEnv['Targeted block at program level'].encode('utf-8').decode('utf-8')
+                        # clusterentitiesPGM = dictDetailsEnv['Targeted cluster at program level'].encode('utf-8').decode('utf-8')
                         # selecting entity type based on the users input 
-                        if districtentitiesPGM:
+                        if clusterentitiesPGM:
+                            entitiesPGM = clusterentitiesPGM
+                            EntityType = "cluster"
+
+                        elif blockentitiesPGM:
+                            entitiesPGM = blockentitiesPGM
+                            EntityType = "block"
+
+                        elif districtentitiesPGM:
                             entitiesPGM = districtentitiesPGM
                             EntityType = "district"
+
                         else:
                             entitiesPGM = entitiesPGM
                             EntityType = "state"
+
 
                         scopeEntityType = EntityType
 
@@ -1553,7 +1580,8 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                       col_index_env in range(detailsEnvSheet.ncols)}
                     projectTaskMandatory = dictDetailsEnv['Mandatory task(Yes or No)'] if dictDetailsEnv[
                         'Mandatory task(Yes or No)'] else terminatingMessage(
-                        "\"Mandatory task(Yes or No)\" must not be Empty in \"Tasks Upload\" sheet")
+                        "\"Mandatory task(Yes or No)\" must not be Empty in \"Tasks Upload\" sheet1")
+                    print(projectTaskMandatory,"projectTaskMandatory")
                     
 
             if sheetColCheck.strip().lower() == 'Certificate details'.lower():
