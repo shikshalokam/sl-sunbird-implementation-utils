@@ -480,9 +480,19 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     # blockentitiesPGM = dictDetailsEnv['Targeted block at program level'].encode('utf-8').decode('utf-8')
                     # clusterentitiesPGM = dictDetailsEnv['Targeted cluster at program level'].encode('utf-8').decode('utf-8')
                     global startDateOfProgram, endDateOfProgram
-                    startDateOfProgram = dictDetailsEnv['Start date of program']
-                    endDateOfProgram = dictDetailsEnv['End date of program']
+                    startDateOfProgram = dictDetailsEnv['Start date of program'] if dictDetailsEnv['Start date of program'] else terminatingMessage("\"Start date of program\" must not be Empty in \"Program details\" sheet")
+                    endDateOfProgram = dictDetailsEnv['End date of program'] if dictDetailsEnv['End date of program'] else terminatingMessage("\"End date of program\" must not be Empty in \"Program details\" sheet")
                     # taking the start date of program from program template and converting YYYY-MM-DD 00:00:00 format
+
+                    try:
+                        startDateParsed = datetime.strptime(startDateOfProgram, "%d-%m-%Y")  # Adjust format if needed
+                        endDateParsed = datetime.strptime(endDateOfProgram, "%d-%m-%Y")      # Adjust format if needed
+            
+                        if endDateParsed < startDateParsed:
+                            terminatingMessage(f"Error: End date ({endDateOfProgram}) cannot be earlier than start date ({startDateOfProgram}) in \"Resource Details\" sheet")
+                    except ValueError:
+                        terminatingMessage("Invalid date format in \"program Details\" sheet. Expected format: YYYY-MM-DD")
+
                     
                     startDateArr = str(startDateOfProgram).split("-")
                     startDateOfProgram = startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"
@@ -610,8 +620,17 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     resourceStatusOrExtPGM = dictDetailsEnv['Resource Status'] if dictDetailsEnv['Resource Status'] else terminatingMessage("\"Resource Status\" must not be Empty in \"Resource Details\" sheet")
                     # setting start and end dates globally. 
                     global startDateOfResource, endDateOfResource
-                    startDateOfResource = dictDetailsEnv['Start date of resource']
-                    endDateOfResource = dictDetailsEnv['End date of resource']
+                    startDateOfResource = dictDetailsEnv['Start date of resource'] if dictDetailsEnv['Start date of resource'] else terminatingMessage("\"start date of resource\" must not be Empty in \"Resource Details\" sheet")
+                    endDateOfResource = dictDetailsEnv['End date of resource'] if dictDetailsEnv['End date of resource'] else terminatingMessage("\"End date of resource\" must not be Empty in \"Resource Details\" sheet")
+                    try:
+                        startDateParsed = datetime.strptime(startDateOfResource, "%d-%m-%Y")  # Adjust format if needed
+                        endDateParsed = datetime.strptime(endDateOfResource, "%d-%m-%Y")      # Adjust format if needed
+            
+                        if endDateParsed < startDateParsed:
+                            terminatingMessage(f"Error: End date ({endDateOfResource}) cannot be earlier than start date ({startDateOfResource}) in \"Resource Details\" sheet")
+                    except ValueError:
+                        terminatingMessage("Invalid date format in \"Resource Details\" sheet. Expected format: YYYY-MM-DD")
+
                     # checking resource types and calling relevant functions 
                     if resourceTypePGM.lstrip().rstrip().lower() == "course":
                         coursemapping = courseMapToProgram(accessToken, resourceLinkOrExtPGM, parentFolder)
@@ -3315,7 +3334,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                             endDateArr = None
                             endDateArr = (dictDetailsEnv["survey_end_date"]).split("-")
                             surveySolutionCreationReqBody["endDate"] = endDateArr[2] + "-" + endDateArr[1] + "-" + \
-                                                                       endDateArr[0] + "T23:59:59.000Z"
+                                                                       endDateArr[0] + " 23:59:59"
                         elif type(dictDetailsEnv["survey_end_date"]) == float:
                             surveySolutionCreationReqBody["endDate"] = (
                                 xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_end_date"],
