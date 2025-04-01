@@ -258,6 +258,8 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "concepts": [],
         "createdFor": orgIds,
         "rootOrganisations": orgIds,
+        "startDate": startDateOfProgram,
+        "endDate": endDateOfProgram,
         "imageCompression": {
             "quality": 10
         },
@@ -266,10 +268,15 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
         "author": creatorKeyCloakId,
         "scope": {
             "entityType": scopeEntityType,
-            "entities": entities,
+            "entities": entitiesPGMID,
             "roles": roles
-        }})
-
+        },
+        "metaInformation": {
+            "state":entitiesPGM.split(","),
+            "roles": mainRole.split(",")
+            },
+            "requestForPIIConsent":True
+            })
     messageArr.append("Body : " + str(payload))
     headers = {'X-authenticated-user-token': accessToken,
                'internal-access-token': config.get(environment, 'internal-access-token'),
@@ -331,7 +338,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                 programNameInp = dictDetailsEnv['Title of the Program'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Title of the Program'] else terminatingMessage("\"Title of the Program\" must not be Empty in \"Program details\" sheet")
 
             extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
-
+            validate_identifier(extIdPGM)
             programdesigner = dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Diksha username/user id/email id/phone no. of Program Designer\" must not be Empty in \"Program details\" sheet")
             userDetails = fetchUserDetails(environment, accessToken, programdesigner)
             
@@ -468,9 +475,20 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     global entitiesPGM
                     entitiesPGM = dictDetailsEnv['Targeted state at program level'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Targeted state at program level'] else terminatingMessage("\"Targeted state at program level\" must not be Empty in \"Program details\" sheet")
                     districtentitiesPGM = dictDetailsEnv['Targeted district at program level'].encode('utf-8').decode('utf-8')
-                    global startDateOfProgram, endDateOfProgram
+                    global startDateOfProgram, endDateOfProgram, ReffstartDateOfProgram, ReffendDateOfProgram
                     startDateOfProgram = dictDetailsEnv['Start date of program']
                     endDateOfProgram = dictDetailsEnv['End date of program']
+                    ReffstartDateOfProgram = dictDetailsEnv['Start date of program']
+                    ReffendDateOfProgram = dictDetailsEnv['End date of program']
+                    # taking the start date of program from program template and converting YYYY-MM-DD 00:00:00 format
+                    
+                    startDateArr = str(startDateOfProgram).split("-")
+                    startDateOfProgram = startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"
+
+                    # taking the end date of program from program template and converting YYYY-MM-DD 00:00:00 format
+
+                    endDateArr = str(endDateOfProgram).split("-")
+                    endDateOfProgram = endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"
 
                     global scopeEntityType
                     scopeEntityType = "state"
@@ -574,12 +592,12 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         coursemapping = courseMapToProgram(accessToken, resourceLinkOrExtPGM, parentFolder)
                         if startDateOfResource:
                             startDateArr = str(startDateOfResource).split("-")
-                            bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
+                            bodySolutionUpdate = {"startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
                             solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
                         if endDateOfResource:
                             endDateArr = str(endDateOfResource).split("-")
                             bodySolutionUpdate = {
-                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
+                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
                             solutionUpdate(parentFolder, accessToken, coursemapping, bodySolutionUpdate)
                         
 
@@ -650,6 +668,13 @@ def envCheck():
         return False
 
 # Generate access token for the APIs. 
+def validate_identifier(identifier, field_name="Field"):
+    pattern = r'^[A-Za-z0-9_-]+$'
+    if not re.match(pattern, identifier):
+        raise ValueError(f"Invalid {field_name}: '{identifier}'. Only A-Z, a-z, 0-9, '-', and '_' are allowed.")
+    else:
+        print(f"{field_name} '{identifier}' is valid.")
+
 def generateAccessToken(solutionName_for_folder_path):
     # production search user api - start
     headerKeyClockUser = {'Content-Type': config.get(environment, 'keyclockAPIContent-Type')}
@@ -923,6 +948,7 @@ def fetchEntityId(solutionName_for_folder_path, accessToken, entitiesNameList, s
     messageArr = ["Entities List Fetch API executed.", "URL  : " + str(urlFetchEntityListApi),
                   "Status : " + str(responseFetchEntityListApi.status_code)]
     createAPILog(solutionName_for_folder_path, messageArr)
+    print(responseFetchEntityListApi.text, "responseFetchEntityListApi")
     if responseFetchEntityListApi.status_code == 200:
         responseFetchEntityListApi = responseFetchEntityListApi.json()
         entitiesLookup = dict()
@@ -1418,8 +1444,10 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                 questionsColCheck = wbObservation1.sheet_by_name(sheetColCheck)
                 keysColCheckQues = [questionsColCheck.cell(1, col_index_check2).value for col_index_check2 in
                                     range(questionsColCheck.ncols)]
-                if len(keysColCheckQues) != len(questionsColNames):
-                    terminatingMessage('Some Columns are missing in questions sheet')
+                # if len(keysColCheckQues) != len(questionsColNames):
+                #     print(keysColCheckQues)
+                #     print(questionsColNames)
+                #     terminatingMessage('Some Columns are missing in questions sheet')
                 for row_index_env in range(2, questionsColCheck.nrows):
                     dictDetailsEnv = {
                         keysColCheckQues[col_index_env]: questionsColCheck.cell(row_index_env, col_index_env).value for
@@ -1495,6 +1523,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         "\"title\" must not be Empty in \"Project Upload\" sheet")
                     projectId = dictDetailsEnv['projectId'] if dictDetailsEnv['projectId'] else terminatingMessage(
                         "\"projectId\" must not be Empty in \"Project Upload\" sheet")
+                    validate_identifier(projectId)
                     projectCategories = dictDetailsEnv['categories'].encode('utf-8').decode('utf-8') if dictDetailsEnv[
                         'categories'] else terminatingMessage(
                         "\"categories\" must not be Empty in \"Project Upload\" sheet")
@@ -2887,6 +2916,8 @@ def uploadThemeRubrics(solutionName_for_folder_path, wbObservation, accessToken,
 
                 dictThemeRubric = {keys[col_index]: themeRubricSheet.cell(row_index, col_index).value for col_index in
                                    range(themeRubricSheet.ncols)}
+                print(dictThemeRubric,'dictThemeRubric')
+                print(themeRubricUpload,'themeRubricUpload')
                 themeRubricUpload['externalId'] = dictThemeRubric['domain_Id']
                 themeRubricUpload['name'] = dictThemeRubric['domain_name'].encode('utf-8').decode('utf-8')
                 if dictThemeRubric['weightage']:
@@ -2972,13 +3003,13 @@ def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFi
         columnCountRD = resourceDetailsSheet.max_column
         for row in range(3, rowCountRD + 1):
             if resourceDetailsSheet["A" + str(row)].value == solutionName:
-                solutionMainRole = str(resourceDetailsSheet["E" + str(row)].value).strip()
-                solutionRolesArray = str(resourceDetailsSheet["F" + str(row)].value).split(",") if str(
-                    resourceDetailsSheet["E" + str(row)].value).split(",") else []
+                solutionMainRole = str(resourceDetailsSheet["F" + str(row)].value).strip()
+                solutionRolesArray = str(resourceDetailsSheet["G" + str(row)].value).split(",") if str(
+                    resourceDetailsSheet["F" + str(row)].value).split(",") else []
                 if "teacher" in solutionMainRole.strip().lower():
                     solutionRolesArray.append("TEACHER")
-                solutionStartDate = resourceDetailsSheet["G" + str(row)].value
-                solutionEndDate = resourceDetailsSheet["H" + str(row)].value
+                solutionStartDate = resourceDetailsSheet["H" + str(row)].value
+                solutionEndDate = resourceDetailsSheet["I" + str(row)].value
     return [solutionRolesArray, solutionStartDate, solutionEndDate]
 
 
@@ -3246,86 +3277,62 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                 surveySolutionCreationReqBody["externalId"] = surveySolutionExternalId
                 if dictDetailsEnv['Name_of_the_creator']== "":
                     exceptionHandlingFlag = True
-                    print('survey_creator_username column should not be empty in the details sheet')
+                    print('Diksha_loginId column should not be empty in the details sheet')
                     sys.exit()
                 else:
                     surveySolutionCreationReqBody['creator'] = dictDetailsEnv['Name_of_the_creator']
 
 
-                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
+                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha_loginId'])
                 surveySolutionCreationReqBody['author'] = userDetails[0]
-                if dictDetailsEnv["survey_start_date"]:
-                    if type(dictDetailsEnv["survey_start_date"]) == str:
-                        startDateArr = None
-                        startDateArr = (dictDetailsEnv["survey_start_date"]).split("-")
-                        surveySolutionCreationReqBody["startDate"] = startDateArr[2] + "-" + startDateArr[1] + "-" + \
-                                                                     startDateArr[0] + "T00:00:00.000Z"
-                    elif type(dictDetailsEnv["survey_start_date"]) == float:
-                        surveySolutionCreationReqBody["startDate"] = (
-                            xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_start_date"],
-                                                           wbSurvey.datemode)).strftime("%Y/%m/%d")
+                global SurveyTemplateStartDate, SurveyTemplateEndDate
+                SurveyTemplateStartDate = dictDetailsEnv["survey_start_date"]
+                SurveyTemplateEndDate = dictDetailsEnv["survey_end_date"]
+                
+                urlCreateSolutionApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'surveySolutionCreationApiUrl')
+                headerCreateSolutionApi = {
+                    'Content-Type': config.get(environment, 'Content-Type'),
+                    'Authorization': config.get(environment, 'Authorization'),
+                    'X-authenticated-user-token': accessToken,
+                    'X-Channel-id': config.get(environment, 'X-Channel-id'),
+                    'appName': config.get(environment, 'appName')
+                }
+                responseCreateSolutionApi = requests.post(url=urlCreateSolutionApi,
+                                                          headers=headerCreateSolutionApi,
+                                                          data=json.dumps(surveySolutionCreationReqBody))
+                responseInText = responseCreateSolutionApi.text
+                messageArr = ["********* Create Survey Solution *********", "URL : " + urlCreateSolutionApi,
+                              "BODY : " + str(surveySolutionCreationReqBody),
+                              "Status code : " + str(responseCreateSolutionApi.status_code),
+                              "Response : " + responseCreateSolutionApi.text]
+                fileheader = [surveySolutionCreationReqBody['name'].encode('utf-8').decode('utf-8'),'Program Sheet Validation'," "]
+                createAPILog(parentFolder, messageArr)
+                apicheckslog(parentFolder,fileheader)
+                if responseCreateSolutionApi.status_code == 200:
+                    responseCreateSolutionApi = responseCreateSolutionApi.json()
+                    urlSearchSolution = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "survey&page=1&limit=10&search=" + str(surveySolutionExternalId)
+                    responseSearchSolution = requests.request("POST", urlSearchSolution,
+                                                              headers=headerCreateSolutionApi)
+                    messageArr = ["********* Search Survey Solution *********", "URL : " + urlSearchSolution,
+                                  "Status code : " + str(responseSearchSolution.status_code),
+                                  "Response : " + responseSearchSolution.text]
+                    createAPILog(parentFolder, messageArr)
+                    # apicheckslog(parentFolder, messageArr)
+                    if responseSearchSolution.status_code == 200:
+                        responseSearchSolutionApi = responseSearchSolution.json()
+                        surveySolutionExternalId = None
+                        surveySolutionExternalId = responseSearchSolutionApi['result']['data'][0]['externalId']
                     else:
-                        surveySolutionCreationReqBody["startDate"] = ""
-                    if dictDetailsEnv["survey_end_date"]:
-                        if type(dictDetailsEnv["survey_end_date"]) == str:
-                            endDateArr = None
-                            endDateArr = (dictDetailsEnv["survey_end_date"]).split("-")
-                            surveySolutionCreationReqBody["endDate"] = endDateArr[2] + "-" + endDateArr[1] + "-" + \
-                                                                       endDateArr[0] + "T23:59:59.000Z"
-                        elif type(dictDetailsEnv["survey_end_date"]) == float:
-                            surveySolutionCreationReqBody["endDate"] = (
-                                xlrd.xldate.xldate_as_datetime(dictDetailsEnv["survey_end_date"],
-                                                               wbSurvey.datemode)).strftime("%Y/%m/%d")
-                        else:
-                            surveySolutionCreationReqBody["endDate"] = ""
-                        enDt = surveySolutionCreationReqBody["endDate"]
-                        
-                        urlCreateSolutionApi = config.get(environment, 'INTERNAL_KONG_IP')+ config.get(environment, 'surveySolutionCreationApiUrl')
-                        headerCreateSolutionApi = {
-                            'Content-Type': config.get(environment, 'Content-Type'),
-                            'Authorization': config.get(environment, 'Authorization'),
-                            'X-authenticated-user-token': accessToken,
-                            'X-Channel-id': config.get(environment, 'X-Channel-id'),
-                            'appName': config.get(environment, 'appName')
-                        }
-                        responseCreateSolutionApi = requests.post(url=urlCreateSolutionApi,
-                                                                  headers=headerCreateSolutionApi,
-                                                                  data=json.dumps(surveySolutionCreationReqBody))
-                        responseInText = responseCreateSolutionApi.text
-                        messageArr = ["********* Create Survey Solution *********", "URL : " + urlCreateSolutionApi,
-                                      "BODY : " + str(surveySolutionCreationReqBody),
-                                      "Status code : " + str(responseCreateSolutionApi.status_code),
-                                      "Response : " + responseCreateSolutionApi.text]
-                        fileheader = [surveySolutionCreationReqBody['name'].encode('utf-8').decode('utf-8'),'Program Sheet Validation'," "]
-                        createAPILog(parentFolder, messageArr)
-                        apicheckslog(parentFolder,fileheader)
-                        if responseCreateSolutionApi.status_code == 200:
-                            responseCreateSolutionApi = responseCreateSolutionApi.json()
-                            urlSearchSolution = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment,'fetchSolutionDetails') + "survey&page=1&limit=10&search=" + str(surveySolutionExternalId)
-                            responseSearchSolution = requests.request("POST", urlSearchSolution,
-                                                                      headers=headerCreateSolutionApi)
-                            messageArr = ["********* Search Survey Solution *********", "URL : " + urlSearchSolution,
-                                          "Status code : " + str(responseSearchSolution.status_code),
-                                          "Response : " + responseSearchSolution.text]
-                            createAPILog(parentFolder, messageArr)
-                            # apicheckslog(parentFolder, messageArr)
-                            if responseSearchSolution.status_code == 200:
-                                responseSearchSolutionApi = responseSearchSolution.json()
-                                surveySolutionExternalId = None
-                                surveySolutionExternalId = responseSearchSolutionApi['result']['data'][0]['externalId']
-                            else:
-                                print("Solution fetch API failed")
-                                print("URL : " + urlSearchSolution)
-                                terminatingMessage("Status Code : " + responseSearchSolution.status_code)
-
-                            solutionId = None
-                            solutionId = responseCreateSolutionApi["result"]["solutionId"]
-                            bodySolutionUpdate = {"creator": dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8')}
-                            solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
-
-                            return [solutionId, surveySolutionExternalId]
-                        else:
-                            terminatingMessage("Survey creation Failed, check logs!")
+                        print("Solution fetch API failed")
+                        print("URL : " + urlSearchSolution)
+                        terminatingMessage("Status Code : " + responseSearchSolution.status_code)
+                    solutionId = None
+                    solutionId = responseCreateSolutionApi["result"]["solutionId"]
+                    bodySolutionUpdate = {"creator": dictDetailsEnv['Name_of_the_creator'].encode('utf-8').decode('utf-8')}
+                    solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
+                    return [solutionId, surveySolutionExternalId]
+                else:
+                    terminatingMessage("Survey creation Failed, check logs!")
 
 # upload survey questions 
 def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, accessToken, surveySolutionExternalId, surveyParentSolutionId,millisecond):
@@ -3639,11 +3646,35 @@ def uploadSurveyQuestions(parentFolder, wbSurvey, addObservationSolution, access
                         print("Survey Child Id : " + str(solutionExtIdSuc))
                         solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionIdSuc,
                                                                                accessToken)
-                        scopeEntities = entitiesPGMID
-                        scopeRoles = solutionDetails[0]
-                        surveyScopeBody = {
-                            "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
-                        solutionUpdate(parentFolder, accessToken, solutionIdSuc, surveyScopeBody)
+                        ReffstartDateOfProgram1 = convert_to_date(ReffstartDateOfProgram)
+                        ReffendDateOfProgram1 = convert_to_date(ReffendDateOfProgram)
+                        solutionStartDate1 = convert_to_date(solutionDetails[1])
+                        solutionEndDate1 = convert_to_date(solutionDetails[2])
+                        SurveyTemplateStartDate1 = convert_to_date(SurveyTemplateStartDate)
+                        SurveyTemplateEndDate1 = convert_to_date(SurveyTemplateEndDate)
+
+                        if SurveyTemplateStartDate1 == solutionStartDate1 and SurveyTemplateEndDate1 == solutionEndDate1:
+                            if ReffstartDateOfProgram1 <= solutionStartDate1 <= ReffendDateOfProgram1 and ReffstartDateOfProgram1 <= solutionEndDate1 <= ReffendDateOfProgram1:
+                                scopeEntities = entitiesPGMID
+                                scopeRoles = solutionDetails[0]
+                                surveyScopeBody = {
+                                    "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
+                                solutionUpdate(parentFolder, accessToken, solutionIdSuc, surveyScopeBody)
+                        
+                                if solutionDetails[1]:
+                                    startDateArr = str(solutionDetails[1]).split("-")
+                                    bodySolutionUpdate = {
+                                        "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
+                                    solutionUpdate(parentFolder, accessToken, solutionIdSuc, bodySolutionUpdate)
+                                if solutionDetails[2]:
+                                    endDateArr = str(solutionDetails[2]).split("-")
+                                    bodySolutionUpdate = {
+                                        "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
+                                    solutionUpdate(parentFolder, accessToken, solutionIdSuc, bodySolutionUpdate)
+                            else:
+                                terminatingMessage("Start Date and End date of resource should be within the Program Date Range.")
+                        else:
+                            terminatingMessage("The Survey Template Dates does not match the Resource Start date and end date from program template")
                         prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, solutionExtIdSuc,
                                                    solutionIdSuc, accessToken)
                         
@@ -3863,81 +3894,82 @@ def prepareProjectAndTasksSheets(project_inputFile, projectName_for_folder_path,
         subtaskname = str(dictTasksDetails["Subtask"]).encode('utf-8').decode('utf-8').strip()
 
         if dictTasksDetails['TaskId'] :
-           taskId = str(dictTasksDetails["TaskId"]).encode('utf-8').decode('utf-8').strip() + "-" + str(millisecond)
-           taskminNoOfSubmissionsRequired = str(dictTasksDetails["Number of submissions for observation"]).strip()
-           sequenceNumber = sequenceNumber + 1
-           taskSolutionType = ""
-           try:
-               taskDescription = str(dictTasksDetails["description"]).strip()
-           except:
-               taskDescription = ""
-           if dictTasksDetails["observation Name"] != "":
-               taskType = "observation"
-           elif dictTasksDetails["learningResources1-name"] != "" and dictTasksDetails["learningResources1-link"] != "":
-               taskType = "content"
-           else:
-               taskType = "simple"
-
-           hasAParentTask = "NO"
-           parentTaskOperator = ""
-           parentTaskValue = ""
-           parentTaskId = ""
-
-           if dictTasksDetails["observation Name"] != "":
-               solutionNameOrId = dictTasksDetails["observation Name"].encode('utf-8').decode('utf-8')
-               taskSolutionType = "observation"
-               solutionDetailsInTask = checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessToken)
-               solutionSubType = solutionDetailsInTask[0]
-               solutionId = solutionDetailsInTask[1]
-
-               projectUpload = pd.read_csv(projectFilePath + "projectUpload.csv")
-               # updating the column value/data
-               projectUpload.loc[0, 'entityType'] = solutionDetailsInTask[0]
-
-               # writing into the file
-               projectUpload.to_csv(projectFilePath + "projectUpload.csv", index=False)
-           else:
-               solutionId = ""
-               taskSolutionType = ""
-               solutionSubType = ""
-
-           if str(dictTasksDetails["Mandatory task(Yes or No)"]).strip().strip().lower() == "no":
-               isDeletable = "TRUE"
-           else:
-               isDeletable = "FALSE"
-           task_values = [taskName, taskId, taskDescription, taskType, hasAParentTask, parentTaskOperator, parentTaskValue,
-                          parentTaskId, taskSolutionType, solutionSubType, solutionId, isDeletable]
-           task_lr_value_count = 1
-           for task_lr in range(0, int(taskLearningResource_count)):
-               task_lr_name = str(dictTasksDetails["learningResources" + str(task_lr_value_count) + "-name"]).strip()
-               task_lr_link = str(dictTasksDetails["learningResources" + str(task_lr_value_count) + "-link"]).strip()
-               if task_lr_name == "" and task_lr_link == "":
-                   task_values.append("")
-                   task_values.append("")
-                   task_values.append("")
-                   task_values.append("")
-                   task_lr_value_count += 1
-               else:
-                   task_values.append(task_lr_name)
-                   task_lr_link_id = task_lr_link.split("/")[-1]
-                   task_values.append(task_lr_link)
-                   task_values.append("Diksha")
-                   task_values.append(task_lr_link_id)
-                   task_lr_value_count += 1
-           task_values.append(taskminNoOfSubmissionsRequired)
-           task_values.append(sequenceNumber)
-           
-           # To check weather the previous-task and the curent-task Taskname & Taskid is same 
-           if str(taskName) == str(PreviousTaskname) and str(taskId) == str(PreviousTaskid):
-                print("true")
-           else:
-               print("false")
-               with open(taskFilePath + 'taskUpload.csv','a',encoding='utf-8') as file:
-                writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
-                writer.writerows([task_values])
-           subtaskname2 = str(dictTasksDetails["Subtask"]).encode('utf-8').decode('utf-8').strip()
-           PreviousTaskname = taskName
-           PreviousTaskid = taskId
+            taskId = str(dictTasksDetails["TaskId"]).encode('utf-8').decode('utf-8').strip() + "-" + str(millisecond)
+            taskminNoOfSubmissionsRequired = str(dictTasksDetails["Number of submissions for observation"]).strip()
+            sequenceNumber = sequenceNumber + 1
+            taskSolutionType = ""
+            try:
+                taskDescription = str(dictTasksDetails["description"]).strip()
+            except:
+                taskDescription = ""
+            if dictTasksDetails["observation Name"] != "":
+                
+                taskType = "observation"
+            elif dictTasksDetails["learningResources1-name"] != "" and dictTasksDetails["learningResources1-link"] != "":
+                taskType = "content"
+            else:
+                taskType = "simple"
+ 
+            hasAParentTask = "NO"
+            parentTaskOperator = ""
+            parentTaskValue = ""
+            parentTaskId = ""
+ 
+            if dictTasksDetails["observation Name"] != "":
+                solutionNameOrId = dictTasksDetails["observation Name"].encode('utf-8').decode('utf-8')
+                taskSolutionType = "observation"
+                solutionDetailsInTask = checkEntityOfSolution(projectName_for_folder_path, solutionNameOrId, accessToken)
+                solutionSubType = solutionDetailsInTask[0]
+                solutionId = solutionDetailsInTask[1]
+ 
+                projectUpload = pd.read_csv(projectFilePath + "projectUpload.csv")
+                # updating the column value/data
+                projectUpload.loc[0, 'entityType'] = solutionDetailsInTask[0]
+ 
+                # writing into the file
+                projectUpload.to_csv(projectFilePath + "projectUpload.csv", index=False)
+            else:
+                solutionId = ""
+                taskSolutionType = ""
+                solutionSubType = ""
+ 
+            if str(dictTasksDetails["Mandatory task(Yes or No)"]).strip().strip().lower() == "no":
+                isDeletable = "TRUE"
+            else:
+                isDeletable = "FALSE"
+            task_values = [taskName, taskId, taskDescription, taskType, hasAParentTask, parentTaskOperator, parentTaskValue,
+                           parentTaskId, taskSolutionType, solutionSubType, solutionId, isDeletable]
+            task_lr_value_count = 1
+            for task_lr in range(0, int(taskLearningResource_count)):
+                task_lr_name = str(dictTasksDetails["learningResources" + str(task_lr_value_count) + "-name"]).strip()
+                task_lr_link = str(dictTasksDetails["learningResources" + str(task_lr_value_count) + "-link"]).strip()
+                if task_lr_name == "" and task_lr_link == "":
+                    task_values.append("")
+                    task_values.append("")
+                    task_values.append("")
+                    task_values.append("")
+                    task_lr_value_count += 1
+                else:
+                    task_values.append(task_lr_name)
+                    task_lr_link_id = task_lr_link.split("/")[-1]
+                    task_values.append(task_lr_link)
+                    task_values.append("Diksha")
+                    task_values.append(task_lr_link_id)
+                    task_lr_value_count += 1
+            task_values.append(taskminNoOfSubmissionsRequired)
+            task_values.append(sequenceNumber)
+ 
+            # To check weather the previous-task and the curent-task Taskname & Taskid is same 
+            if str(taskName) == str(PreviousTaskname) and str(taskId) == str(PreviousTaskid):
+                 print("true")
+            else:
+                print("false")
+                with open(taskFilePath + 'taskUpload.csv','a',encoding='utf-8') as file:
+                 writer = csv.writer(file, quoting=csv.QUOTE_NONNUMERIC, delimiter=',',lineterminator='\n')
+                 writer.writerows([task_values])
+            subtaskname2 = str(dictTasksDetails["Subtask"]).encode('utf-8').decode('utf-8').strip()
+            PreviousTaskname = taskName
+            PreviousTaskid = taskId
 
     c = 0
     for row_index_env in range(2, tasksDetailsSheet.nrows):
@@ -4339,7 +4371,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
         payload['criteria']['conditions']['C2']['conditions']['C1']['function'] = "count"
         payload['criteria']['conditions']['C2']['conditions']['C1']['filter'] = {}
         payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['key'] = "type"
-        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"
+        payload['criteria']['conditions']['C2']['conditions']['C1']['filter']['value'] = "all"  
         payload['criteria']['conditions']['C2']['conditions']['C1']['operator'] = ">="
         payload['criteria']['conditions']['C2']['conditions']['C1']['value'] = int(projectMinNooEvide)
         payload['issuer'] ={}
@@ -4676,6 +4708,9 @@ def editsvg(accessToken,filePathAddProject,projectName_for_folder_path,baseTempl
                 else:
                     print("-->Error in downloading SVG file please check logs<--")
 
+def convert_to_date(date_str):
+    return datetime.strptime(date_str, "%d-%m-%Y")
+
 def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, listOfFoundRoles, accessToken):
     SolutionFilePath = projectName_for_folder_path + '/solutionDetails/'
     if not os.path.exists(SolutionFilePath):
@@ -4772,16 +4807,26 @@ def solutionCreationAndMapping(projectName_for_folder_path, entityToUpload, list
                 bodySolutionUpdate = {
                     "creator": projectCreator, "author": matchedShikshalokamLoginId}
                 solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
-                if solutionDetails[1]:
-                    startDateArr = str(solutionDetails[1]).split("-")
-                    bodySolutionUpdate = {
-                        "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
-                    solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
-                if solutionDetails[2]:
-                    endDateArr = str(solutionDetails[2]).split("-")
-                    bodySolutionUpdate = {
-                        "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
-                    solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
+                # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+                ReffstartDateOfProgram1 = convert_to_date(ReffstartDateOfProgram)
+                ReffendDateOfProgram1 = convert_to_date(ReffendDateOfProgram)
+                solutionStartDate1 = convert_to_date(solutionDetails[1])
+                solutionEndDate1 = convert_to_date(solutionDetails[2])
+                print(solutionStartDate1,"solutionStartDate1")
+                print(ReffstartDateOfProgram1,"ReffstartDateOfProgram1")
+                if ReffstartDateOfProgram1 <= solutionStartDate1 <= ReffendDateOfProgram1 and ReffstartDateOfProgram1 <= solutionEndDate1 <= ReffendDateOfProgram1:
+                    if solutionDetails[1]:
+                        startDateArr = str(solutionDetails[1]).split("-")
+                        bodySolutionUpdate = {
+                            "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
+                        solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
+                    if solutionDetails[2]:
+                        endDateArr = str(solutionDetails[2]).split("-")
+                        bodySolutionUpdate = {
+                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
+                        solutionUpdate(projectName_for_folder_path, accessToken, solutionId, bodySolutionUpdate)
+                else:
+                    terminatingMessage("Start Date and End date of resource should be within the Program Date Range.")
             else:
                 terminatingMessage("Map project to solution api failed.")
             return [solutionExternalId, solutionId]
@@ -5026,38 +5071,47 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                 print("Observation with scoring system : null.")
             bodySolutionUpdate = {'allowMultipleAssessemts': allow_multiple_submissions, "creator": creator}
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
-            solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
-            if solutionDetails[1]:
-                startDateArr = str(solutionDetails[1]).split("-")
-                bodySolutionUpdate = {
-                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
-                solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
-            if solutionDetails[2]:
-                endDateArr = str(solutionDetails[2]).split("-")
-                bodySolutionUpdate = {
-                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
-                solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
+            # solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
+            # if solutionDetails[1]:
+            #     startDateArr = str(solutionDetails[1]).split("-")
+            #     bodySolutionUpdate = {
+            #         "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
+            #     solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
+            # if solutionDetails[2]:
+            #     endDateArr = str(solutionDetails[2]).split("-")
+            #     bodySolutionUpdate = {
+            #         "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
+            #     solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if isProgramnamePresent:
                 childId = createChild(parentFolder, observationExternalId, accessToken)
                 if childId[0]:
                     solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, childId[0],
                                                                            accessToken)
-                    scopeEntities = entitiesPGMID
-                    scopeRoles = solutionDetails[0]
-                    bodySolutionUpdate = {
-                        "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
-                    solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
-                    if solutionDetails[1]:
-                        startDateArr = str(solutionDetails[1]).split("-")
+                    ReffstartDateOfProgram1 = convert_to_date(ReffstartDateOfProgram)
+                    ReffendDateOfProgram1 = convert_to_date(ReffendDateOfProgram)
+                    solutionStartDate1 = convert_to_date(solutionDetails[1])
+                    solutionEndDate1 = convert_to_date(solutionDetails[2])
+                    
+                    if ReffstartDateOfProgram1 <= solutionStartDate1 <= ReffendDateOfProgram1 and ReffstartDateOfProgram1 <= solutionEndDate1 <= ReffendDateOfProgram1:
+                        scopeEntities = entitiesPGMID
+                        scopeRoles = solutionDetails[0]
                         bodySolutionUpdate = {
-                            "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
-                                0] + "T00:00:00.000Z"}
+                            "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
-                    if solutionDetails[2]:
-                        endDateArr = str(solutionDetails[2]).split("-")
-                        bodySolutionUpdate = {
-                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
-                        solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+                    
+                        if solutionDetails[1]:
+                            startDateArr = str(solutionDetails[1]).split("-")
+                            bodySolutionUpdate = {
+                                "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
+                                    0] + " 00:00:00"}
+                            solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+                        if solutionDetails[2]:
+                            endDateArr = str(solutionDetails[2]).split("-")
+                            bodySolutionUpdate = {
+                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
+                            solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+                    else:
+                        terminatingMessage("Start Date and End date of resource should be within the Program Date Range.")
                     prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, childId[1], childId[0],
                                                accessToken)
             else:
@@ -5091,38 +5145,48 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                                   "creator": creator}
             solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
 
-            solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
-            if solutionDetails[1]:
-                startDateArr = str(solutionDetails[1]).split("-")
-                bodySolutionUpdate = {
-                    "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + "T00:00:00.000Z"}
-                solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
-            if solutionDetails[2]:
-                endDateArr = str(solutionDetails[2]).split("-")
-                bodySolutionUpdate = {
-                    "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
-                solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
+            # solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, solutionId, accessToken)
+            # # Below script will convert date DD-MM-YYYY TO YYYY-MM-DD 00:00:00 to match the code syntax
+
+            # if solutionDetails[1]:
+            #     startDateArr = str(solutionDetails[1]).split("-")
+            #     bodySolutionUpdate = {
+            #         "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[0] + " 00:00:00"}
+            #     solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
+            # if solutionDetails[2]:
+            #     endDateArr = str(solutionDetails[2]).split("-")
+            #     bodySolutionUpdate = {
+            #         "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
+            #     solutionUpdate(parentFolder, accessToken, solutionId, bodySolutionUpdate)
             if isProgramnamePresent:
                 childId = createChild(parentFolder, observationExternalId, accessToken)
                 if childId[0]:
                     solutionDetails = fetchSolutionDetailsFromProgramSheet(parentFolder, programFile, childId[0],
                                                                            accessToken)
-                    scopeEntities = entitiesPGMID
-                    scopeRoles = solutionDetails[0]
-                    bodySolutionUpdate = {
-                        "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
-                    solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
-                    if solutionDetails[1]:
-                        startDateArr = str(solutionDetails[1]).split("-")
+                    ReffstartDateOfProgram1 = convert_to_date(ReffstartDateOfProgram)
+                    ReffendDateOfProgram1 = convert_to_date(ReffendDateOfProgram)
+                    solutionStartDate1 = convert_to_date(solutionDetails[1])
+                    solutionEndDate1 = convert_to_date(solutionDetails[2])
+                    if ReffstartDateOfProgram1 <= solutionStartDate1 <= ReffendDateOfProgram1 and ReffstartDateOfProgram1 <= solutionEndDate1 <= ReffendDateOfProgram1:                                                  
+                        scopeEntities = entitiesPGMID
+                        scopeRoles = solutionDetails[0]
                         bodySolutionUpdate = {
-                            "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
-                                0] + "T00:00:00.000Z"}
+                            "scope": {"entityType": scopeEntityType, "entities": scopeEntities, "roles": scopeRoles}}
                         solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
-                    if solutionDetails[2]:
-                        endDateArr = str(solutionDetails[2]).split("-")
-                        bodySolutionUpdate = {
-                            "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + "T23:59:59.000Z"}
-                        solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+                        
+                        if solutionDetails[1]:
+                            startDateArr = str(solutionDetails[1]).split("-")
+                            bodySolutionUpdate = {
+                                "startDate": startDateArr[2] + "-" + startDateArr[1] + "-" + startDateArr[
+                                    0] + " 00:00:00"}
+                            solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+                        if solutionDetails[2]:
+                            endDateArr = str(solutionDetails[2]).split("-")
+                            bodySolutionUpdate = {
+                                "endDate": endDateArr[2] + "-" + endDateArr[1] + "-" + endDateArr[0] + " 23:59:59"}
+                            solutionUpdate(parentFolder, accessToken, childId[0], bodySolutionUpdate)
+                    else:
+                        terminatingMessage("Start Date and End date of resource should be within the Program Date Range.")
                     prepareProgramSuccessSheet(MainFilePath, parentFolder, programFile, childId[1], childId[0],
                                                accessToken)
             else:
@@ -5278,6 +5342,7 @@ print(sheetNames)
 print(pgmSheets)
 if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
     print("--->Program Template detected.<---")
+    
     for sheetEnv in sheetNames:
         if sheetEnv.strip().lower() == 'program details':
             print("Checking program details sheet...")
