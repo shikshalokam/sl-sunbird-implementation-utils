@@ -113,6 +113,8 @@ ccRootOrgName = None
 ccRootOrgId  = None
 certificatetemplateid = None
 question_sequence_arr = []
+TaskEvidenceOperator = ""
+AnyTaskEvidenceNo = ""
 
 # function to map course to program
 
@@ -1491,12 +1493,14 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
         detailsColCheck = wbObservation1.sheet_by_name('Tasks upload')
         keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
                                      range(detailsColCheck.ncols)]
-        lentasks = (len(keysColCheckDetai) - 8) // 2
+        lentasks = (len(keysColCheckDetai) - 10) // 2
         for i in range(lentasks):
             taskUploadCols.append(f"learningResources{i+1}-name")
             taskUploadCols.append(f"learningResources{i+1}-link")
-        taskUploadCols.append("Task Level Evidence")
-        taskUploadCols.append("Minimum No. of Evidence")
+        taskUploadCols.append("Evidence required for any task for certificate criteria")
+        taskUploadCols.append("Minimum No. of Evidence for any task criteria")
+        taskUploadCols.append("Task Level Evidence req. for certificate criteria")
+        taskUploadCols.append("Minimum No. of Evidence for task level evidence criteria")
 
         certificateCols = ["Certificate issuer","Type of certificate","Logo - 1","Logo - 2","Authorised Signature Image - 1","Authorised Signature Name - 1",
                            "Authorised Designation - 1","Authorised Signature Image - 2","Authorised Signature Name - 2","Authorised Designation - 2"]
@@ -3003,13 +3007,13 @@ def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFi
         columnCountRD = resourceDetailsSheet.max_column
         for row in range(3, rowCountRD + 1):
             if resourceDetailsSheet["A" + str(row)].value == solutionName:
-                solutionMainRole = str(resourceDetailsSheet["F" + str(row)].value).strip()
-                solutionRolesArray = str(resourceDetailsSheet["G" + str(row)].value).split(",") if str(
-                    resourceDetailsSheet["F" + str(row)].value).split(",") else []
+                solutionMainRole = str(resourceDetailsSheet["E" + str(row)].value).strip()
+                solutionRolesArray = str(resourceDetailsSheet["F" + str(row)].value).split(",") if str(
+                    resourceDetailsSheet["E" + str(row)].value).split(",") else []
                 if "teacher" in solutionMainRole.strip().lower():
                     solutionRolesArray.append("TEACHER")
-                solutionStartDate = resourceDetailsSheet["H" + str(row)].value
-                solutionEndDate = resourceDetailsSheet["I" + str(row)].value
+                solutionStartDate = resourceDetailsSheet["G" + str(row)].value
+                solutionEndDate = resourceDetailsSheet["H" + str(row)].value
     return [solutionRolesArray, solutionStartDate, solutionEndDate]
 
 
@@ -4213,58 +4217,58 @@ def fetchCertificateBaseTemplate(filePathAddProject,accessToken,projectName_for_
 
     
 # This function is used to find the base template id of the certificates
-def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
-    wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
-    projectsheetforcertificate = wbproject.sheet_names()
-    for prosheet in projectsheetforcertificate:
-        if prosheet.strip().lower() == 'Certificate details'.lower():
-            detailsColCheck = wbproject.sheet_by_name(prosheet)
-            keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
-                                 range(detailsColCheck.ncols)]
+# def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
+#     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
+#     projectsheetforcertificate = wbproject.sheet_names()
+#     for prosheet in projectsheetforcertificate:
+#         if prosheet.strip().lower() == 'Certificate details'.lower():
+#             detailsColCheck = wbproject.sheet_by_name(prosheet)
+#             keysColCheckDetai = [detailsColCheck.cell(0, col_index_check).value for col_index_check in
+#                                  range(detailsColCheck.ncols)]
 
-            detailsEnvSheet = wbproject.sheet_by_name(prosheet)
-            keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
-                       range(detailsEnvSheet.ncols)]
-            for row_index_env in range(2, detailsEnvSheet.nrows):
-                dictDetailsEnv = {
-                    keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
-                    for col_index_env in range(detailsEnvSheet.ncols)}
+#             detailsEnvSheet = wbproject.sheet_by_name(prosheet)
+#             keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+#                        range(detailsEnvSheet.ncols)]
+#             for row_index_env in range(2, detailsEnvSheet.nrows):
+#                 dictDetailsEnv = {
+#                     keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+#                     for col_index_env in range(detailsEnvSheet.ncols)}
 
-                typeOfCertificate = dictDetailsEnv["Type of certificate"]
+#                 typeOfCertificate = dictDetailsEnv["Type of certificate"]
                 
-    urldbFind = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'dbfindapi')
-    headerdbFindApi = {
-        'Authorization': config.get(environment, 'Authorization'),
-        'X-authenticated-user-token': accessToken,
-        'X-Channel-id': config.get(environment, 'X-Channel-id'),
-        'internal-access-token': config.get(environment, 'internal-access-token'),
-        'Content-Type': 'application/json'
-    }
-    payload = json.dumps({
-        "query": {},
-        "mongoIdKeys": []
-    })
+#     urldbFind = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'dbfindapi')
+#     headerdbFindApi = {
+#         'Authorization': config.get(environment, 'Authorization'),
+#         'X-authenticated-user-token': accessToken,
+#         'X-Channel-id': config.get(environment, 'X-Channel-id'),
+#         'internal-access-token': config.get(environment, 'internal-access-token'),
+#         'Content-Type': 'application/json'
+#     }
+#     payload = json.dumps({
+#         "query": {},
+#         "mongoIdKeys": []
+#     })
 
-    responsedbFindApi = requests.request("POST", url=urldbFind, headers=headerdbFindApi,
-                                         data=payload)
-    # finding the _id of the certificate 
-    if responsedbFindApi.status_code == 200:
-        responseaddcetificate = responsedbFindApi.json()
-        result_list = responseaddcetificate['result']
-        baseTemplateLookup = {}
-        for i in result_list:
-            baseTemplateLookup[i['code']] = i['_id']
-        typeOfCertificate=typeOfCertificate.lower()
-        baseTemplateCode=config.get(environment,typeOfCertificate.replace(" ",""))
+#     responsedbFindApi = requests.request("POST", url=urldbFind, headers=headerdbFindApi,
+#                                          data=payload)
+#     # finding the _id of the certificate 
+#     if responsedbFindApi.status_code == 200:
+#         responseaddcetificate = responsedbFindApi.json()
+#         result_list = responseaddcetificate['result']
+#         baseTemplateLookup = {}
+#         for i in result_list:
+#             baseTemplateLookup[i['code']] = i['_id']
+#         typeOfCertificate=typeOfCertificate.lower()
+#         baseTemplateCode=config.get(environment,typeOfCertificate.replace(" ",""))
 
-# returning the base temp id
-        return baseTemplateLookup[baseTemplateCode]
+# # returning the base temp id
+#         return baseTemplateLookup[baseTemplateCode]
         
-    else:
-        print("--->Error in fetching DBfind data please give proper code value<---")
-        messageArr.append("Response : " + str(responseaddcetificate.text))
-        createAPILog(projectName_for_folder_path, messageArr)
-        sys.exit()
+#     else:
+#         print("--->Error in fetching DBfind data please give proper code value<---")
+#         messageArr.append("Response : " + str(responseaddcetificate.text))
+#         createAPILog(projectName_for_folder_path, messageArr)
+#         sys.exit()
 
 
     
@@ -4272,6 +4276,7 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
 # This function is used to add SVG to the certificate based on type of certificate
 
 def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path, accessToken, solutionId, programID,baseTemplate_id):
+    global TaskEvidenceOperator,AnyTaskEvidenceNo
     wbproject = xlrd.open_workbook(filePathAddProject, on_demand=True)
     projectsheetforcertificate = wbproject.sheet_names()
     tasksLevelEvidance = []
@@ -4320,16 +4325,20 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
                     for col_index_env in range(detailsEnvSheet.ncols)}
                 
                 
-                taskLevelEvidence = dictDetailsEnv["Task Level Evidence"].lower()
-                minNoOfEvidence = dictDetailsEnv["Minimum No. of Evidence"]
+                taskLevelEvidence = dictDetailsEnv["Task Level Evidence req. for certificate criteria"].lower()
+                minNoOfEvidence = dictDetailsEnv["Minimum No. of Evidence for task level evidence criteria"]
             
-                if taskLevelEvidence == "yes":
+                if TaskEvidenceOperator.lower() == "yes":
                     tasksLevelEvidance.append(dictDetailsEnv["TaskTitle"])
-                    if minNoOfEvidence == "":
-                        minNoOfEvidence = 1  # Set default value to 1
-                        taskMinNooEvide.append(minNoOfEvidence)
-                    else:
-                        taskMinNooEvide.append(minNoOfEvidence)
+                
+                else:
+                    if taskLevelEvidence == "yes":
+                        tasksLevelEvidance.append(dictDetailsEnv["TaskTitle"])
+                        if minNoOfEvidence == "":
+                            minNoOfEvidence = 1  # Set default value to 1
+                            taskMinNooEvide.append(minNoOfEvidence)
+                        else:
+                            taskMinNooEvide.append(minNoOfEvidence)
                 
 
 
@@ -4446,45 +4455,96 @@ def prepareaddingcertificatetemp(filePathAddProject, projectName_for_folder_path
             if task["hasAParentTask"].lower() == "no":
                 
                 task_id = task["_SYSTEM_ID"]
-                
-                c = c + 1
-                cn = "C" + str(c)
-                taskconditions = {
-                    cn: {
-                        "validationText": f"Add {int(taskMinNooEvide[c-3])} evidence for the task {tasksLevelEvidance[c-3]}",
-                        "expression": "C1",
-                        "conditions": {
-                            "C1": {
-                                "scope": "task",
-                                "key": "attachments",
-                                "function": "count",
-                                "filter": {
-                                    "key": "type",
-                                    "value": "all"
-                                },
-                                "operator": ">=",
-                                "value": int(taskMinNooEvide[c-3]),
-                                "taskDetails": [
-                                    task_id
-                                ]
+                if TaskEvidenceOperator.lower() == "no":
+                    c = c + 1
+                    cn = "C" + str(c)
+                    taskconditions = {
+                        cn: {
+                            "validationText": f"Add {int(taskMinNooEvide[c-3])} evidence for the task {tasksLevelEvidance[c-3]}",
+                            "expression": "C1",
+                            "conditions": {
+                                "C1": {
+                                    "scope": "task",
+                                    "key": "attachments",
+                                    "function": "count",
+                                    "filter": {
+                                        "key": "type",
+                                        "value": "all"
+                                    },
+                                    "operator": ">=",
+                                    "value": int(taskMinNooEvide[c-3]),
+                                    "taskDetails": [
+                                        task_id
+                                    ]
+                                }
                             }
                         }
                     }
-                }
-                payload["criteria"]["conditions"].update(taskconditions)
+                    payload["criteria"]["conditions"].update(taskconditions)
+                else:
+                    c = c + 1
+                    cn = "C" + str(c)
+                    taskconditions = {
+                        cn: {
+                            # "validationText": f"Add {int(AnyTaskEvidenceNo)} evidence for any task",
+                            # "validationText": f"Add {int(AnyTaskEvidenceNo)} evidence for any task {tasksLevelEvidance[c-3]}",
+                            "expression": "C1",
+                            "conditions": {
+                                "C1": {
+                                    "scope": "task",
+                                    "key": "attachments",
+                                    "function": "count",
+                                    "filter": {
+                                        "key": "type",
+                                        "value": "all"
+                                    },
+                                    "operator": ">=",
+                                    "value": int(AnyTaskEvidenceNo),
+                                    "taskDetails": [
+                                        task_id
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                    payload["criteria"]["conditions"].update(taskconditions)
         else:
             pass
+    if TaskEvidenceOperator.lower() == "yes":
+        # payload["criteria"]["conditions"]["C1"]["validationText"] = f"Add {int(AnyTaskEvidenceNo)} evidence for any task"
+        payload["criteria"]["conditions"]["C3"]["validationText"] = f"Add {int(AnyTaskEvidenceNo)} evidence for any task"
 
+    if str(projectLevelEvidance).strip().lower() == "yes":       
+        condition = ""
+        print(payload["criteria"]["conditions"],"4514")
+        print(TaskEvidenceOperator.lower(),"4515")
+        condition_keys = list(payload["criteria"]["conditions"].keys())
+        TaskEvidenceOperator = TaskEvidenceOperator.lower()
 
-    condition = ""
-    for a, i in enumerate(payload["criteria"]["conditions"]):
-        if a == 0:
-            condition = condition + str(i)
+        if TaskEvidenceOperator.lower() == "yes" and len(condition_keys) > 2:
+            first_part = "&&".join(condition_keys[:2])
+            grouped_part = "||".join(condition_keys[2:])
+            condition = f"{first_part}&&({grouped_part})"
         else:
-            condition = condition + "&&" + str(i)
-    payload["criteria"]["expression"] = condition
+            condition = "&&".join(condition_keys)
 
+        payload["criteria"]["expression"] = condition
+    else:
+        condition = ""
+        condition_keys = list(payload["criteria"]["conditions"].keys())
+        TaskEvidenceOperator = TaskEvidenceOperator.lower()
 
+        if TaskEvidenceOperator.lower() == "yes" and len(condition_keys) > 1:
+            first_part = "&&".join(condition_keys[:1])
+            grouped_part = "||".join(condition_keys[1:])
+            condition = f"{first_part}&&({grouped_part})"
+        else:
+            condition = "&&".join(condition_keys)
+
+        payload["criteria"]["expression"] = condition
+
+    TaskEvidenceOperator = ""
+    print(payload["criteria"]["expression"])
     print(json.dumps(payload, indent=1))
     # sys.exit()
 
@@ -5000,6 +5060,7 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
              scopeEntityType=scopeEntityType):
     scopeEntityType = scopeEntityType
 
+    global AnyTaskEvidenceNo,TaskEvidenceOperator
     if not isCourse:
         parentFolder = createFileStruct(MainFilePath, addObservationSolution)
         accessToken = generateAccessToken(parentFolder)
@@ -5237,6 +5298,26 @@ def mainFunc(MainFilePath, programFile, addObservationSolution, millisecond, isP
                         ProjectName = projectDetails["title"].encode('utf-8').decode('utf-8')
                         print(ProjectName)
                         entityType = "school"
+
+                elif sheets.strip().lower() == 'Tasks upload'.lower():
+                    projectsheet = wbproject.sheet_by_name('Tasks upload')
+                    keysEnv = [projectsheet.cell_value(1, col_index) for col_index in range(projectsheet.ncols)]
+                    try:
+                        evidence_col_index = keysEnv.index("Evidence required for any task for certificate criteria")
+                        no_evidence_col_index = keysEnv.index("Minimum No. of Evidence for any task criteria")
+                    except ValueError:
+                        print("Column 'Evidence required for any task for certificate criteria' or 'Min No. Evidence for any task' not found.")
+                        evidence_col_index = None
+                        no_evidence_col_index = None
+
+                    if evidence_col_index is not None:
+                        TaskEvidenceOperator = projectsheet.cell_value(2, evidence_col_index)
+                        if not TaskEvidenceOperator or str(TaskEvidenceOperator).strip().lower() == "":
+                            TaskEvidenceOperator = "no"
+                    if TaskEvidenceOperator.lower() == "yes" and no_evidence_col_index is not None:
+                        AnyTaskEvidenceNo = projectsheet.cell_value(2, no_evidence_col_index)
+                        if not AnyTaskEvidenceNo or str(AnyTaskEvidenceNo).strip().lower() == "":
+                            AnyTaskEvidenceNo = 1
 
             try:
                 def addProjectFunc(filePathAddProject, projectName_for_folder_path, millisAddObs,validateSheets):
