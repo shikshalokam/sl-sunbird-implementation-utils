@@ -565,6 +565,8 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     resourceTypePGM = dictDetailsEnv['Type of resources'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Type of resources'] else terminatingMessage("\"Type of resources\" must not be Empty in \"Resource Details\" sheet")
                     resourceLinkOrExtPGM = dictDetailsEnv['Resource Link']
                     resourceStatusOrExtPGM = dictDetailsEnv['Resource Status'] if dictDetailsEnv['Resource Status'] else terminatingMessage("\"Resource Status\" must not be Empty in \"Resource Details\" sheet")
+                    resourceRoleLevel = dictDetailsEnv['Target role at the resource level'] if dictDetailsEnv['Target role at the resource level'] else terminatingMessage("\"Target role at the resource level\" must not be Empty in \"Resource Details\" sheet")
+                    resourceSubroleLevel = dictDetailsEnv['Targeted subrole at resource level'] if dictDetailsEnv['Targeted subrole at resource level'] else terminatingMessage("\"Targeted subrole at resource level\" must not be Empty in \"Resource Details\" sheet")
                     # setting start and end dates globally. 
                     global startDateOfResource, endDateOfResource
                     startDateOfResource = dictDetailsEnv['Start date of resource']
