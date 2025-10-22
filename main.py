@@ -451,7 +451,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
     global programNameInp
     sheetNames = wbPgm.sheet_names()
     # list of sheets in the program sheet 
-    pgmSheets = ["Instructions", "Program Details", "Resource Details","Program Manager Details"]
+    pgmSheets = ["Instructions", "Program Details", "Resource Details","Program Manager Details","Role-Subrole mapping]
 
     # checking the sheets in the program sheet 
     if (len(sheetNames) == len(pgmSheets)) and ((set(sheetNames) == set(pgmSheets))):
@@ -5420,7 +5420,7 @@ else:
 MainFilePath = createFileStructForProgram(programFile)
 wbPgm = xlrd.open_workbook(programFile, on_demand=True)
 sheetNames = wbPgm.sheet_names()
-pgmSheets = ["Instructions", "Program Details", "Resource Details","Program Manager Details"]
+pgmSheets = ["Instructions", "Program Details", "Resource Details","Program Manager Details","Role-Subrole mapping]
 print(sheetNames)
 print(pgmSheets)
 if len(sheetNames) == len(pgmSheets) and sheetNames == pgmSheets:
