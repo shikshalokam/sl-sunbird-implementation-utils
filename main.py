@@ -10,7 +10,7 @@ import uuid
 import csv
 from bson.objectid import ObjectId
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 from difflib import get_close_matches
 from requests import post, get, delete
@@ -115,6 +115,7 @@ certificatetemplateid = None
 question_sequence_arr = []
 TaskEvidenceOperator = ""
 AnyTaskEvidenceNo = ""
+resourceEndDates = []
 
 # function to map course to program
 
@@ -299,9 +300,14 @@ def programCreation(accessToken, parentFolder, externalId, pName, pDescription, 
     apicheckslog(parentFolder, fileheader)
     if responsePgmCreate.status_code == 200:
         responsePgmCreateResp = responsePgmCreate.json()
+        countOfPrograms = (responsePgmCreateResp['result'])
+        programidforValidation = countOfPrograms["_id"]
+
     else:
         # terminate execution
         terminatingMessage("Program creation API failed. Please check logs.")
+
+    return programidforValidation
 
 # this function is used to create the sheet of PDPM for API requerment
 def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,programexternalId,parentFolder):
@@ -371,7 +377,13 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
                                   col_index_env in range(detailsEnvSheet.ncols)}
 
                 if str(dictDetailsEnv['Is a SSO user?']).strip() == "YES":
-                    programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'] if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
+                    try :
+                        programmanagername2 = dictDetailsEnv['Diksha user id ( profile ID)'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Diksha user id ( profile ID)'] else terminatingMessage("\"Diksha user id ( profile ID)\" must not be Empty in \"Program details\" sheet")
+                        userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+                    except :
+                        programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Login ID on DIKSHA'] else terminatingMessage("\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
+                        userDetails = fetchUserDetails(environment, accessToken, programmanagername2)
+                        
                 else:
                     try :
                         programmanagername2 = dictDetailsEnv['Login ID on DIKSHA'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Login ID on DIKSHA'] else terminatingMessage("\"Login ID on DIKSHA\" must not be Empty in \"Program details\" sheet")
@@ -399,6 +411,7 @@ def programmappingpdpmsheetcreation(MainFilePath,accessToken, program_file,progr
 
                 fileheader = [creatorName,"program manager mapped succesfully","Passed"]
                 apicheckslog(parentFolder,fileheader)
+    return creatorKeyCloakId
 
 
 # this function is used for call the api and map the pdpm roles which we created
@@ -443,6 +456,66 @@ def check_sequence(arr):
             return False
     return True
 
+def validate_program_mapping(accessToken, programId, userkeycklockid):
+    """
+    Calls dbFind API and validates whether programId exists
+    in platformRoles.programs.
+    Throws Exception if mapping is unsuccessful.
+    """
+
+    urldbFind = (
+        config.get(environment, 'INTERNAL_KONG_IP')
+        + config.get(environment, 'dbfindapi-url')+"userExtension"
+    )
+
+    headerdbFindApi = {
+        'Authorization': config.get(environment, 'Authorization'),
+        'X-authenticated-user-token': accessToken,
+        'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        'internal-access-token': config.get(environment, 'internal-access-token'),
+        'Content-Type': 'application/json'
+    }
+
+    payload = json.dumps({
+        "query": {
+            "userId" : userkeycklockid
+        },
+        "mongoIdKeys": []
+    })
+
+    responsedbFindApi = requests.post(
+        url=urldbFind,
+        headers=headerdbFindApi,
+        data=payload
+    )
+
+    if responsedbFindApi.status_code != 200:
+        raise Exception(
+            f"dbFind API failed with status code {responsedbFindApi.status_code}"
+        )
+
+    response_json = responsedbFindApi.json()
+    result_list = response_json.get("result", [])
+
+    if not isinstance(result_list, list) or not result_list:
+        raise Exception("Invalid response: result is empty or not a list")
+
+    # ---- Validation Logic ----
+    for user in result_list:
+        platform_roles = user.get("platformRoles", [])
+
+        for role in platform_roles:
+            programs = role.get("programs", [])
+
+            if programId in programs:
+                # Mapping found
+                return True
+
+    # If reached here → programId not found
+    print(f"Mapping unsuccessful: Program ID {programId} not found in platformRoles.programs")
+    return False
+
+
 # Open and validate program sheet 
 def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
     program_file = filePathAddPgm
@@ -457,11 +530,36 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
     if (len(sheetNames) == len(pgmSheets)) and ((set(sheetNames) == set(pgmSheets))):
         print("--->Program Template detected.<---")
         # iterate through the sheets 
+        resourceEndDates = []
+
+        # Ensure "Resource Details" is processed first to populate resourceEndDates
+        for i, name in enumerate(sheetNames):
+            if name.strip().lower() == 'resource details':
+                sheetNames.insert(0, sheetNames.pop(i))
+                break
+
         for sheetEnv in sheetNames:
 
             if sheetEnv == "Instructions":
                 # skip Instructions sheet 
                 pass
+            elif sheetEnv.strip().lower() == 'resource details':
+                # checking Resource details sheet 
+                print("--->Checking Resource Details sheet...")
+                detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
+                keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                           range(detailsEnvSheet.ncols)]
+                # iterate through each row in Resource Details sheet and validate 
+                for row_index_env in range(2, detailsEnvSheet.nrows):
+                    dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                                      for
+                                      col_index_env in range(detailsEnvSheet.ncols)}
+                    endDateOfResources = dictDetailsEnv['End date of resource']
+                    if endDateOfResources:
+                        resourceEndDates.append(endDateOfResources)
+            
+
+            
             elif sheetEnv.strip().lower() == 'program details':
                 print("--->Checking Program details sheet...")
                 detailsEnvSheet = wbPgm.sheet_by_name(sheetEnv)
@@ -512,7 +610,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     
 
 
-                    if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8')):
+                    if not getProgramInfo(accessToken, parentFolder, programNameInp.encode('utf-8').decode('utf-8'),resourceEndDates):
                         extIdPGM = dictDetailsEnv['Program ID'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Program ID'] else terminatingMessage("\"Program ID\" must not be Empty in \"Program details\" sheet")
                         if str(dictDetailsEnv['Program ID']).strip() == "Do not fill this field":
                             terminatingMessage("change the program id")
@@ -557,18 +655,60 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         # sys.exit()
 
                         # call function to create program 
-                        programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
+                        programIDCreated=programCreation(accessToken, parentFolder, extIdPGM, programNameInp, descriptionPGM,keywordsPGM.lstrip().rstrip().split(","), entitiesPGMID, rolesPGMID, orgIds,creatorKeyCloakId, creatorName,entitiesPGM,mainRole,rolesPGM)
+                        print(programIDCreated)
+
                         # sys.exit()
-                        programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                        userkeycklockid=programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, extIdPGM,parentFolder)
+                        print(userkeycklockid)
 
                         # map PM / PD to the program 
+
                         Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
+                        
+                        #check if created program is mapped to program manager or not
+                        try:
+                            validate_program_mapping( accessToken, programIDCreated, userkeycklockid)
+                            print("✅ Program mapping successful")
+                        except Exception as e:
+                            print("❌", str(e))
 
                         # check if program is created or not 
-                        if getProgramInfo(accessToken, parentFolder, programNameInp):
+                        if getProgramInfo(accessToken, parentFolder, programNameInp,resourceEndDates):
                             print("Program Created SuccessFully.")
                         else :
                             terminatingMessage("Program creation failed! Please check logs.")
+
+                    else:
+                        messageArr = []
+                        userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
+                        userkeycklockid = userDetails[0]
+                        
+                        # map PM / PD to the program 
+                        
+                        #check if created program is mapped to program manager or not
+                        try:
+                            if not validate_program_mapping( accessToken, programID, userkeycklockid):
+                                userkeycklockid=programmappingpdpmsheetcreation(MainFilePath, accessToken, program_file, programExternalId, parentFolder)
+                                print(userkeycklockid)
+                                Programmappingapicall(MainFilePath, accessToken, program_file,parentFolder)
+                                if validate_program_mapping( accessToken, programID, userkeycklockid):
+                                    print("✅ Program mapping successful")
+                                    messageArr.append("✅ Program mapping check is successful for existing progam")
+                                    createAPILog(parentFolder, messageArr)
+                                else:
+                                    print("❌ Program mapping Failed")
+                                    messageArr.append("❌ Program mapping check is failed for existing progam")
+                            else:
+                                print("✅ Program mapping recheck successful")
+                                messageArr.append("✅ Program mapping check is successful for existing progam")
+                                createAPILog(parentFolder, messageArr)
+                        except Exception as e:
+                            print("❌", str(e))
+                            messageArr.append("❌ Program mapping check is failed for existing progam" + str(e))
+                            createAPILog(parentFolder, messageArr)
+
+                   
 
             elif sheetEnv.strip().lower() == 'resource details':
                 # checking Resource details sheet 
@@ -585,7 +725,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                     resourceTypePGM = dictDetailsEnv['Type of resources'].encode('utf-8').decode('utf-8') if dictDetailsEnv['Type of resources'] else terminatingMessage("\"Type of resources\" must not be Empty in \"Resource Details\" sheet")
                     resourceLinkOrExtPGM = dictDetailsEnv['Resource Link']
                     resourceStatusOrExtPGM = dictDetailsEnv['Resource Status'] if dictDetailsEnv['Resource Status'] else terminatingMessage("\"Resource Status\" must not be Empty in \"Resource Details\" sheet")
-                    resourceStatusOrExtPGM = dictDetailsEnv['Target role at the resource level'] if dictDetailsEnv['Target role at the resource level'] else terminatingMessage("\"Target role at the resource level\" must not be Empty in \"Resource Details\" sheet")
+                    resourceStatusOrExtPGM = dictDetailsEnv['Targeted role at resource level'] if dictDetailsEnv['Targeted role at resource level'] else terminatingMessage("\"Targeted role at resource level\" must not be Empty in \"Resource Details\" sheet")
                     resourceStatusOrExtPGM = dictDetailsEnv['Targeted subrole at resource level'] if dictDetailsEnv['Targeted subrole at resource level'] else terminatingMessage("\"Targeted subrole at resource level\" must not be Empty in \"Resource Details\" sheet")
                     # setting start and end dates globally. 
                     global startDateOfResource, endDateOfResource
@@ -709,8 +849,70 @@ def generateAccessToken(solutionName_for_folder_path):
     apicheckslog(solutionName_for_folder_path, fileheader)
     terminatingMessage("Please check API logs.")
 
+
+def validate_solution_end_date(program_end_date, solution_end_date):
+    """
+    program_end_date  : '2025-11-27T18:29:59.000Z'
+    solution_end_date : ['15-01-2026'] or '15-01-2026'
+    """
+ 
+    # -----------------------------
+    # Validate program end date
+    # -----------------------------
+    if not program_end_date or not str(program_end_date).strip():
+        raise ValueError("Program end date is missing or empty")
+ 
+    try:
+        program_utc = datetime.strptime(
+            program_end_date, "%Y-%m-%dT%H:%M:%S.%fZ"
+        ).replace(tzinfo=timezone.utc)
+    except ValueError:
+        raise ValueError(
+            f"Invalid program end date format: {program_end_date}"
+        )
+ 
+    # Convert UTC → IST
+    ist_timezone = timezone(timedelta(hours=5, minutes=30))
+    program_ist = program_utc.astimezone(ist_timezone)
+ 
+    # -----------------------------
+    # Normalize solution end date
+    # -----------------------------
+    if isinstance(solution_end_date, list):
+        if not solution_end_date:
+            raise ValueError("Solution end date list is empty")
+        solution_end_date = solution_end_date[0]
+ 
+    if not solution_end_date or not str(solution_end_date).strip():
+        raise ValueError("Solution end date is missing or empty")
+ 
+    solution_end_date = str(solution_end_date).strip()
+ 
+    try:
+        solution_date = datetime.strptime(
+            solution_end_date, "%d-%m-%Y"
+        ).date()
+    except ValueError:
+        raise ValueError(
+            f"Invalid solution end date format (expected DD-MM-YYYY): {solution_end_date}"
+        )
+ 
+    # -----------------------------
+    # Compare dates
+    # -----------------------------
+    if solution_date > program_ist.date():
+        raise ValueError(
+            f"Solution end date ({solution_end_date}) "
+            f"cannot be beyond program end date "
+            f"({program_ist.date().strftime('%d-%m-%Y')})"
+        )
+ 
+    return True
+
+
 # Function to search for programs
-def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp):
+def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp,resourceEndDates):
+    print(resourceEndDates,"reached till here")
     global programID, programExternalId, programDescription, isProgramnamePresent, programName
     programName = programNameInp
     programUrl = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'fetchProgramInfoApiUrl')
@@ -760,7 +962,9 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
                     programExternalId = eachPgm['externalId']
                     programDescription = eachPgm['description']
                     isAPrivateProgram = eachPgm['isAPrivateProgram']
-                    getProgramDetails.append([programID, programExternalId, programDescription, isAPrivateProgram])
+                    endDate = eachPgm["endDate"]
+                    getProgramDetails.append([programID, programExternalId, programDescription, isAPrivateProgram,endDate])
+
                     if len(getProgramDetails) == 0:
                         print("Total " + str(len(getProgramDetails)) + " backend programs found with the name : " + programName.lstrip().rstrip())
                         messageArr.append("Total " + str(len(getProgramDetails)) + " backend programs found with the name : " + programName.lstrip().rstrip())
@@ -781,11 +985,15 @@ def getProgramInfo(accessTokenUser, solutionName_for_folder_path, programNameInp
                         programExternalId = getProgramDetails[0][1]
                         programDescription = getProgramDetails[0][2]
                         isAPrivateProgram = getProgramDetails[0][3]
+                        programEndDate = getProgramDetails[0][4]
+                        if resourceEndDates:
+                            validate_solution_end_date(programEndDate,resourceEndDates)
                         isProgramnamePresent = True
                         messageArr.append("programID : " + str(programID))
                         messageArr.append("programExternalId : " + str(programExternalId))
                         messageArr.append("programDescription : " + str(programDescription))
                         messageArr.append("isAPrivateProgram : " + str(isAPrivateProgram))
+                        messageArr.append("isAPrivateProgram : " + str(programEndDate))
                     createAPILog(solutionName_for_folder_path, messageArr)
     else:
         print("Program search API failed...")
@@ -952,7 +1160,7 @@ def fetchEntityId(solutionName_for_folder_path, accessToken, entitiesNameList, s
     messageArr = ["Entities List Fetch API executed.", "URL  : " + str(urlFetchEntityListApi),
                   "Status : " + str(responseFetchEntityListApi.status_code)]
     createAPILog(solutionName_for_folder_path, messageArr)
-    print(responseFetchEntityListApi.text, "responseFetchEntityListApi")
+    # print(responseFetchEntityListApi.text, "responseFetchEntityListApi")
     if responseFetchEntityListApi.status_code == 200:
         responseFetchEntityListApi = responseFetchEntityListApi.json()
         entitiesLookup = dict()
@@ -1057,6 +1265,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
 
     # 1-with rubrics , 2 - with out rubrics , 3 - survey , 4 - Project 5 - With rubric and IMP
     typeofSolutin = 0
+    resourceEndDates = []
 
     global environment, observationId, solutionName, pointBasedValue, entityType, allow_multiple_submissions, programName, userEntity, roles, isProgramnamePresent, solutionLanguage, keyWords, entityTypeId, solutionDescription, creator, dikshaLoginId
 
@@ -1104,8 +1313,21 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                         dictProgramDetails[
                             'Targeted state at program level'] else terminatingMessage(
                         "\"scope_entity\" must not be Empty in \"details\" sheet")
-                    
 
+            elif programSheets.strip().lower() == 'resource details':
+                print("--->Checking Resource Details sheet...")
+                detailsEnvSheet = wbPgm.sheet_by_name(programSheets)
+                keysEnv = [detailsEnvSheet.cell(1, col_index_env).value for col_index_env in
+                           range(detailsEnvSheet.ncols)]
+                # iterate through each row in Resource Details sheet and validate 
+                for row_index_env in range(2, detailsEnvSheet.nrows):
+                    dictDetailsEnv = {keysEnv[col_index_env]: detailsEnvSheet.cell(row_index_env, col_index_env).value
+                                      for
+                                      col_index_env in range(detailsEnvSheet.ncols)}
+                    endDateOfResources = dictDetailsEnv['End date of resource']
+                    if endDateOfResources:
+                        resourceEndDates.append(endDateOfResources)
+                   
         for sheetEnv in sheetNames1:
             questionsequenceArr =[]
             if sheetEnv == "Instructions":
@@ -1149,7 +1371,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                                 isProgramnamePresent = False
                             else:
                                 isProgramnamePresent = True
-                                getProgramInfo(accessToken, parentFolder, programName)
+                                getProgramInfo(accessToken, parentFolder, programName,resourceEndDates)
                         else:
                             terminatingMessage("--->Columns Mismatch in Details Sheet.")
                 if sheetEnv.strip().lower() == 'framework':
@@ -1364,7 +1586,7 @@ def validateSheets(filePathAddObs, accessToken, parentFolder):
                             
                         entityType = dictDetailsEnv['entity_type'].encode('utf-8').decode('utf-8') if dictDetailsEnv['entity_type'] else terminatingMessage("\"entity_type\" must not be Empty in \"details\" sheet")
                         solutionLanguage = dictDetailsEnv['language'].encode('utf-8').decode('utf-8').split(",") if dictDetailsEnv['language'] else [""]
-                        getProgramInfo(accessToken, parentFolder, programNameInp)
+                        getProgramInfo(accessToken, parentFolder, programNameInp,resourceEndDates)
                 elif sheetEnv.strip().lower() == 'criteria':
                     print("--->Checking criteria sheet...")
                     detailsEnvSheet = wbObservation1.sheet_by_name(sheetEnv)
@@ -3289,7 +3511,7 @@ def createSurveySolution(parentFolder, wbSurvey, accessToken):
                     surveySolutionCreationReqBody['creator'] = dictDetailsEnv['Name_of_the_creator']
 
 
-                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha_loginId'])
+                userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['survey_creator_username'])
                 surveySolutionCreationReqBody['author'] = userDetails[0]
                 global SurveyTemplateStartDate, SurveyTemplateEndDate
                 SurveyTemplateStartDate = dictDetailsEnv["survey_start_date"]
