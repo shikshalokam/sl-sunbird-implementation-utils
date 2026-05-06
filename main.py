@@ -635,7 +635,7 @@ def programsFileCheck(filePathAddPgm, accessToken, parentFolder, MainFilePath):
                         rolesPGM = dictDetailsEnv['Targeted subrole at program level'] if dictDetailsEnv['Targeted subrole at program level'] else terminatingMessage("\"Targeted subrole at program level\" must not be Empty in \"Program details\" sheet")
                         
                         if "teacher" in mainRole.strip().lower():
-                            rolesPGM = str(rolesPGM).strip() + ",TEACHER"
+                            rolesPGM = str(rolesPGM).strip() + ",Teacher"
                         userDetails = fetchUserDetails(environment, accessToken, dictDetailsEnv['Diksha username/user id/email id/phone no. of Program Designer'])
                         OrgName=userDetails[4]
                         orgIds=fetchOrgId(environment, accessToken, parentFolder, OrgName)
@@ -1193,61 +1193,81 @@ def fetchEntityId(solutionName_for_folder_path, accessToken, entitiesNameList, s
         terminatingMessage("---> Error in location search.")
 
 def fetchScopeRole(solutionName_for_folder_path, accessToken, roleNameList):
+    print(roleNameList, "roleNameList")
+    if len(roleNameList) == 0:
+        terminatingMessage("Roles fields must not be empty.")
+
     urlFetchRolesListApi = config.get(environment, 'INTERNAL_KONG_IP') + config.get(environment, 'listOfRolesApi')
     headerFetchRolesListApi = {
         'Content-Type': config.get(environment, 'Content-Type'),
         'Authorization': config.get(environment, 'Authorization'),
         'X-authenticated-user-token': accessToken,
         'X-Channel-id': config.get(environment, 'X-Channel-id'),
+        'internal-access-token': config.get(environment, 'internal-access-token')
+
     }
-    responseFetchRolesListApi = requests.post(url=urlFetchRolesListApi, headers=headerFetchRolesListApi)
-    rolesLookup = dict()
-    rolesReturn = list()
-    messageArr = ["Roles list fetch API called.", "URL  : " + str(urlFetchRolesListApi),
-                  "Status Code : " + str(responseFetchRolesListApi.status_code)]
-    createAPILog(solutionName_for_folder_path, messageArr)
-    if responseFetchRolesListApi.status_code == 200:
-        responseFetchRolesListApi = responseFetchRolesListApi.json()
-        for listRoles in responseFetchRolesListApi['result']:
-            eachDict = dict()
-            eachDict['id'] = listRoles['_id'].lstrip().rstrip()
-            eachDict['code'] = listRoles['code'].lstrip().rstrip()
-            rolesLookup[listRoles['code']] = eachDict['id']
-            rolesReturn.append(listRoles['code'].lstrip().rstrip())
-    else:
-        terminatingMessage("---> error in subroles API.")
 
-    userRolesFromInp = roleNameList
-    listOfFoundRoles = list()
-    if len(userRolesFromInp) == 0:
-        terminatingMessage("Roles fields must not be empty.")
-    for ur in userRolesFromInp:
-        rolesFlag = True
-        try:
-            roleDetails = rolesLookup[ur.lstrip().rstrip()]
-            rolesFlag = True
-        except:
-            rolesFlag = False
+    listOfFoundCodes = list()
 
-        if rolesFlag:
-            print("Role Found... : " + ur)
-            listOfFoundRoles.append(ur)
-        else:
-            if "all" in userRolesFromInp:
-                listOfFoundRoles = ["all"]
-            else:
-                print("Role error...")
-                print("Role : " + ur)
-                messageArr = ["Roles Error", "URL  : ", "Role : " + ur]
-                createAPILog(solutionName_for_folder_path, messageArr)
+    for roleName in roleNameList:
+        roleName = roleName.lstrip().rstrip()
 
-    messageArr = ["Accepted Roles : " + str(listOfFoundRoles)]
-    createAPILog(solutionName_for_folder_path, messageArr)
-    if len(listOfFoundRoles) == 0:
-        messageArr = ["No roles matched our DB "]
+        # Build query payload using the role name (same pattern as getProgramInfo)
+        payload = json.dumps({
+            "query": {
+                "title": roleName
+            },
+            "mongoIdKeys": []
+        })
+
+        responseFetchRolesListApi = requests.post(
+            url=urlFetchRolesListApi,
+            headers=headerFetchRolesListApi,
+            data=payload
+        )
+        # print(responseFetchRolesListApi.text,"responseFetchRolesListApi")
+
+        messageArr = [
+            "Roles Search API called.",
+            "URL  : " + str(urlFetchRolesListApi),
+            "Role Name Queried : " + roleName,
+            "Status Code : " + str(responseFetchRolesListApi.status_code),
+            "Response : " + str(responseFetchRolesListApi.text)
+        ]
         createAPILog(solutionName_for_folder_path, messageArr)
-        print("No Roles matched our DB.")
-    return listOfFoundRoles
+
+        if responseFetchRolesListApi.status_code == 200:
+            responseJson = responseFetchRolesListApi.json()
+            results = responseJson.get('result', [])
+            matchedCode = None
+
+            # Match by name (case-insensitive) and extract the code
+            for role in results:
+                if role.get('title', '').strip().lower() == roleName.lower():
+                    matchedCode = role.get('code', '').strip()
+                    break
+
+            if matchedCode:
+                print("Role matched. Name: " + roleName + " | Code: " + matchedCode)
+                listOfFoundCodes.append(matchedCode)
+                messageArr = ["Role matched - Name: " + roleName + " | Code: " + matchedCode]
+                createAPILog(solutionName_for_folder_path, messageArr)
+            else:
+                print("Role not found in response for name: " + roleName)
+                messageArr = ["Role not matched in response. Role Name: " + roleName]
+                createAPILog(solutionName_for_folder_path, messageArr)
+        else:
+            terminatingMessage("---> Error in roles search API for role: " + roleName)
+
+    messageArr = ["Final matched role codes : " + str(listOfFoundCodes)]
+    createAPILog(solutionName_for_folder_path, messageArr)
+
+    if len(listOfFoundCodes) == 0:
+        print("No roles matched in DB.")
+        messageArr = ["No roles matched our DB."]
+        createAPILog(solutionName_for_folder_path, messageArr)
+
+    return listOfFoundCodes
 
 
 def validateSheets(filePathAddObs, accessToken, parentFolder):
@@ -3232,10 +3252,10 @@ def fetchSolutionDetailsFromProgramSheet(solutionName_for_folder_path, programFi
         for row in range(3, rowCountRD + 1):
             if resourceDetailsSheet["A" + str(row)].value == solutionName:
                 solutionMainRole = str(resourceDetailsSheet["E" + str(row)].value).strip()
-                solutionRolesArray = str(resourceDetailsSheet["F" + str(row)].value).split(",") if str(
-                    resourceDetailsSheet["E" + str(row)].value).split(",") else []
+                rawRoleNames = [r.strip() for r in str(resourceDetailsSheet["F" + str(row)].value).split(",")] if resourceDetailsSheet["F" + str(row)].value else []
+                solutionRolesArray = fetchScopeRole(solutionName_for_folder_path, accessToken, rawRoleNames) if rawRoleNames else []
                 if "teacher" in solutionMainRole.strip().lower():
-                    solutionRolesArray.append("TEACHER")
+                    solutionRolesArray.append("Teacher")
                 solutionStartDate = resourceDetailsSheet["G" + str(row)].value
                 solutionEndDate = resourceDetailsSheet["H" + str(row)].value
     return [solutionRolesArray, solutionStartDate, solutionEndDate]
